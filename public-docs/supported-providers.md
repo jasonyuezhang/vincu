@@ -16,6 +16,8 @@ Work out of the box once the underlying CLI is installed and authenticated.
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Anthropic's coding agent with MCP support, streaming, and deep reasoning.
 - [Codex](/docs/codex). OpenAI's workspace agent with sandbox controls and optional network access.
+- [Cursor](https://cursor.com/docs/cli/overview). Cursor's coding agent via ACP (`cursor-agent` on `PATH`).
+- [GitHub Copilot](https://github.com/features/copilot/cli/). GitHub's AI pair programmer via ACP.
 - [OpenCode](https://opencode.ai/). Open-source coding assistant with multi-provider model support.
 - [Pi](https://pi.dev). Minimal terminal-based coding agent with multi-provider LLM support.
 
@@ -33,14 +35,12 @@ Pick any of these from the in-app provider catalog. Each entry is a one-click in
 - [Cortex Code](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli), Snowflake's coding agent.
 - [Corust Agent](https://github.com/Corust-ai/corust-agent-release/releases), Rust-focused coding partner.
 - [crow-cli](https://crow-ai.dev/), minimal ACP-native coding agent.
-- [Cursor](https://cursor.com/docs/cli/overview), Cursor's coding agent.
 - [DeepAgents](https://docs.langchain.com/oss/javascript/deepagents/overview), LangChain-powered coding agent.
 - [DimCode](https://dimcode.dev/docs/acp.html), multi-model coding agent.
 - [Dirac](https://dirac.run), open-source agent with hash-anchored parallel edits.
 - [Factory Droid](https://factory.ai/product/cli), Factory AI's coding agent.
 - [fast-agent](https://fast-agent.ai/acp/), multi-provider coding agent.
 - [Gemini CLI](https://geminicli.com), Google's official Gemini CLI.
-- [GitHub Copilot](https://github.com/features/copilot/cli/), GitHub's AI pair programmer via ACP.
 - [GLM Agent](https://github.com/stefandevo/glm-acp-agent), Zhipu AI's GLM coding agent.
 - [goose](https://block.github.io/goose/), Block's local open-source AI agent.
 - [Grok](https://docs.x.ai/build/overview), xAI's Grok Build agentic coding CLI.

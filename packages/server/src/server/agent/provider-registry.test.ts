@@ -695,10 +695,29 @@ test("ACP provider params can disable MCP support", () => {
   ]);
 });
 
-test("cursor provider extending acp uses CursorACPAgentClient", () => {
+test("Cursor is an enabled built-in ACP provider", () => {
+  const registry = buildProviderRegistry(logger);
+
+  expect(registry.cursor).toMatchObject({
+    id: "cursor",
+    label: "Cursor",
+    enabled: true,
+    derivedFromProviderId: null,
+  });
+  expect(registry.cursor.createClient(logger).provider).toBe("cursor");
+  expect(mockState.constructorArgs.cursor.length).toBeGreaterThan(0);
+  expect(mockState.constructorArgs.cursor[0]).toEqual({
+    command: ["cursor-agent", "acp"],
+    env: undefined,
+    providerParams: undefined,
+  });
+});
+
+test("cursor provider override keeps CursorACPAgentClient and applies env", () => {
   const registry = buildProviderRegistry(logger, {
     providerOverrides: {
       cursor: {
+        // Legacy catalog installs used extends: "acp"; builtin overrides ignore extends.
         extends: "acp",
         label: "Cursor",
         command: ["cursor-agent", "acp"],

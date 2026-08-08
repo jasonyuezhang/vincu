@@ -38,9 +38,12 @@ describe("ACP provider catalog", () => {
     expect(ACP_PROVIDER_CATALOG.some((entry) => entry.id === "pi-acp")).toBe(false);
   });
 
+  it("does not list first-class builtins that used to be catalog-only", () => {
+    expect(ACP_PROVIDER_CATALOG.some((entry) => entry.id === "cursor")).toBe(false);
+  });
+
   it("uses PATH commands for entries that were binary distributions upstream", () => {
     expect(findProvider("amp-acp").command).toEqual(["amp-acp"]);
-    expect(findProvider("cursor").command).toEqual(["cursor-agent", "acp"]);
     expect(findProvider("codewhale").command).toEqual(["codewhale", "serve", "--acp"]);
     expect(findProvider("devin").command).toEqual(["devin", "acp"]);
     expect(findProvider("goose").command).toEqual(["goose", "acp"]);
