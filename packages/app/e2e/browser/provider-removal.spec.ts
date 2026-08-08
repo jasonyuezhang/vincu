@@ -71,13 +71,12 @@ test.describe("provider removal", () => {
       await openSettingsHost(page, getServerId());
       await openSettingsHostSection(page, getServerId(), "providers");
 
-      await expect(page.getByTestId("provider-actions-claude")).toHaveCount(0);
+      await expect(page.getByTestId("provider-remove-claude")).toHaveCount(0);
       await openAddProviderArea(page);
       await installAcpCatalogProvider(page, CUSTOM_PROVIDER.name);
       await expectProviderInstalledInSettings(page, CUSTOM_PROVIDER.name);
       await expectProviderSource(client, "custom");
 
-      await page.getByTestId(`provider-actions-${CUSTOM_PROVIDER.id}`).click();
       await expect(page.getByTestId(`provider-remove-${CUSTOM_PROVIDER.id}`)).toBeVisible();
       await clickRemoveProviderAndAcceptWarning(page);
 
