@@ -14,7 +14,7 @@ import { openAgentRoute, seedMockAgentWorkspace } from "../support/helpers/mock-
 import { seedWorkspace } from "../support/helpers/seed-client";
 import { getServerId } from "../support/helpers/server-id";
 
-const CREATE_AGENT_PREFERENCES_KEY = "@paseo:create-agent-preferences";
+const CREATE_AGENT_PREFERENCES_KEY = "@vincu:create-agent-preferences";
 
 async function seedMockDraftPreferences(page: import("@playwright/test").Page): Promise<void> {
   await page.addInitScript(

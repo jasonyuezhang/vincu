@@ -1,7 +1,7 @@
 {
-  "name": "@getpaseo/protocol",
+  "name": "@getvincu/protocol",
   "version": "0.3.0-beta.4",
-  "description": "Paseo shared protocol schemas and wire types",
+  "description": "Vincu shared protocol schemas and wire types",
   "files": [
     "dist",
     "!dist/**/*.map",

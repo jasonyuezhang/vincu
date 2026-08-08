@@ -28,8 +28,8 @@ import {
   type WSOutboundMessage,
   wrapSessionMessage,
 } from "./messages.js";
-import { asUint8Array, decodeBinaryFrame } from "@getpaseo/protocol/binary-frames/index";
-import type { TerminalActivity } from "@getpaseo/protocol/terminal-activity";
+import { asUint8Array, decodeBinaryFrame } from "@getvincu/protocol/binary-frames/index";
+import type { TerminalActivity } from "@getvincu/protocol/terminal-activity";
 import type { HostnamesConfig } from "./hostnames.js";
 import { isHostnameAllowed } from "./hostnames.js";
 import { Session, type SessionLifecycleIntent, type SessionRuntimeMetrics } from "./session.js";
@@ -62,7 +62,7 @@ import {
 import {
   buildAgentAttentionNotificationPayload,
   findLatestPermissionRequest,
-} from "@getpaseo/protocol/agent-attention-notification";
+} from "@getvincu/protocol/agent-attention-notification";
 import { createGitHubService } from "../services/github-service.js";
 import type { ForgeService } from "../services/forge-service.js";
 import {
@@ -82,12 +82,12 @@ import {
   CLIENT_SHUTDOWN_RPC_REASON,
   normalizeClientRestartRpcReason,
 } from "./lifecycle-reasons.js";
-import { CLIENT_CAPS } from "@getpaseo/protocol/client-capabilities";
-import type { BrowserAutomationExecuteResponse } from "@getpaseo/protocol/browser-automation/rpc-schemas";
+import { CLIENT_CAPS } from "@getvincu/protocol/client-capabilities";
+import type { BrowserAutomationExecuteResponse } from "@getvincu/protocol/browser-automation/rpc-schemas";
 import {
   BrowserAutomationHostCapabilitySchema,
   type BrowserAutomationHostCapability,
-} from "@getpaseo/protocol/browser-automation/capabilities";
+} from "@getvincu/protocol/browser-automation/capabilities";
 import type { BrowserToolsBroker } from "./browser-tools/broker.js";
 import type { DaemonRuntimeConfig } from "./session/daemon/daemon-session.js";
 import {
@@ -175,7 +175,7 @@ function createFallbackWorkspaceGitSnapshot(cwd: string): WorkspaceGitRuntimeSna
       mainRepoRoot: null,
       currentBranch: null,
       remoteUrl: null,
-      isPaseoOwnedWorktree: false,
+      isVincuOwnedWorktree: false,
       isDirty: null,
       baseRef: null,
       aheadBehind: null,
@@ -209,7 +209,7 @@ function createFallbackWorkspaceGitService(): WorkspaceGitService {
       currentBranch: null,
       remoteUrl: null,
       worktreeRoot: null,
-      isPaseoOwnedWorktree: false,
+      isVincuOwnedWorktree: false,
       mainRepoRoot: null,
     }),
     getSnapshot: async (cwd: string) => createFallbackWorkspaceGitSnapshot(cwd),
@@ -518,7 +518,7 @@ export class VoiceAssistantWebSocketServer {
   private readonly workspaceGitService: WorkspaceGitService;
   private readonly workspaceAutoName: WorkspaceAutoName;
   private readonly downloadTokenStore: DownloadTokenStore;
-  private readonly paseoHome: string;
+  private readonly vincuHome: string;
   private readonly worktreesRoot: string | undefined;
   private readonly daemonConfigStore: DaemonConfigStore;
   private readonly pushTokenStore: PushTokenStore;
@@ -569,7 +569,7 @@ export class VoiceAssistantWebSocketServer {
     agentManager: AgentManager,
     agentStorage: AgentStorage,
     downloadTokenStore: DownloadTokenStore,
-    paseoHome: string,
+    vincuHome: string,
     daemonConfigStore: DaemonConfigStore,
     mcpBaseUrl: string | null,
     wsConfig: WebSocketServerConfig,
@@ -638,7 +638,7 @@ export class VoiceAssistantWebSocketServer {
     this.workspaceGitService = workspaceGitService ?? createFallbackWorkspaceGitService();
     this.workspaceAutoName = workspaceAutoName;
     this.downloadTokenStore = downloadTokenStore;
-    this.paseoHome = paseoHome;
+    this.vincuHome = vincuHome;
     this.worktreesRoot = daemonRuntimeConfig?.worktreesRoot;
     this.daemonConfigStore = daemonConfigStore;
     this.mcpBaseUrl = mcpBaseUrl;
@@ -676,7 +676,7 @@ export class VoiceAssistantWebSocketServer {
     });
 
     const pushLogger = this.logger.child({ module: "push" });
-    this.pushTokenStore = new PushTokenStore(pushLogger, join(paseoHome, "push-tokens.json"));
+    this.pushTokenStore = new PushTokenStore(pushLogger, join(vincuHome, "push-tokens.json"));
     this.pushNotificationSender =
       pushNotificationSender ?? createPushNotificationSender(pushLogger, this.pushTokenStore);
 
@@ -1326,7 +1326,7 @@ export class VoiceAssistantWebSocketServer {
       },
       downloadTokenStore: this.downloadTokenStore,
       pushTokenStore: this.pushTokenStore,
-      paseoHome: this.paseoHome,
+      vincuHome: this.vincuHome,
       worktreesRoot: this.worktreesRoot,
       agentManager: this.agentManager,
       agentStorage: this.agentStorage,

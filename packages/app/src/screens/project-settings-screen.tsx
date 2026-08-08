@@ -8,11 +8,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, MoreVertical, Pencil, Plus } from "lucide-react-native";
 import { ProjectIconView } from "@/components/project-icon-view";
 import type {
-  PaseoConfigRaw,
-  PaseoConfigRevision,
+  VincuConfigRaw,
+  VincuConfigRevision,
   ProjectConfigRpcError,
-} from "@getpaseo/protocol/messages";
-import type { DaemonClient } from "@getpaseo/client/internal/daemon-client";
+} from "@getvincu/protocol/messages";
+import type { DaemonClient } from "@getvincu/client/internal/daemon-client";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -86,7 +86,7 @@ const METADATA_PROMPT_FIELDS: Record<MetadataPromptKey, MetadataPromptField> = {
   },
 };
 
-const WORKTREE_DOCS_URL = "https://paseo.sh/docs/worktrees";
+const WORKTREE_DOCS_URL = "https://vincu.sh/docs/worktrees";
 
 type ReadProjectConfigData = Awaited<ReturnType<DaemonClient["readProjectConfig"]>>;
 
@@ -238,8 +238,8 @@ function ProjectSettingsBody({
       selectedHost.projectName,
     ],
   );
-  const loadedConfig: PaseoConfigRaw | null = data?.ok ? (data.config ?? {}) : null;
-  const loadedRevision: PaseoConfigRevision | null = data?.ok ? data.revision : null;
+  const loadedConfig: VincuConfigRaw | null = data?.ok ? (data.config ?? {}) : null;
+  const loadedRevision: VincuConfigRevision | null = data?.ok ? data.revision : null;
   const readError: ProjectConfigRpcError | null = data && !data.ok ? data.error : null;
 
   const handleReload = useCallback(() => {
@@ -303,8 +303,8 @@ function ProjectSettingsBody({
 
 interface RenderContentInput {
   readQuery: ReturnType<typeof useQuery<ReadProjectConfigData>>;
-  loadedConfig: PaseoConfigRaw | null;
-  loadedRevision: PaseoConfigRevision | null;
+  loadedConfig: VincuConfigRaw | null;
+  loadedRevision: VincuConfigRevision | null;
   readError: ProjectConfigRpcError | null;
   selectedHost: ProjectHostEntry;
   queryKey: readonly [string, string, string];
@@ -366,7 +366,7 @@ function renderContent({
   );
 }
 
-function revisionToKey(revision: PaseoConfigRevision | null): string {
+function revisionToKey(revision: VincuConfigRevision | null): string {
   if (!revision) return "none";
   return `${revision.mtimeMs}-${revision.size}`;
 }
@@ -436,8 +436,8 @@ function errorToDetail(error: unknown): string | null {
 }
 
 interface ProjectConfigFormProps {
-  baseConfig: PaseoConfigRaw;
-  revision: PaseoConfigRevision | null;
+  baseConfig: VincuConfigRaw;
+  revision: VincuConfigRevision | null;
   repoRoot: string;
   queryKey: readonly [string, string, string];
   client: DaemonClient;
@@ -462,8 +462,8 @@ function ProjectConfigForm({
 
   const saveMutation = useMutation({
     mutationFn: async (input: {
-      config: PaseoConfigRaw;
-      expectedRevision: PaseoConfigRevision | null;
+      config: VincuConfigRaw;
+      expectedRevision: VincuConfigRevision | null;
     }) => {
       return client.writeProjectConfig({
         repoRoot,

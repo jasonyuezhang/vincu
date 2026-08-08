@@ -14,7 +14,7 @@ Hub talks to GitHub through a GitHub App you own. One App serves your whole Hub;
 
 Go to **Settings → Developer settings → GitHub Apps → New GitHub App** on the account that should own it.
 
-Replace `hub.example.com` with your `PASEO_HUB_APP_URL`.
+Replace `hub.example.com` with your `VINCU_HUB_APP_URL`.
 
 | Setting            | Value                                                      |
 | ------------------ | ---------------------------------------------------------- |
@@ -29,7 +29,7 @@ Repository permissions:
 
 | Permission    | Access       | Why                                       |
 | ------------- | ------------ | ----------------------------------------- |
-| Contents      | Read & write | Read `.paseo/hub.yml`, let agents push    |
+| Contents      | Read & write | Read `.vincu/hub.yml`, let agents push    |
 | Issues        | Read & write | Read comments, add reactions              |
 | Pull requests | Read & write | Read review comments, let agents open PRs |
 | Metadata      | Read         | Required by GitHub                        |
@@ -42,7 +42,7 @@ Subscribe to events:
 - Pull request review comment
 - Push
 
-Push is what makes configuration sync work. Without it, Hub never learns that `.paseo/hub.yml` changed.
+Push is what makes configuration sync work. Without it, Hub never learns that `.vincu/hub.yml` changed.
 
 ## Configure Hub
 
@@ -67,14 +67,14 @@ Open **Connections → GitHub → Connect**. Hub sends you to GitHub to install 
 
 Start from Hub, not from GitHub's own install button. GitHub only calls the setup URL when an installation is created or changed, so installing directly can leave you on a settings page with nothing bound.
 
-The connection appears with a slug derived from the account: an installation on `getpaseo` becomes `getpaseo-github`. That slug is how configuration names this connection.
+The connection appears with a slug derived from the account: an installation on `getvincu` becomes `getvincu-github`. That slug is how configuration names this connection.
 
 Connect as many installations as you need. A personal account and several organizations can coexist in one Hub organization.
 
 ## What the connection gives you
 
 - **Events.** Comments, issues, and reviews from every repository the installation can see. See [GitHub triggers](/docs/hub/triggers/github).
-- **Configuration sync.** Any repository in the installation can hold `.paseo/hub.yml`. See [Configuration](/docs/hub/configuration).
+- **Configuration sync.** Any repository in the installation can hold `.vincu/hub.yml`. See [Configuration](/docs/hub/configuration).
 - **Tokens.** Scoped, per-execution GitHub credentials.
 
-Which repositories the installation covers is a GitHub setting. Change it on GitHub, not in Paseo.
+Which repositories the installation covers is a GitHub setting. Change it on GitHub, not in Vincu.

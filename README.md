@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="packages/website/public/logo.svg" width="64" height="64" alt="Paseo logo">
+  <img src="packages/website/public/logo.svg" width="64" height="64" alt="Vincu logo">
 </p>
 
-<h1 align="center">Paseo</h1>
+<h1 align="center">Vincu</h1>
 
 <p align="center">
   <a href="README.md">English</a> ·
@@ -12,11 +12,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/getpaseo/paseo/stargazers">
-    <img src="https://img.shields.io/github/stars/getpaseo/paseo?style=flat&logo=github" alt="GitHub stars">
+  <a href="https://github.com/getvincu/vincu/stargazers">
+    <img src="https://img.shields.io/github/stars/getvincu/vincu?style=flat&logo=github" alt="GitHub stars">
   </a>
-  <a href="https://github.com/getpaseo/paseo/releases">
-    <img src="https://img.shields.io/github/v/release/getpaseo/paseo?style=flat&logo=github" alt="GitHub release">
+  <a href="https://github.com/getvincu/vincu/releases">
+    <img src="https://img.shields.io/github/v/release/getvincu/vincu?style=flat&logo=github" alt="GitHub release">
   </a>
   <a href="https://x.com/moboudra">
     <img src="https://img.shields.io/badge/%40moboudra-555?logo=x" alt="X">
@@ -24,7 +24,7 @@
   <a href="https://discord.gg/jz8T2uahpH">
     <img src="https://img.shields.io/badge/Discord-555?logo=discord" alt="Discord">
   </a>
-  <a href="https://www.reddit.com/r/PaseoAI/">
+  <a href="https://www.reddit.com/r/VincuAI/">
     <img src="https://img.shields.io/badge/Reddit-555?logo=reddit" alt="Reddit">
   </a>
 </p>
@@ -32,11 +32,11 @@
 <p align="center">One interface for Claude Code, Codex, Copilot, OpenCode, and Pi agents.</p>
 
 <p align="center">
-  <img src="https://paseo.sh/hero-mockup.png" alt="Paseo app screenshot" width="100%">
+  <img src="https://vincu.sh/hero-mockup.png" alt="Vincu app screenshot" width="100%">
 </p>
 
 <p align="center">
-  <img src="https://paseo.sh/mobile-mockup.png" alt="Paseo mobile app" width="100%">
+  <img src="https://vincu.sh/mobile-mockup.png" alt="Vincu mobile app" width="100%">
 </p>
 
 Run agents in parallel on your own machines. Ship from your phone or your desk.
@@ -45,11 +45,11 @@ Run agents in parallel on your own machines. Ship from your phone or your desk.
 - **Multi-provider:** Claude Code, Codex, Copilot, OpenCode, and Pi through the same interface. Pick the right model for each job.
 - **Voice control:** Dictate tasks or talk through problems in voice mode. Hands-free when you need it.
 - **Cross-device:** iOS, Android, desktop, web, and CLI. Start work at your desk, check in from your phone, script it from the terminal.
-- **Privacy-first:** Paseo doesn't have any telemetry, tracking, or forced log-ins.
+- **Privacy-first:** Vincu doesn't have any telemetry, tracking, or forced log-ins.
 
 ## Getting Started
 
-Paseo runs a local server called the daemon that manages your coding agents. Clients like the desktop app, mobile app, web app, and CLI connect to it.
+Vincu runs a local server called the daemon that manages your coding agents. Clients like the desktop app, mobile app, web app, and CLI connect to it.
 
 ### Prerequisites
 
@@ -63,85 +63,85 @@ You need at least one agent CLI installed and configured with your credentials:
 
 ### Desktop app (recommended)
 
-Download it from [paseo.sh/download](https://paseo.sh/download) or the [GitHub releases page](https://github.com/getpaseo/paseo/releases). Open the app and the daemon starts automatically. Nothing else to install.
+Download it from [vincu.sh/download](https://vincu.sh/download) or the [GitHub releases page](https://github.com/getvincu/vincu/releases). Open the app and the daemon starts automatically. Nothing else to install.
 
 To connect from your phone, open **Settings → your host → Pair Device**.
 
 ### CLI / headless
 
-Install the CLI and start Paseo:
+Install the CLI and start Vincu:
 
 ```bash
-npm install -g @getpaseo/cli
-paseo
+npm install -g @getvincu/cli
+vincu
 ```
 
-Paseo starts locally, then asks whether to enable the end-to-end encrypted relay for device pairing. If you decline, connect directly over TCP, Tailscale, or another VPN. This path is useful for servers and remote machines.
+Vincu starts locally, then asks whether to enable the end-to-end encrypted relay for device pairing. If you decline, connect directly over TCP, Tailscale, or another VPN. This path is useful for servers and remote machines.
 
 For full setup and configuration, see:
 
-- [Docs](https://paseo.sh/docs)
-- [Connectivity guide](https://paseo.sh/docs/connectivity)
-- [Configuration reference](https://paseo.sh/docs/configuration)
+- [Docs](https://vincu.sh/docs)
+- [Connectivity guide](https://vincu.sh/docs/connectivity)
+- [Configuration reference](https://vincu.sh/docs/configuration)
 
 ### Docker
 
-Run the Paseo daemon and self-hosted web UI in Docker:
+Run the Vincu daemon and self-hosted web UI in Docker:
 
 ```bash
-docker run -d --name paseo \
+docker run -d --name vincu \
   -p 6767:6767 \
-  -e PASEO_PASSWORD=change-me \
-  -v "$PWD/paseo-home:/home/paseo" \
+  -e VINCU_PASSWORD=change-me \
+  -v "$PWD/vincu-home:/home/vincu" \
   -v "$PWD:/workspace" \
-  ghcr.io/getpaseo/paseo:latest
+  ghcr.io/getvincu/vincu:latest
 ```
 
-Open `http://localhost:6767` after it starts. Extend the base image with the agent CLIs you use, then provide credentials through environment variables or the persistent `/home/paseo` volume. See the [Docker documentation](docs/docker.md) for full setup details.
+Open `http://localhost:6767` after it starts. Extend the base image with the agent CLIs you use, then provide credentials through environment variables or the persistent `/home/vincu` volume. See the [Docker documentation](docs/docker.md) for full setup details.
 
 ## CLI
 
 Everything you can do in the app, you can do from the terminal.
 
 ```bash
-paseo run --provider claude/opus-4.6 "implement user authentication"
-paseo run --provider codex/gpt-5.4 --worktree feature-x "implement feature X"
+vincu run --provider claude/opus-4.6 "implement user authentication"
+vincu run --provider codex/gpt-5.4 --worktree feature-x "implement feature X"
 
-paseo ls                           # list running agents
-paseo attach abc123                # stream live output
-paseo send abc123 "also add tests" # follow-up task
+vincu ls                           # list running agents
+vincu attach abc123                # stream live output
+vincu send abc123 "also add tests" # follow-up task
 
 # run on a remote daemon
-paseo --host workstation.local:6767 run "run the full test suite"
+vincu --host workstation.local:6767 run "run the full test suite"
 ```
 
-See the [full CLI reference](https://paseo.sh/docs/cli) for more.
+See the [full CLI reference](https://vincu.sh/docs/cli) for more.
 
 ## Skills
 
-Skills teach your agent to use Paseo to orchestrate other agents.
+Skills teach your agent to use Vincu to orchestrate other agents.
 
 ```bash
-npx skills add getpaseo/paseo
+npx skills add getvincu/vincu
 ```
 
 Then use them in any agent conversation:
 
-- `/paseo-handoff` — hand off work between agents. I use this to plan with Claude and then handoff to Codex to implement.
-- `/paseo-loop` — loop an agent against clear acceptance criteria (aka Ralph loops), optionally with a verifier.
-- `/paseo-advisor` — spin up a single agent as an advisor for a second opinion, without delegating the work itself.
-- `/paseo-committee` — form a committee of two contrasting agents to step back, do root cause analysis, and produce a plan.
+- `/vincu-handoff` — hand off work between agents. I use this to plan with Claude and then handoff to Codex to implement.
+- `/vincu-loop` — loop an agent against clear acceptance criteria (aka Ralph loops), optionally with a verifier.
+- `/vincu-advisor` — spin up a single agent as an advisor for a second opinion, without delegating the work itself.
+- `/vincu-committee` — form a committee of two contrasting agents to step back, do root cause analysis, and produce a plan.
 
 ## Development
 
 Quick monorepo package map:
 
-- `packages/server`: Paseo daemon (agent process orchestration, WebSocket API, MCP server)
+- `packages/server`: Vincu daemon (agent process orchestration, WebSocket API, MCP server)
 - `packages/app`: Expo client (iOS, Android, web)
-- `packages/cli`: `paseo` CLI for daemon and agent workflows
+- `packages/cli`: `vincu` CLI for daemon and agent workflows
 - `packages/desktop`: Electron desktop app
 - `packages/relay`: Relay transport and encryption used by the daemon and clients
-- `packages/website`: Marketing site and documentation (`paseo.sh`)
+- `packages/website`: Marketing site and documentation (`vincu.sh`)
 
 Common commands:
 
@@ -164,9 +164,9 @@ npm run typecheck
 
 ## Related projects
 
-- [getpaseo/paseo-relay](https://github.com/getpaseo/paseo-relay) — official distributed relay, written in Elixir
-- [paseo-skins](https://github.com/huangguang1999/paseo-skins) — community themes and a zero-patch desktop theme loader with an Agent Skill
-- [paseo-vscode](https://marketplace.visualstudio.com/items?itemName=hinnes.paseo-vscode) — VS Code extension
+- [getvincu/vincu-relay](https://github.com/getvincu/vincu-relay) — official distributed relay, written in Elixir
+- [vincu-skins](https://github.com/huangguang1999/vincu-skins) — community themes and a zero-patch desktop theme loader with an Agent Skill
+- [vincu-vscode](https://marketplace.visualstudio.com/items?itemName=hinnes.vincu-vscode) — VS Code extension
 
 ## License
 

@@ -196,7 +196,7 @@ import {
   resolveTerminalProfileLaunch,
   getTerminalProfileIcon,
   resolveTerminalProfiles,
-} from "@getpaseo/protocol/terminal-profiles";
+} from "@getvincu/protocol/terminal-profiles";
 import { getProviderIcon } from "@/components/provider-icons";
 import {
   createWorkspaceFileTabTarget,
@@ -941,9 +941,9 @@ export const WorkspaceScreen = memo(function WorkspaceScreen({
 }: WorkspaceScreenProps) {
   const navigationFocused = useIsFocused();
   useEffect(() => {
-    traceInstant("paseo.workspace.mount", { serverId, workspaceId });
+    traceInstant("vincu.workspace.mount", { serverId, workspaceId });
     return () => {
-      traceInstant("paseo.workspace.unmount", { serverId, workspaceId });
+      traceInstant("vincu.workspace.unmount", { serverId, workspaceId });
     };
   }, [serverId, workspaceId]);
   return (

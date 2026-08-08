@@ -8,7 +8,7 @@ category: Hub
 
 # `hub.yml` reference
 
-A configuration has `environments` and `triggers`. It may also include top-level `project` deployment metadata for `paseo hub deploy`. Execution fields belong to each trigger's `steps`.
+A configuration has `environments` and `triggers`. It may also include top-level `project` deployment metadata for `vincu hub deploy`. Execution fields belong to each trigger's `steps`.
 
 ```yaml
 project: my-project
@@ -34,7 +34,7 @@ triggers:
           provider: codex
           mode: full-access
         prompt:
-          - text: ${{ paseo.prompt }}
+          - text: ${{ vincu.prompt }}
 ```
 
 `project` is an optional bare project slug. The deploy CLI uses it to choose the target project when `-p, --project` is absent. The flag takes precedence over this metadata without rewriting the YAML. `project` is not available to triggers, expressions, or agents.
@@ -73,7 +73,7 @@ inputs:
   repo:
     type: string
     required: false
-    choices: [project, paseo]
+    choices: [project, vincu]
   agent:
     type: string
     default: codex
@@ -82,7 +82,7 @@ inputs:
 
 `type` is `string`, `number`, or `boolean`. `required`, `default`, and `choices` are optional. `required` and `default` cannot be combined. Defaults and choices must match the declared type; a default must be one of the choices.
 
-Inputs may be referenced as `${{ paseo.inputs.name }}`. A dynamic authority-bearing field such as a provider, model, mode, or environment requires finite `choices` at activation. A prompt cannot supply authority.
+Inputs may be referenced as `${{ vincu.inputs.name }}`. A dynamic authority-bearing field such as a provider, model, mode, or environment requires finite `choices` at activation. A prompt cannot supply authority.
 
 ### Values
 
@@ -90,7 +90,7 @@ Values bind expressions under their own namespace:
 
 ```yaml
 values:
-  selected_repo: ${{ paseo.inputs.repo ?? steps.classify.outputs.repo }}
+  selected_repo: ${{ vincu.inputs.repo ?? steps.classify.outputs.repo }}
 ```
 
 The grammar supports paths, JSON literals, parentheses, `!`, `==`, `!=`, `&&`, `||`, and `??`. It does not support function calls, JavaScript, arithmetic, mutation, or implicit string coercion. Referenced steps must exist and value dependencies cannot cycle.
@@ -114,11 +114,11 @@ Prompt blocks are objects, not a scalar prompt:
 
 ```yaml
 prompt:
-  - text: Request: ${{ paseo.prompt }}
+  - text: Request: ${{ vincu.prompt }}
   - include: developer.md
 ```
 
-Use `${{ paseo.prompt }}`, `${{ paseo.inputs.* }}`, `${{ steps.*.outputs.* }}`, and `${{ values.* }}` in prompts, conditions, and agent selection fields. Provider event payloads are not part of this workflow expression namespace; provider adapters put the normalized request into the prompt and preserve the raw event as evidence.
+Use `${{ vincu.prompt }}`, `${{ vincu.inputs.* }}`, `${{ steps.*.outputs.* }}`, and `${{ values.* }}` in prompts, conditions, and agent selection fields. Provider event payloads are not part of this workflow expression namespace; provider adapters put the normalized request into the prompt and preserve the raw event as evidence.
 
 #### Output capabilities
 
@@ -135,7 +135,7 @@ Hub counts an actual capability emission; ordinary assistant text does not satis
 
 ## Prompt partials
 
-`include` paths are relative to `.paseo/partials/`. For GitHub configuration, Hub reads them at the exact configuration commit and stores the resolved content and SHA-256 hash in the immutable revision. For `paseo hub deploy`, the CLI reads the referenced files from the local project root and sends them in the optional `partials` bundle; the bundle path omits the `.paseo/partials/` prefix. Missing files, unsafe paths, symlinks, submodules, directories, duplicate or unexpected bundle entries, and nested includes are rejected. Manual configurations cannot use repository partials.
+`include` paths are relative to `.vincu/partials/`. For GitHub configuration, Hub reads them at the exact configuration commit and stores the resolved content and SHA-256 hash in the immutable revision. For `vincu hub deploy`, the CLI reads the referenced files from the local project root and sends them in the optional `partials` bundle; the bundle path omits the `.vincu/partials/` prefix. Missing files, unsafe paths, symlinks, submodules, directories, duplicate or unexpected bundle entries, and nested includes are rejected. Manual configurations cannot use repository partials.
 
 ## Deadlines
 
@@ -159,10 +159,10 @@ The effective step hard and idle deadlines are capped by the remaining trigger d
 The provider removes its mention or marker before Hub parses leading declared input tokens. Slack and Discord place the inputs immediately after the bot mention. GitHub places them after the configured marker. Manual runs send the same string as the API `input`:
 
 ```text
-@Paseo repo=project investigate the failed sync
+@Vincu repo=project investigate the failed sync
 ```
 
-The first token that is not a declared input begins the prompt. The clean prompt is available as `${{ paseo.prompt }}`. The raw provider message remains separate Activity evidence. See [provider triggers](/docs/hub/triggers) for provider-specific marker and filter behavior.
+The first token that is not a declared input begins the prompt. The clean prompt is available as `${{ vincu.prompt }}`. The raw provider message remains separate Activity evidence. See [provider triggers](/docs/hub/triggers) for provider-specific marker and filter behavior.
 
 ## Removed fields
 

@@ -3,7 +3,7 @@
 /**
  * Phase 2: Daemon Command Tests
  *
- * Tests daemon commands with an isolated PASEO_HOME.
+ * Tests daemon commands with an isolated VINCU_HOME.
  *
  * Tests:
  * - daemon --help shows subcommands
@@ -19,23 +19,23 @@ import assert from "node:assert";
 import { mkdtemp, readFile, rm, unlink, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
-import { runLocalPaseo } from "./helpers/local-cli.ts";
+import { runLocalVincu } from "./helpers/local-cli.ts";
 
 console.log("=== Daemon Commands ===\n");
 
 // Keep restart off default 6767 to avoid collisions with any existing daemon.
 const port = 10000 + Math.floor(Math.random() * 50000);
-const paseoHome = await mkdtemp(join(tmpdir(), "paseo-test-home-"));
+const vincuHome = await mkdtemp(join(tmpdir(), "vincu-test-home-"));
 
 function daemonCommand(args: string[]) {
-  return runLocalPaseo(["daemon", ...args], { PASEO_HOME: paseoHome });
+  return runLocalVincu(["daemon", ...args], { VINCU_HOME: vincuHome });
 }
 
 try {
   // Test 1: daemon --help shows subcommands
   {
     console.log("Test 1: daemon --help shows subcommands");
-    const result = await runLocalPaseo(["daemon", "--help"]);
+    const result = await runLocalVincu(["daemon", "--help"]);
     assert.strictEqual(result.exitCode, 0, "daemon --help should exit 0");
     assert(result.stdout.includes("start"), "help should mention start");
     assert(result.stdout.includes("status"), "help should mention status");
@@ -90,7 +90,7 @@ try {
     const status = JSON.parse(result.stdout);
     assert.strictEqual(typeof status.serverId, "string", "json status should include serverId");
     assert.strictEqual(status.localDaemon, "stopped", "json status should report stopped");
-    assert.strictEqual(status.home, paseoHome, "json status should reflect the isolated home");
+    assert.strictEqual(status.home, vincuHome, "json status should reflect the isolated home");
     assert.strictEqual(
       status.hostname,
       null,
@@ -130,16 +130,16 @@ try {
     console.log("Test 8: daemon status probes live relay state over local IPC");
     const listen =
       process.platform === "win32"
-        ? `\\\\.\\pipe\\paseo-status-${process.pid}-${Date.now()}`
-        : join(paseoHome, "status.sock");
+        ? `\\\\.\\pipe\\vincu-status-${process.pid}-${Date.now()}`
+        : join(vincuHome, "status.sock");
     const start = await daemonCommand(["start", "--listen", listen, "--relay"]);
     assert.strictEqual(start.exitCode, 0, `IPC daemon should start: ${start.stderr}`);
 
-    const configPath = join(paseoHome, "config.json");
+    const configPath = join(vincuHome, "config.json");
     const config = JSON.parse(await readFile(configPath, "utf-8"));
     config.daemon = { ...config.daemon, listen };
     await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`, "utf-8");
-    const pidPath = join(paseoHome, "paseo.pid");
+    const pidPath = join(vincuHome, "vincu.pid");
     const pidContents = await readFile(pidPath, "utf-8");
     await unlink(pidPath);
     const status = await daemonCommand(["status", "--json"]);
@@ -155,16 +155,16 @@ try {
     assert.strictEqual(pairingPayload.relayEnabled, true, "pairing should use live relay state");
     assert.match(pairingPayload.url, /#offer=/, "pairing should use the live daemon offer");
 
-    const foreignHome = await mkdtemp(join(tmpdir(), "paseo-test-foreign-home-"));
+    const foreignHome = await mkdtemp(join(tmpdir(), "vincu-test-foreign-home-"));
     try {
       await writeFile(
         join(foreignHome, "config.json"),
         `${JSON.stringify({ daemon: { listen } }, null, 2)}\n`,
         "utf-8",
       );
-      const foreignPairing = await runLocalPaseo(
+      const foreignPairing = await runLocalVincu(
         ["daemon", "pair", "--home", foreignHome, "--json"],
-        { PASEO_HOME: foreignHome },
+        { VINCU_HOME: foreignHome },
       );
       assert.notStrictEqual(
         foreignPairing.exitCode,
@@ -172,7 +172,7 @@ try {
         "pairing should reject a daemon owned by another home",
       );
       assert(
-        foreignPairing.stderr.includes("different Paseo home"),
+        foreignPairing.stderr.includes("different Vincu home"),
         "pairing should explain the daemon identity mismatch",
       );
       assert(!foreignPairing.stdout.includes("#offer="), "pairing should not expose another offer");
@@ -188,7 +188,7 @@ try {
   // Test 9: --relay accepts an already-enabled persisted relay while stopped
   {
     console.log("Test 9: daemon pair --relay accepts persisted relay while stopped");
-    const configPath = join(paseoHome, "config.json");
+    const configPath = join(vincuHome, "config.json");
     const config = JSON.parse(await readFile(configPath, "utf-8"));
     config.daemon = {
       ...config.daemon,
@@ -212,7 +212,7 @@ try {
   // Best-effort daemon cleanup in case assertions fail before explicit stop.
   await daemonCommand(["stop", "--force"]);
   // Clean up temp directory
-  await rm(paseoHome, { recursive: true, force: true });
+  await rm(vincuHome, { recursive: true, force: true });
 }
 
 console.log("=== All daemon tests passed ===");

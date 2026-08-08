@@ -1,14 +1,14 @@
 ---
-title: Why Paseo?
-description: What Paseo is, what it isn't, and how it fits into your workflow.
-nav: Why Paseo?
+title: Why Vincu?
+description: What Vincu is, what it isn't, and how it fits into your workflow.
+nav: Why Vincu?
 order: 2
 category: Getting started
 ---
 
-# Why Paseo?
+# Why Vincu?
 
-Paseo is a self-hostable platform for running and orchestrating coding agents. It runs the agent CLIs you already use, on the hardware you already have, and gives you a UI, CLI, and API to drive them from anywhere.
+Vincu is a self-hostable platform for running and orchestrating coding agents. It runs the agent CLIs you already use, on the hardware you already have, and gives you a UI, CLI, and API to drive them from anywhere.
 
 ## Architecture
 
@@ -18,7 +18,7 @@ Paseo is a self-hostable platform for running and orchestrating coding agents. I
 
 ## Providers
 
-- Bring your own. Use your Claude subscription, your OpenAI account, your own API keys, a self-hosted endpoint. Paseo doesn't proxy model calls.
+- Bring your own. Use your Claude subscription, your OpenAI account, your own API keys, a self-hosted endpoint. Vincu doesn't proxy model calls.
 - Local voice stack. Speech-to-text and text-to-speech run on-device by default. OpenAI providers are configurable if you want cloud quality.
 - Open source. No telemetry on your code.
 
@@ -37,9 +37,9 @@ Paseo is a self-hostable platform for running and orchestrating coding agents. I
 ## Automation
 
 - The CLI exposes the same surface as the app. Anything in the UI is scriptable.
-- [Paseo tools](/docs/orchestration). Agents can drive Paseo themselves: create isolated workspaces, spawn subagents, open terminals, and send prompts.
+- [Vincu tools](/docs/orchestration). Agents can drive Vincu themselves: create isolated workspaces, spawn subagents, open terminals, and send prompts.
 - [Hub](/docs/hub). A service you host that starts agents on your daemon when someone mentions you on GitHub, Slack, or Discord.
 
 ## What it isn't
 
-Not a hosted agent, not an IDE, not a model provider. Paseo runs the CLIs you already use and stays out of the way.
+Not a hosted agent, not an IDE, not a model provider. Vincu runs the CLIs you already use and stays out of the way.

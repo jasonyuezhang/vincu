@@ -38,9 +38,9 @@ export function resolveSelectedAgentForNewAgent(input: {
   return parseHostAgentRouteFromPathname(input.pathname) ?? parseAgentKey(input.selectedAgentId);
 }
 
-function inferMainRepoRootFromPaseoWorktreePath(cwd: string): string | null {
+function inferMainRepoRootFromVincuWorktreePath(cwd: string): string | null {
   const normalizedPath = cwd.replace(/\\/g, "/");
-  const marker = "/.paseo/worktrees";
+  const marker = "/.vincu/worktrees";
   const markerIndex = normalizedPath.indexOf(marker);
   if (markerIndex <= 0) {
     return null;
@@ -58,12 +58,12 @@ export function resolveNewAgentWorkingDir(
   cwd: string,
   checkout: CheckoutStatusPayload | null,
 ): string {
-  const explicitMainRepoRoot = checkout?.isPaseoOwnedWorktree
+  const explicitMainRepoRoot = checkout?.isVincuOwnedWorktree
     ? checkout.mainRepoRoot?.trim() || null
     : null;
   if (explicitMainRepoRoot) {
     return explicitMainRepoRoot;
   }
 
-  return inferMainRepoRootFromPaseoWorktreePath(cwd) ?? cwd;
+  return inferMainRepoRootFromVincuWorktreePath(cwd) ?? cwd;
 }

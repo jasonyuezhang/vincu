@@ -1,6 +1,6 @@
 ---
 title: CLI
-description: "Paseo CLI reference: manage agents, workspaces, scripts, schedules, daemons, and permissions from your terminal."
+description: "Vincu CLI reference: manage agents, workspaces, scripts, schedules, daemons, and permissions from your terminal."
 nav: CLI
 order: 3
 category: Getting started
@@ -8,53 +8,53 @@ category: Getting started
 
 # CLI
 
-The Paseo CLI lets you manage agents from your terminal. It's the same interface exposed by the daemon's API, so anything you can do in the app you can do from the command line.
+The Vincu CLI lets you manage agents from your terminal. It's the same interface exposed by the daemon's API, so anything you can do in the app you can do from the command line.
 
-> **Agent orchestration:** You can tell coding agents to use the Paseo CLI to spawn and manage other agents. Paseo recognizes the calling agent, so CLI-created workers get the same workspace and parent defaults as MCP-created workers.
+> **Agent orchestration:** You can tell coding agents to use the Vincu CLI to spawn and manage other agents. Vincu recognizes the calling agent, so CLI-created workers get the same workspace and parent defaults as MCP-created workers.
 
 ## Quick reference
 
 ```bash
-paseo run "fix the tests"            # Start an agent
-paseo ls                             # List running agents
-paseo attach <id>                    # Stream agent output
-paseo send <id> "also fix linting"   # Send follow-up task
-paseo logs <id>                      # View agent timeline
-paseo stop <id>                      # Stop an agent
+vincu run "fix the tests"            # Start an agent
+vincu ls                             # List running agents
+vincu attach <id>                    # Stream agent output
+vincu send <id> "also fix linting"   # Send follow-up task
+vincu logs <id>                      # View agent timeline
+vincu stop <id>                      # Stop an agent
 ```
 
 ## Running agents
 
-Use `paseo run` to start a new agent with a task:
+Use `vincu run` to start a new agent with a task:
 
 ```bash
-paseo run "implement user authentication"
-paseo run --provider codex "refactor the API layer"
-paseo run --background "run the focused test suite"
-paseo run --new-workspace worktree --worktree-mode branch-off --new-branch feature/x --base main "implement feature X"
-paseo run --workspace <workspace-id> "review the current diff"
-paseo run --output-schema schema.json "extract release notes"
-paseo run --output-schema '{"type":"object","properties":{"summary":{"type":"string"}},"required":["summary"]}' "summarize release notes"
+vincu run "implement user authentication"
+vincu run --provider codex "refactor the API layer"
+vincu run --background "run the focused test suite"
+vincu run --new-workspace worktree --worktree-mode branch-off --new-branch feature/x --base main "implement feature X"
+vincu run --workspace <workspace-id> "review the current diff"
+vincu run --output-schema schema.json "extract release notes"
+vincu run --output-schema '{"type":"object","properties":{"summary":{"type":"string"}},"required":["summary"]}' "summarize release notes"
 ```
 
-From a human shell, a bare `paseo run` creates a new local workspace for the current directory. Use `--workspace <id>` to add the agent to an existing workspace, or `--new-workspace local|worktree` to explicitly create a separate workspace for the run.
+From a human shell, a bare `vincu run` creates a new local workspace for the current directory. Use `--workspace <id>` to add the agent to an existing workspace, or `--new-workspace local|worktree` to explicitly create a separate workspace for the run.
 
 Worktree creation accepts `--worktree-mode branch-off|checkout-branch|checkout-pr` plus the matching `--new-branch`/`--base`, `--branch`, or `--pr-number`/`--forge` options. Use `--worktree-slug` to choose the managed directory slug.
 
-When an existing Paseo agent runs the same command, Paseo recognizes it through `PASEO_AGENT_ID`. Without explicit placement, the new agent becomes its subagent in the same workspace. `--workspace` can place that subagent elsewhere without changing its parent.
+When an existing Vincu agent runs the same command, Vincu recognizes it through `VINCU_AGENT_ID`. Without explicit placement, the new agent becomes its subagent in the same workspace. `--workspace` can place that subagent elsewhere without changing its parent.
 
 Use `--output-schema` to return only matching JSON output. You can pass a schema file path or an inline JSON schema object. This mode cannot be used with `--background`.
 
-By default, `paseo run` waits for completion. Use `--background` to return immediately while the agent keeps running.
+By default, `vincu run` waits for completion. Use `--background` to return immediately while the agent keeps running.
 
 ## Workspaces
 
 Create a workspace independently when you want to prepare its files before starting an agent:
 
 ```bash
-paseo workspace create --isolation local --path ~/dev/my-app --title main
+vincu workspace create --isolation local --path ~/dev/my-app --title main
 
-paseo workspace create \
+vincu workspace create \
   --isolation worktree \
   --path ~/dev/my-app \
   --mode branch-off \
@@ -62,14 +62,14 @@ paseo workspace create \
   --worktree-slug feature-auth \
   --base main
 
-paseo workspace create \
+vincu workspace create \
   --isolation worktree \
   --path ~/dev/my-app \
   --mode checkout-branch \
   --branch feature/existing \
   --worktree-slug existing-copy
 
-paseo workspace create \
+vincu workspace create \
   --isolation worktree \
   --path ~/dev/my-app \
   --mode checkout-pr \
@@ -79,42 +79,42 @@ paseo workspace create \
 Then list, use, or archive it:
 
 ```bash
-paseo workspace ls
-paseo run --workspace <workspace-id> "implement authentication"
-paseo workspace archive <workspace-id>
+vincu workspace ls
+vincu run --workspace <workspace-id> "implement authentication"
+vincu workspace archive <workspace-id>
 ```
 
-Add `--forge <name>` to PR checkout when Paseo cannot infer the forge from the source checkout. See [Git worktrees](/docs/worktrees) for setup hooks and services.
+Add `--forge <name>` to PR checkout when Vincu cannot infer the forge from the source checkout. See [Git worktrees](/docs/worktrees) for setup hooks and services.
 
 ## Workspace scripts
 
-List, start, and stop the scripts configured in a workspace's `paseo.json`:
+List, start, and stop the scripts configured in a workspace's `vincu.json`:
 
 ```bash
-paseo script ls
-paseo script start web
-paseo script stop web
+vincu script ls
+vincu script start web
+vincu script stop web
 ```
 
-By default, Paseo selects the workspace whose directory is the current directory. Pass `--cwd <path>` to select a different directory, or `--workspace <workspace-id>` when a directory has multiple workspaces. These commands also accept `--host` and the standard output options such as `--json`.
+By default, Vincu selects the workspace whose directory is the current directory. Pass `--cwd <path>` to select a different directory, or `--workspace <workspace-id>` when a directory has multiple workspaces. These commands also accept `--host` and the standard output options such as `--json`.
 
-The output includes each script's lifecycle and supervised terminal ID. Services also include their assigned port, proxy URL, and health. See [Git worktrees](/docs/worktrees#scripts-and-services) for `paseo.json` configuration.
+The output includes each script's lifecycle and supervised terminal ID. Services also include their assigned port, proxy URL, and health. See [Git worktrees](/docs/worktrees#scripts-and-services) for `vincu.json` configuration.
 
 ## Listing agents
 
 ```bash
-paseo ls                    # Running agents in current directory
-paseo ls -a                 # Include completed/stopped agents
-paseo ls -g                 # All directories
-paseo ls -a -g --json       # Full list as JSON
+vincu ls                    # Running agents in current directory
+vincu ls -a                 # Include completed/stopped agents
+vincu ls -g                 # All directories
+vincu ls -a -g --json       # Full list as JSON
 ```
 
 ## Streaming output
 
-Use `paseo attach` to stream an agent's output in real-time:
+Use `vincu attach` to stream an agent's output in real-time:
 
 ```bash
-paseo attach abc123   # Attach to agent (Ctrl+C to detach)
+vincu attach abc123   # Attach to agent (Ctrl+C to detach)
 ```
 
 Agent IDs can be shortened, `abc` works if it's unambiguous.
@@ -124,18 +124,18 @@ Agent IDs can be shortened, `abc` works if it's unambiguous.
 Send follow-up tasks to a running or idle agent:
 
 ```bash
-paseo send <id> "now run the tests"
-paseo send <id> --image screenshot.png "what's wrong here?"
-paseo send <id> --no-wait "queue this task"
+vincu send <id> "now run the tests"
+vincu send <id> --image screenshot.png "what's wrong here?"
+vincu send <id> --no-wait "queue this task"
 ```
 
 ## Viewing logs
 
 ```bash
-paseo logs <id>                  # Full timeline
-paseo logs <id> -f               # Follow (streaming)
-paseo logs <id> --tail 10        # Last 10 entries
-paseo logs <id> --filter tools   # Only tool calls
+vincu logs <id>                  # Full timeline
+vincu logs <id> -f               # Follow (streaming)
+vincu logs <id> --tail 10        # Last 10 entries
+vincu logs <id> --filter tools   # Only tool calls
 ```
 
 ## Waiting for agents
@@ -143,8 +143,8 @@ paseo logs <id> --filter tools   # Only tool calls
 Block until an agent finishes its current task:
 
 ```bash
-paseo wait <id>
-paseo wait <id> --timeout 60   # 60 second timeout
+vincu wait <id>
+vincu wait <id> --timeout 60   # 60 second timeout
 ```
 
 Useful in scripts or when one agent needs to wait for another.
@@ -154,9 +154,9 @@ Useful in scripts or when one agent needs to wait for another.
 Run an agent on a cron schedule. The CLI also accepts simple cadence presets and compiles them to cron. See [Schedules from the CLI](/docs/schedules-cli) for the full reference.
 
 ```bash
-paseo schedule create --every 30m --cwd ~/dev/my-app "Continue the refactor and leave a note."
-paseo schedule ls
-paseo schedule pause <id>
+vincu schedule create --every 30m --cwd ~/dev/my-app "Continue the refactor and leave a note."
+vincu schedule ls
+vincu schedule pause <id>
 ```
 
 ## Permissions
@@ -164,9 +164,9 @@ paseo schedule pause <id>
 Agents may request permission for certain actions. Manage these from the CLI:
 
 ```bash
-paseo permit ls                # List pending requests
-paseo permit allow <id>        # Allow all pending for agent
-paseo permit deny <id> --all   # Deny all pending
+vincu permit ls                # List pending requests
+vincu permit allow <id>        # Allow all pending for agent
+vincu permit deny <id> --all   # Deny all pending
 ```
 
 ## Agent modes
@@ -174,10 +174,10 @@ paseo permit deny <id> --all   # Deny all pending
 Change an agent's operational mode (provider-specific):
 
 ```bash
-paseo agent mode <id> --list   # Show available modes
-paseo agent mode <id> bypass   # Set bypass mode
-paseo agent mode <id> plan     # Set plan mode
-paseo agent detach <id>        # Make a subagent top-level
+vincu agent mode <id> --list   # Show available modes
+vincu agent mode <id> bypass   # Set bypass mode
+vincu agent mode <id> plan     # Set plan mode
+vincu agent detach <id>        # Make a subagent top-level
 ```
 
 Detaching is an explicit lifecycle action, not a creation flag. The agent keeps running; only its relationship to its parent changes.
@@ -185,43 +185,43 @@ Detaching is an explicit lifecycle action, not a creation flag. The agent keeps 
 ## Daemon management
 
 ```bash
-paseo daemon start             # Start the daemon
-paseo daemon start --web-ui    # Start and serve the bundled web UI
-paseo daemon status            # Check status
-paseo daemon stop              # Stop the daemon
+vincu daemon start             # Start the daemon
+vincu daemon start --web-ui    # Start and serve the bundled web UI
+vincu daemon status            # Check status
+vincu daemon stop              # Stop the daemon
 ```
 
-Use `PASEO_HOME` to run multiple isolated daemon instances.
+Use `VINCU_HOME` to run multiple isolated daemon instances.
 
 ## Hub
 
 ```bash
-paseo hub connect <url>        # Enroll this daemon with a Paseo Hub
-paseo hub status               # Show the current Hub relationship
-paseo hub disconnect           # End it
-paseo hub deploy [file]        # Install and activate a Hub configuration
+vincu hub connect <url>        # Enroll this daemon with a Vincu Hub
+vincu hub status               # Show the current Hub relationship
+vincu hub disconnect           # End it
+vincu hub deploy [file]        # Install and activate a Hub configuration
 ```
 
-`file` defaults exactly to `.paseo/hub.yml` relative to the current directory. Pass a file to use another path. The CLI does not search parent directories or alternate filenames.
+`file` defaults exactly to `.vincu/hub.yml` relative to the current directory. Pass a file to use another path. The CLI does not search parent directories or alternate filenames.
 
 Pass `-p, --project <slug>` to select the project, or add optional top-level `project` metadata to the YAML. The flag wins when both are present. Project is deployment metadata, not workflow configuration, and the YAML is sent unchanged.
 
-Prompt `include` blocks are read from `.paseo/partials/` under the current directory, even when you pass an explicit configuration file. The CLI sends only the files referenced by the main YAML. Nested include-looking text inside a partial is content and is not resolved recursively. Inline-only configurations omit the partial bundle.
+Prompt `include` blocks are read from `.vincu/partials/` under the current directory, even when you pass an explicit configuration file. The CLI sends only the files referenced by the main YAML. Nested include-looking text inside a partial is content and is not resolved recursively. Inline-only configurations omit the partial bundle.
 
-Deployment requires an explicit Hub origin and organization API key. `--hub <origin>` overrides `PASEO_HUB_URL`; `--api-key <secret>` overrides `PASEO_HUB_API_KEY`. The key's organization supplies organization scope. Durable Hub login and credential persistence are not implemented.
+Deployment requires an explicit Hub origin and organization API key. `--hub <origin>` overrides `VINCU_HUB_URL`; `--api-key <secret>` overrides `VINCU_HUB_API_KEY`. The key's organization supplies organization scope. Durable Hub login and credential persistence are not implemented.
 
 See [Daemons in Hub](/docs/hub/daemons), [Hub configuration](/docs/hub/configuration), and the [Hub public API](/docs/hub/api).
 
 ## Connecting to a remote daemon
 
-`--host` accepts either a local target (`host:port`, a unix socket, or a Windows pipe) or a pairing offer URL, the same `https://app.paseo.sh/#offer=...` link the mobile app uses for QR pairing. With an offer URL the CLI connects through the Paseo relay with end-to-end encryption, so you can drive a daemon on another machine without exposing it to the network.
+`--host` accepts either a local target (`host:port`, a unix socket, or a Windows pipe) or a pairing offer URL, the same `https://app.vincu.sh/#offer=...` link the mobile app uses for QR pairing. With an offer URL the CLI connects through the Vincu relay with end-to-end encryption, so you can drive a daemon on another machine without exposing it to the network.
 
 Get an offer URL from the daemon you want to control:
 
 ```bash
-paseo daemon pair          # asks before enabling relay, then prints the QR and link
-paseo daemon pair --relay  # enables relay without prompting
-paseo daemon pair --json   # structured output; never prompts
+vincu daemon pair          # asks before enabling relay, then prints the QR and link
+vincu daemon pair --relay  # enables relay without prompting
+vincu daemon pair --json   # structured output; never prompts
 ```
 
 Relay is off for new installations. In non-interactive or JSON mode, a disabled relay returns a `RELAY_DISABLED` error; pass `--relay` to provide explicit consent. Relay pairing is end-to-end encrypted. See [Security](/docs/security).
@@ -229,11 +229,11 @@ Relay is off for new installations. In non-interactive or JSON mode, a disabled 
 Use it from anywhere:
 
 ```bash
-paseo ls --host 'https://app.paseo.sh/#offer=eyJ2IjoyLC...'
-paseo run --host "$OFFER_URL" "fix the failing tests"
+vincu ls --host 'https://app.vincu.sh/#offer=eyJ2IjoyLC...'
+vincu run --host "$OFFER_URL" "fix the failing tests"
 ```
 
-You can also set it once via `PASEO_HOST` instead of passing `--host` on every command.
+You can also set it once via `VINCU_HOST` instead of passing `--host` on every command.
 
 ## Multi-agent workflows
 
@@ -241,9 +241,9 @@ The CLI is designed to be used by agents themselves. You can instruct an agent t
 
 ```bash
 # Agent A spawns Agent B and waits for it
-agent_id=$(paseo run --background --quiet --title api-agent "implement the API")
-paseo wait "$agent_id"
-paseo logs "$agent_id" --tail 5
+agent_id=$(vincu run --background --quiet --title api-agent "implement the API")
+vincu wait "$agent_id"
+vincu logs "$agent_id" --tail 5
 ```
 
 Because Agent A's ID is present in the environment, Agent B is created as its subagent in the same workspace unless `--workspace` is specified.
@@ -253,9 +253,9 @@ Simple implement + verify loop:
 ```bash
 # Requires jq
 while true; do
-  paseo run --provider codex "make the tests pass" >/dev/null
+  vincu run --provider codex "make the tests pass" >/dev/null
 
-  verdict=$(paseo run --provider claude --output-schema '{"type":"object","properties":{"criteria_met":{"type":"boolean"}},"required":["criteria_met"],"additionalProperties":false}' "ensure tests all pass")
+  verdict=$(vincu run --provider claude --output-schema '{"type":"object","properties":{"criteria_met":{"type":"boolean"}},"required":["criteria_met"],"additionalProperties":false}' "ensure tests all pass")
   if echo "$verdict" | jq -e '.criteria_met == true' >/dev/null; then
     echo "criteria met"
     break
@@ -270,14 +270,14 @@ This pattern enables hierarchical task decomposition, a lead agent can break dow
 Most commands support multiple output formats for scripting:
 
 ```bash
-paseo ls --json                # JSON output
-paseo ls --format yaml         # YAML output
-paseo ls -q                    # IDs only (quiet)
+vincu ls --json                # JSON output
+vincu ls --format yaml         # YAML output
+vincu ls -q                    # IDs only (quiet)
 ```
 
 ## Global options
 
-- `--host <target>`, connect to a different daemon (`host:port`, unix socket, or `https://app.paseo.sh/#offer=...` for relay). See [Connecting to a remote daemon](#connecting-to-a-remote-daemon).
+- `--host <target>`, connect to a different daemon (`host:port`, unix socket, or `https://app.vincu.sh/#offer=...` for relay). See [Connecting to a remote daemon](#connecting-to-a-remote-daemon).
 - `--json`, JSON output
 - `-q, --quiet`, minimal output
 - `--no-color`, disable colors

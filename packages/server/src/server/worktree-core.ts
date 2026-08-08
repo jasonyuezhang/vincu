@@ -14,7 +14,7 @@ import {
   UnsupportedForgeCheckoutTargetError,
   type WorktreeCreationIntent,
 } from "./resolve-worktree-creation-intent.js";
-import type { ChangeRequestCheckoutSource, FirstAgentContext } from "@getpaseo/protocol/messages";
+import type { ChangeRequestCheckoutSource, FirstAgentContext } from "@getvincu/protocol/messages";
 import type { WorkspaceGitService } from "./workspace-git-service.js";
 import { runWithGitCommandPriority } from "../utils/run-git-command.js";
 
@@ -27,7 +27,7 @@ export interface CreateWorktreeCoreInput {
   checkoutSource?: ChangeRequestCheckoutSource;
   githubPrNumber?: number;
   firstAgentContext?: FirstAgentContext;
-  paseoHome?: string;
+  vincuHome?: string;
   worktreesRoot?: string;
   runSetup?: boolean;
 }
@@ -121,7 +121,7 @@ async function createWorktreeCoreWithPriority(
   const existingWorktree = await resolveExistingWorktreeForSlug({
     slug: normalizedSlug,
     repoRoot,
-    paseoHome: input.paseoHome,
+    vincuHome: input.vincuHome,
     worktreesRoot: input.worktreesRoot,
   });
   if (existingWorktree) {
@@ -134,7 +134,7 @@ async function createWorktreeCoreWithPriority(
       worktreeSlug: normalizedSlug,
       source: intent,
       runSetup: input.runSetup ?? true,
-      paseoHome: input.paseoHome,
+      vincuHome: input.vincuHome,
       worktreesRoot: input.worktreesRoot,
     }),
     intent,
@@ -173,7 +173,7 @@ async function resolveDefaultBranch(
 }
 
 export async function resolveWorktreeRepoRoot(
-  input: Pick<CreateWorktreeCoreInput, "cwd" | "paseoHome">,
+  input: Pick<CreateWorktreeCoreInput, "cwd" | "vincuHome">,
   workspaceGitService?: Pick<WorkspaceGitService, "resolveRepoRoot">,
 ): Promise<string> {
   if (!workspaceGitService) {

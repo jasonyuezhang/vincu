@@ -24,7 +24,7 @@ Which repositories produce events is set on the GitHub App installation. `filter
 ```yaml
 filters:
   repo: example/project
-  contains: "@paseo"
+  contains: "@vincu"
   from_users: [maintainer]
 ```
 
@@ -35,10 +35,10 @@ filters:
 Put the configured marker in the message, then put leading inputs in the text parsed after that marker:
 
 ```text
-@paseo repo=project agent=claude investigate the failed sync
+@vincu repo=project agent=claude investigate the failed sync
 ```
 
-Hub consumes only declared consecutive headers and passes `investigate the failed sync` as `${{ paseo.prompt }}`. See [Hub workflows](/docs/hub/workflows) for input types, defaults, choices, and rejected Activity records.
+Hub consumes only declared consecutive headers and passes `investigate the failed sync` as `${{ vincu.prompt }}`. See [Hub workflows](/docs/hub/workflows) for input types, defaults, choices, and rejected Activity records.
 
 ## Credentials and replies
 

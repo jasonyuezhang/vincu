@@ -15,9 +15,9 @@ import {
   upsertUserMessage,
   upsertUserMessageAcrossStream,
 } from "./stream";
-import type { AgentProvider, ToolCallDetail } from "@getpaseo/protocol/agent-types";
-import type { AgentStreamEventPayload } from "@getpaseo/protocol/messages";
-import { buildToolCallDisplayModel } from "@getpaseo/protocol/tool-call-display";
+import type { AgentProvider, ToolCallDetail } from "@getvincu/protocol/agent-types";
+import type { AgentStreamEventPayload } from "@getvincu/protocol/messages";
+import { buildToolCallDisplayModel } from "@getvincu/protocol/tool-call-display";
 
 type CanonicalToolStatus = "running" | "completed" | "failed" | "canceled";
 

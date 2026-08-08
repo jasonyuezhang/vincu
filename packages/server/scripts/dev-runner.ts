@@ -15,7 +15,7 @@ const supervisor = spawn(process.execPath, supervisorArgs, {
   stdio: "inherit",
   env: {
     ...process.env,
-    PASEO_LOG_FORMAT: process.env.PASEO_LOG_FORMAT ?? "pretty",
+    VINCU_LOG_FORMAT: process.env.VINCU_LOG_FORMAT ?? "pretty",
   },
 });
 

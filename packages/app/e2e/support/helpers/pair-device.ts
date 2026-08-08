@@ -47,7 +47,7 @@ export async function expectRelayConsent(page: Page): Promise<void> {
   const modal = page.getByTestId("host-page-pair-device-card");
   await expect(modal.getByText("Enable relay?", { exact: true })).toBeVisible();
   await expect(modal.getByText(/end-to-end encrypted/)).toBeVisible();
-  await expect(modal.getByRole("link", { name: "Read how Paseo relay works" })).toBeVisible();
+  await expect(modal.getByRole("link", { name: "Read how Vincu relay works" })).toBeVisible();
   await expect(modal.getByText(/TCP, Tailscale, or another VPN/)).toBeVisible();
   await expect(modal.getByRole("img", { name: "Pairing QR code" })).toHaveCount(0);
   await expect(modal.getByRole("textbox", { name: "Pairing link" })).toHaveCount(0);
@@ -85,9 +85,9 @@ export async function closePairDeviceModal(page: Page): Promise<void> {
 
 export async function reloadAndOpenPairDevice(page: Page): Promise<void> {
   await page.evaluate(() => {
-    const nonce = localStorage.getItem("@paseo:e2e-seed-nonce");
+    const nonce = localStorage.getItem("@vincu:e2e-seed-nonce");
     if (!nonce) throw new Error("Expected e2e seed nonce");
-    localStorage.setItem("@paseo:e2e-disable-default-seed-once", nonce);
+    localStorage.setItem("@vincu:e2e-disable-default-seed-once", nonce);
   });
   await page.reload();
   await openPairDeviceModal(page);
@@ -116,9 +116,9 @@ export async function retryRelayAndExpectFailure(
 
 export async function openPairDeviceFromHome(page: Page): Promise<void> {
   await page.evaluate(() => {
-    const nonce = localStorage.getItem("@paseo:e2e-seed-nonce");
+    const nonce = localStorage.getItem("@vincu:e2e-seed-nonce");
     if (!nonce) throw new Error("Expected e2e seed nonce");
-    localStorage.setItem("@paseo:e2e-disable-default-seed-once", nonce);
+    localStorage.setItem("@vincu:e2e-disable-default-seed-once", nonce);
   });
   await page.goto("/open-project");
   await page.getByTestId("open-project-pair-device").click();
@@ -128,7 +128,7 @@ export async function openPairDeviceFromHome(page: Page): Promise<void> {
 export async function expectRelayUpdateRequired(page: Page): Promise<void> {
   const modal = page.getByTestId("host-page-pair-device-card");
   await expect(
-    modal.getByText("Update the host to enable relay from Paseo Desktop."),
+    modal.getByText("Update the host to enable relay from Vincu Desktop."),
   ).toBeVisible();
   await expect(modal.getByRole("button", { name: "Enable relay", exact: true })).toHaveCount(0);
   await expect(modal.getByRole("textbox", { name: "Pairing link" })).toHaveCount(0);
@@ -160,10 +160,10 @@ export async function switchPairDeviceToHost(page: Page, serverId: string): Prom
 }
 
 export async function openRelaySecurityDocs(page: Page): Promise<void> {
-  await page.getByRole("link", { name: "Read how Paseo relay works" }).click();
+  await page.getByRole("link", { name: "Read how Vincu relay works" }).click();
   await expect
-    .poll(() => page.evaluate(() => localStorage.getItem("@paseo:e2e-opened-url")))
-    .toBe("https://paseo.sh/docs/security");
+    .poll(() => page.evaluate(() => localStorage.getItem("@vincu:e2e-opened-url")))
+    .toBe("https://vincu.sh/docs/security");
 }
 
 export function expectDaemonPidUnchanged(

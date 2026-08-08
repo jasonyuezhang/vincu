@@ -4,10 +4,10 @@ import { createRequire } from "node:module";
 import net from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildRelayWebSocketUrl } from "@getpaseo/protocol/daemon-endpoints";
-import { parseConnectionOfferFromUrl } from "@getpaseo/protocol/connection-offer";
-import { generateLocalPairingOffer } from "@getpaseo/server";
-import { DaemonClient } from "@getpaseo/client/internal/daemon-client";
+import { buildRelayWebSocketUrl } from "@getvincu/protocol/daemon-endpoints";
+import { parseConnectionOfferFromUrl } from "@getvincu/protocol/connection-offer";
+import { generateLocalPairingOffer } from "@getvincu/server";
+import { DaemonClient } from "@getvincu/client/internal/daemon-client";
 import { WebSocket } from "ws";
 import { getAvailablePort } from "../helpers/network.ts";
 import { createE2ETestContext } from "../helpers/test-daemon.ts";
@@ -180,14 +180,14 @@ async function waitForDaemonRelayRegistered(offerUrl: string, timeoutMs = 30_000
     ctx = await createE2ETestContext({
       timeout: 60_000,
       env: {
-        PASEO_RELAY_ENABLED: "true",
-        PASEO_RELAY_ENDPOINT: relayEndpoint,
-        PASEO_RELAY_PUBLIC_ENDPOINT: relayEndpoint,
+        VINCU_RELAY_ENABLED: "true",
+        VINCU_RELAY_ENDPOINT: relayEndpoint,
+        VINCU_RELAY_PUBLIC_ENDPOINT: relayEndpoint,
       },
     });
 
     const offer = await generateLocalPairingOffer({
-      paseoHome: ctx.paseoHome,
+      vincuHome: ctx.vincuHome,
       relayEnabled: true,
       relayEndpoint,
       relayPublicEndpoint: relayEndpoint,
@@ -210,17 +210,17 @@ async function waitForDaemonRelayRegistered(offerUrl: string, timeoutMs = 30_000
     }
   }, SHUTDOWN_TIMEOUT_MS);
 
-  it("runs `paseo --host <offer-url> ls` over the relay and matches direct ls output", async () => {
+  it("runs `vincu --host <offer-url> ls` over the relay and matches direct ls output", async () => {
     if (!ctx) throw new Error("test context not initialized");
 
-    const direct = await ctx.paseo(["ls", "--json"]);
+    const direct = await ctx.vincu(["ls", "--json"]);
     expect(direct.exitCode, `direct ls failed: ${direct.stderr}`).toBe(0);
     const directAgents = JSON.parse(direct.stdout.trim() || "[]");
     expect(Array.isArray(directAgents)).toBe(true);
 
-    const relay = await ctx.paseo(["ls", "--json", "--host", offerUrl], {
+    const relay = await ctx.vincu(["ls", "--json", "--host", offerUrl], {
       timeout: 30_000,
-      env: { PASEO_HOST: offerUrl },
+      env: { VINCU_HOST: offerUrl },
     });
     expect(relay.exitCode, `relay ls failed: ${relay.stderr}\nstdout: ${relay.stdout}`).toBe(0);
     const relayAgents = JSON.parse(relay.stdout.trim() || "[]");

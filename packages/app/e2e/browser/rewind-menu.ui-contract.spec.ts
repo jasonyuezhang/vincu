@@ -29,7 +29,7 @@ async function rewriteCachedMessageAsLegacyRow(page: Page, prompt: string): Prom
   await expect
     .poll(() =>
       page.evaluate((messageText) => {
-        const raw = localStorage.getItem("@paseo:replica-cache");
+        const raw = localStorage.getItem("@vincu:replica-cache");
         if (!raw) return false;
         const cache = JSON.parse(raw) as {
           hosts?: Array<{ timeline?: { items?: Array<Record<string, unknown>> } | null }>;
@@ -47,7 +47,7 @@ async function rewriteCachedMessageAsLegacyRow(page: Page, prompt: string): Prom
     .toBe(true);
 
   await page.evaluate((messageText) => {
-    const key = "@paseo:replica-cache";
+    const key = "@vincu:replica-cache";
     const raw = localStorage.getItem(key);
     if (!raw) throw new Error("Replica cache was not persisted");
     const cache = JSON.parse(raw) as {
@@ -69,7 +69,7 @@ async function waitForCurrentSubmissionExcludedFromCache(
   await expect
     .poll(() =>
       page.evaluate((messageText) => {
-        const raw = localStorage.getItem("@paseo:replica-cache");
+        const raw = localStorage.getItem("@vincu:replica-cache");
         if (!raw) return false;
         const cache = JSON.parse(raw) as {
           hosts?: Array<{ timeline?: { items?: Array<Record<string, unknown>> } | null }>;
@@ -92,7 +92,7 @@ async function waitForCachedMessageWithoutProviderId(page: Page, prompt: string)
   await expect
     .poll(() =>
       page.evaluate((messageText) => {
-        const raw = localStorage.getItem("@paseo:replica-cache");
+        const raw = localStorage.getItem("@vincu:replica-cache");
         if (!raw) return false;
         const cache = JSON.parse(raw) as {
           hosts?: Array<{ timeline?: { items?: Array<Record<string, unknown>> } | null }>;

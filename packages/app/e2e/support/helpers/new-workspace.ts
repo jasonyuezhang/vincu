@@ -1,5 +1,5 @@
 import { expect, type BrowserContext, type Page } from "@playwright/test";
-import type { DaemonClient as InternalDaemonClient } from "@getpaseo/client/internal/daemon-client";
+import type { DaemonClient as InternalDaemonClient } from "@getvincu/client/internal/daemon-client";
 import { decodeWorkspaceIdFromPathSegment } from "@/utils/host-routes";
 import { connectDaemonClient } from "./daemon-client-loader";
 import { daemonWsRoutePattern } from "./daemon-port";
@@ -9,15 +9,15 @@ import { withProjectOwnership } from "./project-ownership";
 
 type NewWorkspaceDaemonClient = Pick<
   InternalDaemonClient,
-  | "archivePaseoWorktree"
+  | "archiveVincuWorktree"
   | "archiveWorkspace"
   | "checkoutRefresh"
   | "close"
   | "connect"
-  | "createPaseoWorktree"
+  | "createVincuWorktree"
   | "createWorkspace"
   | "fetchWorkspaces"
-  | "getPaseoWorktreeList"
+  | "getVincuWorktreeList"
   | "getDaemonConfig"
   | "inspectWorkspaceRecovery"
   | "listProjects"
@@ -132,7 +132,7 @@ export async function archiveWorkspaceFromDaemon(
   workspaceDirectory: string,
   options?: { scope?: "workspace" | "worktree" },
 ): Promise<void> {
-  const payload = await client.archivePaseoWorktree({
+  const payload = await client.archiveVincuWorktree({
     worktreePath: workspaceDirectory,
     ...(options?.scope !== undefined ? { scope: options.scope } : {}),
   });
@@ -161,7 +161,7 @@ export async function createWorktreeViaDaemon(
   client: NewWorkspaceDaemonClient,
   input: { cwd: string; slug: string },
 ): Promise<OpenedProject> {
-  const payload = await client.createPaseoWorktree({
+  const payload = await client.createVincuWorktree({
     cwd: input.cwd,
     worktreeSlug: input.slug,
   });

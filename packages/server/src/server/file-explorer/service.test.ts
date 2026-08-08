@@ -19,7 +19,7 @@ async function createTempDir(prefix: string): Promise<string> {
 
 describe("file explorer service", () => {
   it("atomically writes an existing text file at the expected revision", async () => {
-    const root = await createTempDir("paseo-file-write-");
+    const root = await createTempDir("vincu-file-write-");
     try {
       const filePath = path.join(root, "notes.txt");
       await writeFile(filePath, "before", "utf8");
@@ -45,7 +45,7 @@ describe("file explorer service", () => {
   it.skipIf(process.platform === "win32")(
     "preserves the original file permissions across atomic replacement",
     async () => {
-      const root = await createTempDir("paseo-file-mode-");
+      const root = await createTempDir("vincu-file-mode-");
       try {
         const filePath = path.join(root, "script.sh");
         await writeFile(filePath, "before", "utf8");
@@ -71,7 +71,7 @@ describe("file explorer service", () => {
   );
 
   it("preserves a newer disk revision instead of overwriting it", async () => {
-    const root = await createTempDir("paseo-file-conflict-");
+    const root = await createTempDir("vincu-file-conflict-");
     try {
       const filePath = path.join(root, "notes.txt");
       await writeFile(filePath, "newer on disk", "utf8");
@@ -93,7 +93,7 @@ describe("file explorer service", () => {
   });
 
   it("prefers the high-precision revision token over the display timestamp", async () => {
-    const root = await createTempDir("paseo-file-revision-");
+    const root = await createTempDir("vincu-file-revision-");
     try {
       const filePath = path.join(root, "notes.txt");
       await writeFile(filePath, "on disk", "utf8");
@@ -117,7 +117,7 @@ describe("file explorer service", () => {
   });
 
   it("never creates a missing file through the write API", async () => {
-    const root = await createTempDir("paseo-file-missing-");
+    const root = await createTempDir("vincu-file-missing-");
     try {
       const result = await writeExplorerFile({
         root,
@@ -133,7 +133,7 @@ describe("file explorer service", () => {
   });
 
   it("reads .ex files as text", async () => {
-    const root = await createTempDir("paseo-file-explorer-");
+    const root = await createTempDir("vincu-file-explorer-");
 
     try {
       const filePath = path.join(root, "sample.ex");
@@ -155,7 +155,7 @@ describe("file explorer service", () => {
   });
 
   it("reads unknown extension text files as text", async () => {
-    const root = await createTempDir("paseo-file-explorer-");
+    const root = await createTempDir("vincu-file-explorer-");
 
     try {
       const filePath = path.join(root, "notes.customext");
@@ -177,7 +177,7 @@ describe("file explorer service", () => {
   });
 
   it("classifies files with null bytes as binary", async () => {
-    const root = await createTempDir("paseo-file-explorer-");
+    const root = await createTempDir("vincu-file-explorer-");
 
     try {
       const filePath = path.join(root, "blob.weird");
@@ -198,7 +198,7 @@ describe("file explorer service", () => {
   });
 
   it("fails a stream when the file grows after its revision is advertised", async () => {
-    const root = await createTempDir("paseo-file-stream-growth-");
+    const root = await createTempDir("vincu-file-stream-growth-");
 
     try {
       const filePath = path.join(root, "growing.log");
@@ -218,7 +218,7 @@ describe("file explorer service", () => {
   });
 
   it("fails a stream when the file shrinks below its advertised size", async () => {
-    const root = await createTempDir("paseo-file-stream-truncate-");
+    const root = await createTempDir("vincu-file-stream-truncate-");
 
     try {
       const filePath = path.join(root, "shrinking.log");
@@ -238,7 +238,7 @@ describe("file explorer service", () => {
   });
 
   it("fails a stream when the file is overwritten in place", async () => {
-    const root = await createTempDir("paseo-file-stream-overwrite-");
+    const root = await createTempDir("vincu-file-stream-overwrite-");
 
     try {
       const filePath = path.join(root, "changing.log");
@@ -263,7 +263,7 @@ describe("file explorer service", () => {
   });
 
   it("classifies sampled text when UTF-8 crosses the sample boundary", async () => {
-    const root = await createTempDir("paseo-file-stream-utf8-");
+    const root = await createTempDir("vincu-file-stream-utf8-");
 
     try {
       const content = Buffer.concat([Buffer.alloc(8191, 0x61), Buffer.from("€"), Buffer.from("z")]);
@@ -284,7 +284,7 @@ describe("file explorer service", () => {
   });
 
   it("rejects incomplete UTF-8 when the whole file was sampled", async () => {
-    const root = await createTempDir("paseo-file-stream-invalid-utf8-");
+    const root = await createTempDir("vincu-file-stream-invalid-utf8-");
 
     try {
       await writeFile(path.join(root, "invalid.txt"), Buffer.from([0x61, 0xe2, 0x82]));
@@ -301,7 +301,7 @@ describe("file explorer service", () => {
   });
 
   it("detects binary bytes beyond the initial classification block", async () => {
-    const root = await createTempDir("paseo-file-stream-late-binary-");
+    const root = await createTempDir("vincu-file-stream-late-binary-");
 
     try {
       const content = Buffer.concat([Buffer.alloc(8192, 0x61), Buffer.from([0xff])]);
@@ -319,7 +319,7 @@ describe("file explorer service", () => {
   });
 
   it("expands a ~ prefix in relative paths against the user home directory", async () => {
-    const root = await createHomeTempDir(".paseo-file-explorer-home-");
+    const root = await createHomeTempDir(".vincu-file-explorer-home-");
 
     try {
       const filePath = path.join(root, "sample.txt");
@@ -339,7 +339,7 @@ describe("file explorer service", () => {
   });
 
   it("allows home to be the scoped root for tilde file previews", async () => {
-    const root = await createHomeTempDir(".paseo-file-explorer-home-root-");
+    const root = await createHomeTempDir(".vincu-file-explorer-home-root-");
 
     try {
       const filePath = path.join(root, "sample.txt");
@@ -360,7 +360,7 @@ describe("file explorer service", () => {
   });
 
   it("rejects ~-prefixed paths that resolve outside the workspace", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "paseo-file-explorer-outside-home-"));
+    const root = await mkdtemp(path.join(os.tmpdir(), "vincu-file-explorer-outside-home-"));
 
     try {
       await expect(

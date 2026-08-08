@@ -136,9 +136,9 @@ test("reloading a timeline anchors near-tail assistant image growth", async ({
       }
       (
         window as unknown as {
-          __paseoReloadImageGeometry?: typeof state;
+          __vincuReloadImageGeometry?: typeof state;
         }
-      ).__paseoReloadImageGeometry = state;
+      ).__vincuReloadImageGeometry = state;
     },
     { accessibleName: image.alt },
   );
@@ -152,9 +152,9 @@ test("reloading a timeline anchors near-tail assistant image growth", async ({
   const events = await page.evaluate(() => {
     const state = (
       window as unknown as {
-        __paseoReloadImageGeometry?: { events: Array<unknown> };
+        __vincuReloadImageGeometry?: { events: Array<unknown> };
       }
-    ).__paseoReloadImageGeometry;
+    ).__vincuReloadImageGeometry;
     if (!state) throw new Error("Reload image geometry observer was not installed");
     return state.events;
   });

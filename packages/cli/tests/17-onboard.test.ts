@@ -11,13 +11,13 @@ $.verbose = false;
 
 console.log("=== Onboarding Command ===\n");
 
-const paseoHome = await mkdtemp(join(tmpdir(), "paseo-onboard-home-"));
+const vincuHome = await mkdtemp(join(tmpdir(), "vincu-onboard-home-"));
 const port = await getAvailablePort();
 
 try {
-  console.log("Test 1: `paseo` runs blocking onboarding without implicit relay pairing");
+  console.log("Test 1: `vincu` runs blocking onboarding without implicit relay pairing");
   const onboard =
-    await $`PASEO_HOME=${paseoHome} PASEO_LISTEN=127.0.0.1:${port} PASEO_PAIRING_QR=0 npx paseo`.nothrow();
+    await $`VINCU_HOME=${vincuHome} VINCU_LISTEN=127.0.0.1:${port} VINCU_PAIRING_QR=0 npx vincu`.nothrow();
 
   assert.strictEqual(
     onboard.exitCode,
@@ -34,32 +34,32 @@ try {
     onboard.stdout.includes("CLI quick reference"),
     "onboard output should include CLI quick reference",
   );
-  assert(onboard.stdout.includes("paseo --help"), "onboard output should include --help shortcut");
-  assert(onboard.stdout.includes("paseo ls"), "onboard output should include ls shortcut");
+  assert(onboard.stdout.includes("vincu --help"), "onboard output should include --help shortcut");
+  assert(onboard.stdout.includes("vincu ls"), "onboard output should include ls shortcut");
   assert(
-    onboard.stdout.includes('paseo run "your prompt"'),
+    onboard.stdout.includes('vincu run "your prompt"'),
     "onboard output should include run shortcut",
   );
-  assert(onboard.stdout.includes("paseo status"), "onboard output should include status shortcut");
+  assert(onboard.stdout.includes("vincu status"), "onboard output should include status shortcut");
   assert(
-    onboard.stdout.includes(join(paseoHome, "daemon.log")),
+    onboard.stdout.includes(join(vincuHome, "daemon.log")),
     "onboard output should include daemon log path",
   );
 
   const status =
-    await $`PASEO_HOME=${paseoHome} npx paseo daemon status --home ${paseoHome}`.nothrow();
+    await $`VINCU_HOME=${vincuHome} npx vincu daemon status --home ${vincuHome}`.nothrow();
   assert.strictEqual(status.exitCode, 0, `daemon status should succeed: ${status.stderr}`);
   assert(status.stdout.includes("running"), "daemon should be running when onboarding exits");
   console.log("✓ onboarding keeps relay disabled and waits for daemon readiness\n");
 
   console.log("Test 2: --no-relay suppresses pairing for an already-running daemon");
   const enableRelay =
-    await $`PASEO_HOME=${paseoHome} npx paseo daemon pair --home ${paseoHome} --relay`.nothrow();
+    await $`VINCU_HOME=${vincuHome} npx vincu daemon pair --home ${vincuHome} --relay`.nothrow();
   assert.strictEqual(enableRelay.exitCode, 0, `relay enable should succeed: ${enableRelay.stderr}`);
   assert(enableRelay.stdout.includes("#offer="), "relay enable should produce a pairing offer");
 
   const noRelayOnboard =
-    await $`PASEO_HOME=${paseoHome} PASEO_LISTEN=127.0.0.1:${port} npx paseo --no-relay`.nothrow();
+    await $`VINCU_HOME=${vincuHome} VINCU_LISTEN=127.0.0.1:${port} npx vincu --no-relay`.nothrow();
   assert.strictEqual(
     noRelayOnboard.exitCode,
     0,
@@ -72,7 +72,7 @@ try {
   console.log("✓ --no-relay suppresses pairing for an already-running daemon\n");
 
   console.log("Test 3: non-interactive onboarding persists voice disabled config");
-  const configRaw = await readFile(join(paseoHome, "config.json"), "utf-8");
+  const configRaw = await readFile(join(vincuHome, "config.json"), "utf-8");
   const config = JSON.parse(configRaw) as {
     features?: {
       dictation?: { enabled?: boolean };
@@ -90,15 +90,15 @@ try {
     false,
     "voiceMode.enabled should be false",
   );
-  const daemonLog = await readFile(join(paseoHome, "daemon.log"), "utf-8");
+  const daemonLog = await readFile(join(vincuHome, "daemon.log"), "utf-8");
   assert(
     !daemonLog.includes("Ensuring local speech models"),
     "daemon should not attempt local speech model setup when voice is disabled",
   );
   console.log("✓ non-interactive run persisted voice disabled choices\n");
 } finally {
-  await $`PASEO_HOME=${paseoHome} npx paseo daemon stop --home ${paseoHome} --force`.nothrow();
-  await rm(paseoHome, { recursive: true, force: true });
+  await $`VINCU_HOME=${vincuHome} npx vincu daemon stop --home ${vincuHome} --force`.nothrow();
+  await rm(vincuHome, { recursive: true, force: true });
 }
 
 console.log("=== Onboarding tests passed ===");

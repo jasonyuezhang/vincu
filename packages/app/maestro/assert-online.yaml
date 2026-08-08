@@ -1,8 +1,8 @@
-appId: sh.paseo
+appId: sh.vincu
 ---
 - runFlow:
     when:
-      visible: "Open in.*Paseo.*\\?"
+      visible: "Open in.*Vincu.*\\?"
     commands:
       - tapOn: "Open"
 

@@ -8,13 +8,13 @@ import {
   startPidLockHeartbeat,
   updatePidLock,
 } from "../src/server/pid-lock.js";
-import { resolvePaseoHome } from "../src/server/paseo-home.js";
+import { resolveVincuHome } from "../src/server/vincu-home.js";
 import { loadPersistedConfig } from "../src/server/persisted-config.js";
 import { runSupervisor } from "./supervisor.js";
 import { resolveSupervisorLogFile } from "./supervisor-log-config.js";
 import { applySherpaLoaderEnv } from "../src/server/speech/providers/local/sherpa/sherpa-runtime-env.js";
 
-process.title = "Paseo Supervisor";
+process.title = "Vincu Supervisor";
 
 interface DaemonRunnerConfig {
   devMode: boolean;
@@ -76,9 +76,9 @@ function resolveWorkerExecArgv(workerEntry: string, devMode: boolean): string[] 
     "--heapsnapshot-near-heap-limit=3",
     "--max-old-space-size=3072",
     "--report-on-fatalerror",
-    "--report-directory=/tmp/paseo-reports",
+    "--report-directory=/tmp/vincu-reports",
   ];
-  const inspectArg = process.env.PASEO_NODE_INSPECT ?? "--inspect";
+  const inspectArg = process.env.VINCU_NODE_INSPECT ?? "--inspect";
   if (inspectArg !== "0" && inspectArg !== "false" && inspectArg !== "off") {
     devArgs.push(inspectArg);
   }
@@ -86,7 +86,7 @@ function resolveWorkerExecArgv(workerEntry: string, devMode: boolean): string[] 
 }
 
 function resolvePackagedNodeEntrypointRunnerPath(currentScriptPath: string): string | null {
-  const packageMarker = `${path.sep}node_modules${path.sep}@getpaseo${path.sep}server${path.sep}`;
+  const packageMarker = `${path.sep}node_modules${path.sep}@getvincu${path.sep}server${path.sep}`;
   const markerIndex = currentScriptPath.lastIndexOf(packageMarker);
   if (markerIndex === -1) {
     return null;
@@ -109,12 +109,12 @@ async function main(): Promise<void> {
 
   applySherpaLoaderEnv(workerEnv);
 
-  const paseoHome = resolvePaseoHome(workerEnv);
-  const persistedConfig = loadPersistedConfig(paseoHome);
-  const supervisorLogFile = resolveSupervisorLogFile(paseoHome, persistedConfig, workerEnv);
+  const vincuHome = resolveVincuHome(workerEnv);
+  const persistedConfig = loadPersistedConfig(vincuHome);
+  const supervisorLogFile = resolveSupervisorLogFile(vincuHome, persistedConfig, workerEnv);
 
   try {
-    await acquirePidLock(paseoHome, null, {
+    await acquirePidLock(vincuHome, null, {
       ownerPid: process.pid,
       reclaimStaleDesktopLock: config.reclaimStalePidLock,
     });
@@ -129,7 +129,7 @@ async function main(): Promise<void> {
 
   let lockReleased = false;
   let requestSupervisorShutdown: ((reason: string) => void) | null = null;
-  const stopLockHeartbeat = startPidLockHeartbeat(paseoHome, {
+  const stopLockHeartbeat = startPidLockHeartbeat(vincuHome, {
     ownerPid: process.pid,
     onError: (error) => {
       const message = error instanceof Error ? error.message : String(error);
@@ -145,7 +145,7 @@ async function main(): Promise<void> {
     }
     lockReleased = true;
     stopLockHeartbeat();
-    await releasePidLock(paseoHome, {
+    await releasePidLock(vincuHome, {
       ownerPid: process.pid,
     });
   };
@@ -175,7 +175,7 @@ async function main(): Promise<void> {
     restartOnCrash: true,
     logFile: supervisorLogFile,
     onWorkerReady: async ({ listen }) => {
-      await updatePidLock(paseoHome, { listen }, { ownerPid: process.pid });
+      await updatePidLock(vincuHome, { listen }, { ownerPid: process.pid });
     },
     onSupervisorExit: releaseLock,
   });

@@ -4,10 +4,10 @@ import equal from "fast-deep-equal";
 import { useStoreWithEqualityFn } from "zustand/traditional";
 import { useSessionStore, type Agent } from "@/stores/session-store";
 import { refreshProviderSubagents, useProviderSubagentStore } from "./provider-store";
-import type { ProviderSubagentDescriptorPayload } from "@getpaseo/protocol/messages";
+import type { ProviderSubagentDescriptorPayload } from "@getvincu/protocol/messages";
 
-export interface PaseoSubagentRow {
-  kind: "paseo";
+export interface VincuSubagentRow {
+  kind: "vincu";
   id: Agent["id"];
   provider: Agent["provider"];
   title: Agent["title"];
@@ -36,7 +36,7 @@ export interface ProviderSubagentRow {
   createdAt: Date;
 }
 
-export type SubagentRow = PaseoSubagentRow | ProviderSubagentRow;
+export type SubagentRow = VincuSubagentRow | ProviderSubagentRow;
 
 type SessionStoreSnapshot = ReturnType<typeof useSessionStore.getState>;
 type ProviderSubagentStoreSnapshot = ReturnType<typeof useProviderSubagentStore.getState>;
@@ -51,7 +51,7 @@ const EMPTY_PROVIDER_SUBAGENT_ROWS: ProviderSubagentRow[] = [];
 
 function toSubagentRow(agent: Agent): SubagentRow {
   return {
-    kind: "paseo",
+    kind: "vincu",
     id: agent.id,
     provider: agent.provider,
     title: agent.title,
@@ -122,7 +122,7 @@ export function selectProviderSubagentsForParent(
 
 export function useSubagentsForParent(params: SelectSubagentsParams): SubagentRow[] {
   const pendingArchiveIds = usePendingArchiveAgentIds(params.serverId);
-  const paseoRows = useStoreWithEqualityFn(
+  const vincuRows = useStoreWithEqualityFn(
     useSessionStore,
     (state) => selectSubagentsForParent(state, params, pendingArchiveIds),
     equal,
@@ -145,9 +145,9 @@ export function useSubagentsForParent(params: SelectSubagentsParams): SubagentRo
   }, [client, params.parentAgentId, params.serverId, supported]);
 
   return useMemo(() => {
-    if (providerRows.length === 0) return paseoRows;
-    const rows = [...paseoRows, ...providerRows];
+    if (providerRows.length === 0) return vincuRows;
+    const rows = [...vincuRows, ...providerRows];
     rows.sort((left, right) => left.createdAt.getTime() - right.createdAt.getTime());
     return rows;
-  }, [paseoRows, providerRows]);
+  }, [vincuRows, providerRows]);
 }

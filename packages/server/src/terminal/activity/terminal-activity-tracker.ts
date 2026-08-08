@@ -1,7 +1,7 @@
 import type {
   TerminalActivityAttentionReason,
   TerminalActivityState,
-} from "@getpaseo/protocol/terminal-activity";
+} from "@getvincu/protocol/terminal-activity";
 
 export interface TerminalActivitySnapshot {
   state: TerminalActivityState | null;

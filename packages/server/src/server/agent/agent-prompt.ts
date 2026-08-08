@@ -4,7 +4,7 @@ import type { AgentPromptInput, AgentRunOptions } from "./agent-sdk-types.js";
 import type { AgentManager, ManagedAgent } from "./agent-manager.js";
 import type { AgentStorage } from "./agent-storage.js";
 import { ensureAgentLoaded } from "./agent-loading.js";
-import { getParentAgentIdFromLabels } from "@getpaseo/protocol/agent-labels";
+import { getParentAgentIdFromLabels } from "@getvincu/protocol/agent-labels";
 
 export type AgentUnarchiveController = Pick<AgentManager, "notifyAgentState" | "unarchiveSnapshot">;
 
@@ -105,15 +105,15 @@ export async function unarchiveAgentState(
 }
 
 /**
- * Wrap a body in <paseo-system>…</paseo-system> so the receiving agent
+ * Wrap a body in <vincu-system>…</vincu-system> so the receiving agent
  * recognizes the prompt as system-injected context — not a user turn.
  * Used by chat mentions, schedule fires, and notify-on-finish.
  */
 export function formatSystemNotificationPrompt(reason: string): string {
-  return `<paseo-system>\n${reason}\n</paseo-system>`;
+  return `<vincu-system>\n${reason}\n</vincu-system>`;
 }
 
-const SYSTEM_ENVELOPE_PATTERN = /^<paseo-system>\n[\s\S]*\n<\/paseo-system>$/;
+const SYSTEM_ENVELOPE_PATTERN = /^<vincu-system>\n[\s\S]*\n<\/vincu-system>$/;
 
 export function isSystemInjectedEnvelope(text: string): boolean {
   return SYSTEM_ENVELOPE_PATTERN.test(text);

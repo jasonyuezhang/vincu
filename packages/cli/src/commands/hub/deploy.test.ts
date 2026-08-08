@@ -18,7 +18,7 @@ afterEach(async () => {
 describe("hub deploy", () => {
   it("deploys the default file with its project metadata and exact YAML through env credentials", async () => {
     const cwd = await temporaryDirectory();
-    const configurationDirectory = path.join(cwd, ".paseo");
+    const configurationDirectory = path.join(cwd, ".vincu");
     const yaml = "project: studio-api\r\nenvironments: []\r\ntriggers: []\r\n";
     await mkdir(configurationDirectory);
     await writeFile(path.join(configurationDirectory, "hub.yml"), yaml);
@@ -30,7 +30,7 @@ describe("hub deploy", () => {
         {},
         {
           cwd,
-          env: { PASEO_HUB_URL: hub.origin, PASEO_HUB_API_KEY: "test-operator-secret" },
+          env: { VINCU_HUB_URL: hub.origin, VINCU_HUB_API_KEY: "test-operator-secret" },
         },
       );
 
@@ -79,7 +79,7 @@ describe("hub deploy", () => {
 
   it("deploys mixed inline and partial prompts with only the referenced partial files", async () => {
     const cwd = await temporaryDirectory();
-    const configurationDirectory = path.join(cwd, ".paseo");
+    const configurationDirectory = path.join(cwd, ".vincu");
     const partialDirectory = path.join(configurationDirectory, "partials", "docs");
     const yaml = [
       "project: studio-api",
@@ -103,7 +103,7 @@ describe("hub deploy", () => {
     try {
       await runHubDeploy(
         {},
-        { cwd, env: { PASEO_HUB_URL: hub.origin, PASEO_HUB_API_KEY: "bundle-secret" } },
+        { cwd, env: { VINCU_HUB_URL: hub.origin, VINCU_HUB_API_KEY: "bundle-secret" } },
       );
 
       expect(await hub.received).toEqual({
@@ -127,7 +127,7 @@ describe("hub deploy", () => {
   it("anchors explicit configuration files and their partial bundle at the current project root", async () => {
     const cwd = await temporaryDirectory();
     const configurationDirectory = path.join(cwd, "configs");
-    const partialDirectory = path.join(cwd, ".paseo", "partials");
+    const partialDirectory = path.join(cwd, ".vincu", "partials");
     const yaml =
       "project: explicit-project\ntriggers:\n  - steps:\n      - prompt:\n          - include: instructions.md\n";
     const partial = "Explicit project-root partial";
@@ -158,16 +158,16 @@ describe("hub deploy", () => {
   it("does not search parent directories or alternate default filenames", async () => {
     const parent = await temporaryDirectory();
     const cwd = path.join(parent, "child");
-    await mkdir(path.join(parent, ".paseo"));
-    await mkdir(path.join(cwd, ".paseo"), { recursive: true });
-    await writeFile(path.join(parent, ".paseo", "hub.yml"), "project: parent-project\n");
-    await writeFile(path.join(cwd, ".paseo", "hub.yaml"), "project: alternate-project\n");
+    await mkdir(path.join(parent, ".vincu"));
+    await mkdir(path.join(cwd, ".vincu"), { recursive: true });
+    await writeFile(path.join(parent, ".vincu", "hub.yml"), "project: parent-project\n");
+    await writeFile(path.join(cwd, ".vincu", "hub.yaml"), "project: alternate-project\n");
 
     await expect(
       runHubDeploy({ hub: "https://hub.example.com", apiKey: "unused-secret" }, { cwd, env: {} }),
     ).rejects.toMatchObject({
       code: "HUB_CONFIGURATION_UNREADABLE",
-      message: "Could not read Hub configuration at .paseo/hub.yml. Pass an existing YAML file.",
+      message: "Could not read Hub configuration at .vincu/hub.yml. Pass an existing YAML file.",
     });
   });
 
@@ -230,7 +230,7 @@ describe("hub deploy", () => {
     const cwd = await projectFile(
       "project: studio-api\ntriggers:\n  - steps:\n      - prompt:\n          - include: docs\n",
     );
-    await mkdir(path.join(cwd, ".paseo", "partials", "docs"), { recursive: true });
+    await mkdir(path.join(cwd, ".vincu", "partials", "docs"), { recursive: true });
     const hub = await startHub();
 
     try {
@@ -250,7 +250,7 @@ describe("hub deploy", () => {
     const cwd = await projectFile(
       "project: studio-api\ntriggers:\n  - steps:\n      - prompt:\n          - include: unreadable.md\n",
     );
-    const partial = path.join(cwd, ".paseo", "partials", "unreadable.md");
+    const partial = path.join(cwd, ".vincu", "partials", "unreadable.md");
     await mkdir(path.dirname(partial), { recursive: true });
     await writeFile(partial, "secret instructions");
     await chmod(partial, 0o000);
@@ -292,9 +292,9 @@ describe("hub deploy", () => {
 
   it("fails locally when the configuration exceeds the YAML size limit", async () => {
     const cwd = await temporaryDirectory();
-    await mkdir(path.join(cwd, ".paseo"));
+    await mkdir(path.join(cwd, ".vincu"));
     await writeFile(
-      path.join(cwd, ".paseo", "hub.yml"),
+      path.join(cwd, ".vincu", "hub.yml"),
       `project: studio-api\n${"#".repeat(1_000_000)}`,
     );
     const hub = await startHub();
@@ -314,8 +314,8 @@ describe("hub deploy", () => {
   it("uses the Hub YAML string limit rather than its UTF-8 byte length", async () => {
     const cwd = await temporaryDirectory();
     const yaml = `project: studio-api\n# ${"😀".repeat(400_000)}\n`;
-    await mkdir(path.join(cwd, ".paseo"));
-    await writeFile(path.join(cwd, ".paseo", "hub.yml"), yaml);
+    await mkdir(path.join(cwd, ".vincu"));
+    await writeFile(path.join(cwd, ".vincu", "hub.yml"), yaml);
     expect(yaml.length).toBeLessThan(1_000_000);
     expect(Buffer.byteLength(yaml, "utf8")).toBeGreaterThan(1_000_000);
     const hub = await startHub();
@@ -323,7 +323,7 @@ describe("hub deploy", () => {
     try {
       await runHubDeploy(
         {},
-        { cwd, env: { PASEO_HUB_URL: hub.origin, PASEO_HUB_API_KEY: "unicode-yaml-secret" } },
+        { cwd, env: { VINCU_HUB_URL: hub.origin, VINCU_HUB_API_KEY: "unicode-yaml-secret" } },
       );
 
       expect(JSON.parse((await hub.received).body)).toEqual({ projectSlug: "studio-api", yaml });
@@ -336,7 +336,7 @@ describe("hub deploy", () => {
     const cwd = await projectFile(
       "project: studio-api\ntriggers:\n  - steps:\n      - prompt:\n          - include: large.md\n",
     );
-    await writeFile(path.join(cwd, ".paseo", "partials", "large.md"), "x".repeat(1_000_001));
+    await writeFile(path.join(cwd, ".vincu", "partials", "large.md"), "x".repeat(1_000_001));
     const hub = await startHub();
 
     try {
@@ -364,7 +364,7 @@ describe("hub deploy", () => {
     );
     await Promise.all(
       Array.from({ length: 6 }, (_, index) =>
-        writeFile(path.join(cwd, ".paseo", "partials", `part-${index}.md`), "x".repeat(900_000)),
+        writeFile(path.join(cwd, ".vincu", "partials", `part-${index}.md`), "x".repeat(900_000)),
       ),
     );
     const hub = await startHub();
@@ -404,7 +404,7 @@ describe("hub deploy", () => {
 
   it("fails locally when the configuration is a directory", async () => {
     const cwd = await temporaryDirectory();
-    await mkdir(path.join(cwd, ".paseo", "hub.yml"), { recursive: true });
+    await mkdir(path.join(cwd, ".vincu", "hub.yml"), { recursive: true });
     const hub = await startHub();
 
     try {
@@ -415,7 +415,7 @@ describe("hub deploy", () => {
         ),
       ).rejects.toMatchObject({
         code: "HUB_CONFIGURATION_NOT_FILE",
-        message: "Hub configuration at .paseo/hub.yml must be a regular file.",
+        message: "Hub configuration at .vincu/hub.yml must be a regular file.",
       });
       expect(hub.requestCount()).toBe(0);
     } finally {
@@ -425,8 +425,8 @@ describe("hub deploy", () => {
 
   it("fails locally when the configuration cannot be read", async () => {
     const cwd = await temporaryDirectory();
-    await mkdir(path.join(cwd, ".paseo"));
-    const configuration = path.join(cwd, ".paseo", "hub.yml");
+    await mkdir(path.join(cwd, ".vincu"));
+    const configuration = path.join(cwd, ".vincu", "hub.yml");
     await writeFile(configuration, "project: studio-api\n");
     await chmod(configuration, 0o000);
     const hub = await startHub();
@@ -490,12 +490,12 @@ describe("hub deploy", () => {
 
   it("requires Hub origin and API key with actionable flag and env guidance", async () => {
     await expect(runHubDeploy({}, { cwd: "/unused", env: {} })).rejects.toMatchObject({
-      message: "Hub origin is required. Pass --hub <origin> or set PASEO_HUB_URL.",
+      message: "Hub origin is required. Pass --hub <origin> or set VINCU_HUB_URL.",
     });
     await expect(
       runHubDeploy({ hub: "https://hub.example.com" }, { cwd: "/unused", env: {} }),
     ).rejects.toMatchObject({
-      message: "Hub API key is required. Pass --api-key <secret> or set PASEO_HUB_API_KEY.",
+      message: "Hub API key is required. Pass --api-key <secret> or set VINCU_HUB_API_KEY.",
     });
   });
 
@@ -566,7 +566,7 @@ describe("hub deploy", () => {
       runHubDeploy({ hub: hub.origin, apiKey: "network-secret" }, { cwd, env: {} }),
     ).rejects.toMatchObject({
       code: "HUB_NETWORK_ERROR",
-      message: `Could not reach Paseo Hub at ${hub.origin}. Check the Hub URL and network connection.`,
+      message: `Could not reach Vincu Hub at ${hub.origin}. Check the Hub URL and network connection.`,
     });
   });
 
@@ -604,7 +604,7 @@ describe("hub deploy", () => {
     const help = deploy?.helpInformation();
 
     expect(deploy?.registeredArguments[0]?.name()).toBe("file");
-    expect(deploy?.registeredArguments[0]?.defaultValue).toBe(".paseo/hub.yml");
+    expect(deploy?.registeredArguments[0]?.defaultValue).toBe(".vincu/hub.yml");
     expect(help).toContain("-p, --project <slug>");
     expect(help).toContain("--hub <origin>");
     expect(help).toContain("--api-key <secret>");
@@ -613,16 +613,16 @@ describe("hub deploy", () => {
 });
 
 async function temporaryDirectory(): Promise<string> {
-  const directory = await mkdtemp(path.join(tmpdir(), "paseo-hub-deploy-"));
+  const directory = await mkdtemp(path.join(tmpdir(), "vincu-hub-deploy-"));
   temporaryDirectories.push(directory);
   return directory;
 }
 
 async function projectFile(yaml: string): Promise<string> {
   const cwd = await temporaryDirectory();
-  await mkdir(path.join(cwd, ".paseo"));
-  await mkdir(path.join(cwd, ".paseo", "partials"));
-  await writeFile(path.join(cwd, ".paseo", "hub.yml"), yaml);
+  await mkdir(path.join(cwd, ".vincu"));
+  await mkdir(path.join(cwd, ".vincu", "partials"));
+  await writeFile(path.join(cwd, ".vincu", "hub.yml"), yaml);
   return cwd;
 }
 

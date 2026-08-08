@@ -42,11 +42,11 @@ triggers:
         max_runtime: 90m
         idle_timeout: 10m
         agent:
-          provider: ${{ paseo.inputs.provider }}
-          model: ${{ paseo.inputs.model }}
+          provider: ${{ vincu.inputs.provider }}
+          model: ${{ vincu.inputs.model }}
           mode: full-access
         prompt:
-          - text: ${{ paseo.prompt }}
+          - text: ${{ vincu.prompt }}
 ```
 
 Invoke it with `provider=claude model=fast investigate the sync`. An undeclared leading key stops header parsing and becomes prompt text.
@@ -61,10 +61,10 @@ environments:
     kind: daemon
     daemon: my-macbook
     cwd: /Users/you/code/project
-  - name: paseo
+  - name: vincu
     kind: daemon
     daemon: my-macbook
-    cwd: /Users/you/code/paseo
+    cwd: /Users/you/code/vincu
 
 triggers:
   - name: project-request
@@ -77,7 +77,7 @@ triggers:
     inputs:
       repo:
         type: string
-        choices: [project, paseo]
+        choices: [project, vincu]
     steps:
       - id: project-work
         environment: project
@@ -87,32 +87,32 @@ triggers:
           provider: codex
           mode: full-access
         prompt:
-          - text: ${{ paseo.prompt }}
+          - text: ${{ vincu.prompt }}
         allow_outputs:
           - type: slack.reply
             max: 5
 
-  - name: paseo-request
+  - name: vincu-request
     on: slack.mention
     max_runtime: 2h
     filters:
       workspace: T01234567
       from_users: [U01234567]
-      inputs: { repo: paseo }
+      inputs: { repo: vincu }
     inputs:
       repo:
         type: string
-        choices: [project, paseo]
+        choices: [project, vincu]
     steps:
-      - id: paseo-work
-        environment: paseo
+      - id: vincu-work
+        environment: vincu
         max_runtime: 90m
         idle_timeout: 10m
         agent:
           provider: codex
           mode: full-access
         prompt:
-          - text: ${{ paseo.prompt }}
+          - text: ${{ vincu.prompt }}
         allow_outputs:
           - type: slack.reply
             max: 5
@@ -137,7 +137,7 @@ triggers:
     max_runtime: 2h
     filters:
       repo: example/project
-      contains: "@paseo"
+      contains: "@vincu"
       from_users: [maintainer]
     inputs:
       kind:
@@ -145,7 +145,7 @@ triggers:
         choices: [answer, implementation]
     steps:
       - id: classify
-        if: ${{ paseo.inputs.kind == null }}
+        if: ${{ vincu.inputs.kind == null }}
         environment: development
         max_runtime: 2m
         idle_timeout: 30s
@@ -154,7 +154,7 @@ triggers:
           mode: read-only
         prompt:
           - text: Classify this request as answer or implementation.
-          - text: ${{ paseo.prompt }}
+          - text: ${{ vincu.prompt }}
         output:
           schema:
             type: object
@@ -165,7 +165,7 @@ triggers:
                 enum: [answer, implementation]
 
       - id: answer
-        if: ${{ paseo.inputs.kind == 'answer' || steps.classify.outputs.kind == 'answer' }}
+        if: ${{ vincu.inputs.kind == 'answer' || steps.classify.outputs.kind == 'answer' }}
         environment: development
         max_runtime: 10m
         idle_timeout: 2m
@@ -174,10 +174,10 @@ triggers:
           mode: read-only
         prompt:
           - text: Answer the request. Do not change files.
-          - text: ${{ paseo.prompt }}
+          - text: ${{ vincu.prompt }}
 
       - id: implementation
-        if: ${{ paseo.inputs.kind == 'implementation' || steps.classify.outputs.kind == 'implementation' }}
+        if: ${{ vincu.inputs.kind == 'implementation' || steps.classify.outputs.kind == 'implementation' }}
         environment: development
         max_runtime: 90m
         idle_timeout: 10m
@@ -186,7 +186,7 @@ triggers:
           mode: full-access
         prompt:
           - text: Implement the request, verify it, and report the result.
-          - text: ${{ paseo.prompt }}
+          - text: ${{ vincu.prompt }}
         allow_outputs:
           - type: github.reply
             max: 5
@@ -211,7 +211,7 @@ triggers:
     max_runtime: 2h
     filters:
       repo: example/project
-      contains: "@paseo"
+      contains: "@vincu"
       from_users: [maintainer]
     steps:
       - id: implement-review
@@ -225,7 +225,7 @@ triggers:
         prompt:
           - text: |
               Address the review request.
-              Request: ${{ paseo.prompt }}
+              Request: ${{ vincu.prompt }}
         allow_outputs:
           - type: github.reply
             max: 5

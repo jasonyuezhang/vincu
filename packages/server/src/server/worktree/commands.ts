@@ -1,6 +1,6 @@
 import { join } from "node:path";
 
-import { getPaseoWorktreesRoot, isPaseoOwnedWorktreeCwd } from "../../utils/worktree.js";
+import { getVincuWorktreesRoot, isVincuOwnedWorktreeCwd } from "../../utils/worktree.js";
 import {
   archiveByScope,
   resolveWorkspaceIdAtPath,
@@ -8,24 +8,24 @@ import {
   type ArchiveScope,
 } from "../workspace-archive-service.js";
 import type {
-  CreatePaseoWorktreeInput,
-  CreatePaseoWorktreeResult,
-} from "../paseo-worktree-service.js";
+  CreateVincuWorktreeInput,
+  CreateVincuWorktreeResult,
+} from "../vincu-worktree-service.js";
 import { toWorktreeWireError, type WorktreeWireError } from "../worktree-errors.js";
 import type { WorkspaceGitService, WorkspaceGitWorktreeInfo } from "../workspace-git-service.js";
 
-export interface ListPaseoWorktreesCommandDependencies {
+export interface ListVincuWorktreesCommandDependencies {
   workspaceGitService: Pick<WorkspaceGitService, "listWorktrees">;
 }
 
-export interface ListPaseoWorktreesCommandInput {
+export interface ListVincuWorktreesCommandInput {
   cwd: string;
   reason?: string;
 }
 
-export async function listPaseoWorktreesCommand(
-  dependencies: ListPaseoWorktreesCommandDependencies,
-  input: ListPaseoWorktreesCommandInput,
+export async function listVincuWorktreesCommand(
+  dependencies: ListVincuWorktreesCommandDependencies,
+  input: ListVincuWorktreesCommandInput,
 ): Promise<WorkspaceGitWorktreeInfo[]> {
   if (input.reason) {
     return dependencies.workspaceGitService.listWorktrees(input.cwd, { reason: input.reason });
@@ -33,27 +33,27 @@ export async function listPaseoWorktreesCommand(
   return dependencies.workspaceGitService.listWorktrees(input.cwd);
 }
 
-type CreatePaseoWorktreeWorkflow<Result extends CreatePaseoWorktreeResult> = (
-  input: CreatePaseoWorktreeInput,
+type CreateVincuWorktreeWorkflow<Result extends CreateVincuWorktreeResult> = (
+  input: CreateVincuWorktreeInput,
 ) => Promise<Result>;
 
-export interface CreatePaseoWorktreeCommandDependencies<
-  Result extends CreatePaseoWorktreeResult = CreatePaseoWorktreeResult,
+export interface CreateVincuWorktreeCommandDependencies<
+  Result extends CreateVincuWorktreeResult = CreateVincuWorktreeResult,
 > {
-  paseoHome?: string;
+  vincuHome?: string;
   worktreesRoot?: string;
-  createPaseoWorktreeWorkflow?: CreatePaseoWorktreeWorkflow<Result>;
+  createVincuWorktreeWorkflow?: CreateVincuWorktreeWorkflow<Result>;
 }
 
-export type CreatePaseoWorktreeCommandInput = Omit<
-  CreatePaseoWorktreeInput,
-  "paseoHome" | "runSetup"
+export type CreateVincuWorktreeCommandInput = Omit<
+  CreateVincuWorktreeInput,
+  "vincuHome" | "runSetup"
 > & {
-  paseoHome?: string;
+  vincuHome?: string;
   worktreesRoot?: string;
 };
 
-export type CreatePaseoWorktreeCommandResult<Result extends CreatePaseoWorktreeResult> =
+export type CreateVincuWorktreeCommandResult<Result extends CreateVincuWorktreeResult> =
   | {
       ok: true;
       createdWorktree: Result;
@@ -64,19 +64,19 @@ export type CreatePaseoWorktreeCommandResult<Result extends CreatePaseoWorktreeR
       cause: unknown;
     };
 
-export async function createPaseoWorktreeCommand<Result extends CreatePaseoWorktreeResult>(
-  dependencies: CreatePaseoWorktreeCommandDependencies<Result>,
-  input: CreatePaseoWorktreeCommandInput,
-): Promise<CreatePaseoWorktreeCommandResult<Result>> {
+export async function createVincuWorktreeCommand<Result extends CreateVincuWorktreeResult>(
+  dependencies: CreateVincuWorktreeCommandDependencies<Result>,
+  input: CreateVincuWorktreeCommandInput,
+): Promise<CreateVincuWorktreeCommandResult<Result>> {
   try {
-    if (!dependencies.createPaseoWorktreeWorkflow) {
-      throw new Error("Paseo worktree service is not configured");
+    if (!dependencies.createVincuWorktreeWorkflow) {
+      throw new Error("Vincu worktree service is not configured");
     }
 
-    const createdWorktree = await dependencies.createPaseoWorktreeWorkflow({
+    const createdWorktree = await dependencies.createVincuWorktreeWorkflow({
       ...input,
       runSetup: false,
-      paseoHome: input.paseoHome ?? dependencies.paseoHome,
+      vincuHome: input.vincuHome ?? dependencies.vincuHome,
       worktreesRoot: input.worktreesRoot ?? dependencies.worktreesRoot,
     });
     return { ok: true, createdWorktree };
@@ -124,9 +124,9 @@ export async function archiveCommand(
 ): Promise<ArchiveCommandResult> {
   const targetPath = await resolveArchiveTarget(dependencies, input);
   const scope = input.scope ?? "workspace";
-  const ownership = await isPaseoOwnedWorktreeCwd(targetPath, {
-    paseoHome: dependencies.paseoHome,
-    worktreesRoot: dependencies.paseoWorktreesBaseRoot,
+  const ownership = await isVincuOwnedWorktreeCwd(targetPath, {
+    vincuHome: dependencies.vincuHome,
+    worktreesRoot: dependencies.vincuWorktreesBaseRoot,
   });
 
   if (scope === "worktree") {
@@ -134,7 +134,7 @@ export async function archiveCommand(
       return {
         ok: false,
         code: "NOT_ALLOWED",
-        message: "Worktree is not a Paseo-owned worktree",
+        message: "Worktree is not a Vincu-owned worktree",
         removedAgents: [],
       };
     }
@@ -195,7 +195,7 @@ async function resolveArchiveTarget(
     const worktrees = await dependencies.workspaceGitService.listWorktrees(repoRoot);
     const match = worktrees.find((entry) => entry.branchName === input.branchName);
     if (!match) {
-      throw new Error(`Paseo worktree not found for branch ${input.branchName}`);
+      throw new Error(`Vincu worktree not found for branch ${input.branchName}`);
     }
     return match.path;
   }
@@ -208,10 +208,10 @@ async function resolveWorktreeSlugPath(
   repoRoot: string,
   worktreeSlug: string,
 ): Promise<string> {
-  const worktreesRoot = await getPaseoWorktreesRoot(
+  const worktreesRoot = await getVincuWorktreesRoot(
     repoRoot,
-    dependencies.paseoHome,
-    dependencies.paseoWorktreesBaseRoot,
+    dependencies.vincuHome,
+    dependencies.vincuWorktreesBaseRoot,
   );
   return join(worktreesRoot, worktreeSlug);
 }

@@ -8,14 +8,14 @@ category: Hub
 
 # Daemons in Hub
 
-A daemon is one of your machines running the Paseo daemon. Enroll it once with your Hub organization, then any project can reference it.
+A daemon is one of your machines running the Vincu daemon. Enroll it once with your Hub organization, then any project can reference it.
 
 ## Connect
 
 On the machine:
 
 ```sh
-paseo hub connect https://hub.example.com
+vincu hub connect https://hub.example.com
 ```
 
 The CLI prints a URL and a verification code, and opens your browser if it can. In Hub, open **Daemons → Register a daemon**, enter the code, choose a friendly slug, and approve it.
@@ -27,15 +27,15 @@ You can rename the slug later without changing the daemon ID. Renaming after a c
 For unattended setup, skip the browser with an enrollment token:
 
 ```sh
-paseo hub connect https://hub.example.com --token <token>
+vincu hub connect https://hub.example.com --token <token>
 ```
 
 Check and undo:
 
 ```sh
-paseo hub status
-paseo hub disconnect
-paseo hub disconnect --force   # drop local authority when Hub is unreachable
+vincu hub status
+vincu hub disconnect
+vincu hub disconnect --force   # drop local authority when Hub is unreachable
 ```
 
 One daemon has one Hub relationship. Connecting a daemon that already has one is refused.

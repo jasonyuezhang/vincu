@@ -3,7 +3,7 @@ import type {
   AgentSnapshotPayload,
   HubExecutionAgentCreateRequest,
   SessionOutboundMessage,
-} from "@getpaseo/protocol/messages";
+} from "@getvincu/protocol/messages";
 
 import type {
   HubExecutionAgents,
@@ -74,7 +74,7 @@ describe("HubExecutionController", () => {
       requestId: "shutdown-create",
       executionId: "execution-shutdown",
       provider: "codex",
-      cwd: "/tmp/paseo",
+      cwd: "/tmp/vincu",
       prompt: "sleep 30",
     } satisfies HubExecutionAgentCreateRequest);
     await agents.creationStarted();

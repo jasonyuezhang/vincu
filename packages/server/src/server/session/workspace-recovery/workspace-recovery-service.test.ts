@@ -55,7 +55,7 @@ function createWorkspace(
     title: "TDD reproduction",
     branch: "diagnose-repro-tdd",
     worktreeRoot: "/worktrees/trigger-1525443412986298439",
-    isPaseoOwnedWorktree: true,
+    isVincuOwnedWorktree: true,
     mainRepoRoot: "/repo",
     createdAt: NOW,
     updatedAt: NOW,
@@ -68,7 +68,7 @@ function createHarness(input?: {
   workspace?: PersistedWorkspaceRecord | null;
   project?: PersistedProjectRecord | null;
   directories?: string[];
-  paseoHome?: string;
+  vincuHome?: string;
   worktreesRoot?: string;
 }) {
   const workspace = input?.workspace === undefined ? createWorkspace() : input.workspace;
@@ -76,7 +76,7 @@ function createHarness(input?: {
   const directories = new Set(input?.directories ?? ["/repo"]);
   const unarchived: string[] = [];
   const service = createWorkspaceRecoveryService({
-    paseoHome: input?.paseoHome ?? "/paseo-home",
+    vincuHome: input?.vincuHome ?? "/vincu-home",
     worktreesRoot: input?.worktreesRoot ?? "/worktrees",
     getWorkspace: async (workspaceId) =>
       workspace?.workspaceId === workspaceId ? workspace : null,
@@ -139,14 +139,14 @@ describe("workspace recovery", () => {
     execFileSync("git", ["commit", "-m", "add app"], { cwd: repoDir, stdio: "pipe" });
     execFileSync("git", ["branch", branch], { cwd: repoDir, stdio: "pipe" });
 
-    const paseoHome = join(tempDir, "paseo-home");
+    const vincuHome = join(tempDir, "vincu-home");
     const worktreesRoot = join(tempDir, "worktrees");
     const created = await createWorktree({
       cwd: repoDir,
       worktreeSlug: "mixed-project",
       source: { kind: "checkout-branch", branchName: branch },
       runSetup: false,
-      paseoHome,
+      vincuHome,
       worktreesRoot,
     });
     const worktreeRoot = realpathSync(created.worktreePath);
@@ -171,7 +171,7 @@ describe("workspace recovery", () => {
     });
     const unarchived: string[] = [];
     const service = createWorkspaceRecoveryService({
-      paseoHome,
+      vincuHome,
       worktreesRoot,
       getWorkspace: async (workspaceId) =>
         workspaceId === workspace.workspaceId ? workspace : null,
@@ -195,14 +195,14 @@ describe("workspace recovery", () => {
     const { tempDir, repoDir } = createGitRepository();
     const branch = "feature/without-subproject";
     execFileSync("git", ["branch", branch], { cwd: repoDir, stdio: "pipe" });
-    const paseoHome = join(tempDir, "paseo-home");
+    const vincuHome = join(tempDir, "vincu-home");
     const worktreesRoot = join(tempDir, "worktrees");
     const created = await createWorktree({
       cwd: repoDir,
       worktreeSlug: "without-subproject",
       source: { kind: "checkout-branch", branchName: branch },
       runSetup: false,
-      paseoHome,
+      vincuHome,
       worktreesRoot,
     });
     const worktreeRoot = realpathSync(created.worktreePath);
@@ -220,7 +220,7 @@ describe("workspace recovery", () => {
     });
     const unarchived: string[] = [];
     const service = createWorkspaceRecoveryService({
-      paseoHome,
+      vincuHome,
       worktreesRoot,
       getWorkspace: async (workspaceId) =>
         workspaceId === workspace.workspaceId ? workspace : null,
@@ -268,7 +268,7 @@ describe("workspace recovery", () => {
 });
 
 function createGitRepository(): { tempDir: string; repoDir: string } {
-  const tempDir = mkdtempSync(join(tmpdir(), "paseo-workspace-recovery-"));
+  const tempDir = mkdtempSync(join(tmpdir(), "vincu-workspace-recovery-"));
   tempDirectories.push(tempDir);
   const repoDir = join(tempDir, "repo");
   mkdirSync(repoDir);
@@ -277,7 +277,7 @@ function createGitRepository(): { tempDir: string; repoDir: string } {
     cwd: repoDir,
     stdio: "pipe",
   });
-  execFileSync("git", ["config", "user.name", "Paseo Test"], {
+  execFileSync("git", ["config", "user.name", "Vincu Test"], {
     cwd: repoDir,
     stdio: "pipe",
   });

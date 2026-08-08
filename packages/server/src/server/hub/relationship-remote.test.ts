@@ -22,12 +22,12 @@ import {
 
 const openServers: ReturnType<typeof createServer>[] = [];
 const openUpgradeHubs: UpgradeRejectingHub[] = [];
-const openPaseoHomes: string[] = [];
+const openVincuHomes: string[] = [];
 
 afterEach(async () => {
   for (const hub of openUpgradeHubs.splice(0)) hub.destroyConnections();
   await Promise.all(openServers.splice(0).map((server) => closeServer(server)));
-  await Promise.all(openPaseoHomes.splice(0).map((home) => rm(home, { recursive: true })));
+  await Promise.all(openVincuHomes.splice(0).map((home) => rm(home, { recursive: true })));
 });
 
 test.each([401, 403, 404])(
@@ -519,10 +519,10 @@ async function connectController(
   hub: UpgradeRejectingHub,
   clock: ManualRelationshipClock,
 ): Promise<HubRelationshipController> {
-  const paseoHome = await mkdtemp(path.join(tmpdir(), "paseo-hub-socket-"));
-  openPaseoHomes.push(paseoHome);
+  const vincuHome = await mkdtemp(path.join(tmpdir(), "vincu-hub-socket-"));
+  openVincuHomes.push(vincuHome);
   const controller = new HubRelationshipController({
-    paseoHome,
+    vincuHome,
     serverId: "server-1",
     daemonPublicKey: "daemon-public-key",
     logger: pino({ level: "silent" }),

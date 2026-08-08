@@ -28,7 +28,7 @@ function createFacts(cwd: string): CheckoutSnapshotFacts {
     remoteUrl: null,
     absoluteGitDir: path.join(cwd, ".git"),
     gitCommonDir: path.join(cwd, ".git"),
-    paseoWorktree: { isPaseoOwnedWorktree: false },
+    vincuWorktree: { isVincuOwnedWorktree: false },
     storedBaseRef: null,
     resolvedBaseRef: "main",
     mainRepoRoot: null,
@@ -52,7 +52,7 @@ function createStatus(cwd: string): CheckoutStatusGit {
     behindOfOrigin: null,
     hasRemote: false,
     remoteUrl: null,
-    isPaseoOwnedWorktree: false,
+    isVincuOwnedWorktree: false,
   };
 }
 
@@ -65,7 +65,7 @@ afterEach(async () => {
 });
 
 test("native recursive observation updates tracked state and prunes ignored storms", async () => {
-  const tempDir = realpathSync(mkdtempSync(path.join(tmpdir(), "paseo-git-observation-")));
+  const tempDir = realpathSync(mkdtempSync(path.join(tmpdir(), "vincu-git-observation-")));
   const repoDir = path.join(tempDir, "repo");
   const trackedPath = path.join(repoDir, "src", "tracked.txt");
   const ignoredDir = path.join(repoDir, "build");
@@ -150,7 +150,7 @@ test("native recursive observation updates tracked state and prunes ignored stor
   });
   const service = new WorkspaceGitServiceImpl({
     logger: createLogger(),
-    paseoHome: path.join(tempDir, "paseo-home"),
+    vincuHome: path.join(tempDir, "vincu-home"),
     deps: {
       subscribe,
       getCheckoutSnapshotFacts,
@@ -164,7 +164,7 @@ test("native recursive observation updates tracked state and prunes ignored stor
   });
   const diffManager = new CheckoutDiffManager({
     logger: createLogger(),
-    paseoHome: path.join(tempDir, "paseo-home"),
+    vincuHome: path.join(tempDir, "vincu-home"),
     workspaceGitService: service,
   });
   const summaryListener = vi.fn();

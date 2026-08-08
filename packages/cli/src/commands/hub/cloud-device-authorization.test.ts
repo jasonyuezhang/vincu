@@ -148,8 +148,8 @@ class RegistrationCloud {
           JSON.stringify({
             deviceCode: "device-code-with-more-than-thirty-two-characters",
             userCode: "ABCD-EFGH-JKLMN",
-            verificationUri: "https://cloud.paseo.test/activate",
-            verificationUriComplete: "file:///tmp/paseo-activate",
+            verificationUri: "https://cloud.vincu.test/activate",
+            verificationUriComplete: "file:///tmp/vincu-activate",
             expiresAt: "2026-07-18T12:10:00.000Z",
             interval: 5,
           }),

@@ -1,4 +1,4 @@
-import type { AgentStreamEventPayload } from "@getpaseo/protocol/messages";
+import type { AgentStreamEventPayload } from "@getvincu/protocol/messages";
 import { selectAgentTimelineState, useSessionStore } from "@/stores/session-store";
 import type { AssistantMessageItem, StreamItem } from "@/types/stream";
 import type { TurnLivenessTransition } from "@/timeline/turn-liveness";

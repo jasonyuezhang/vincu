@@ -25,18 +25,18 @@ The connection appears with a generated slug like `yourname-github`.
 On the machine that will run agents:
 
 ```sh
-paseo hub connect https://your-hub.example.com
+vincu hub connect https://your-hub.example.com
 ```
 
 The CLI prints a verification code. In Hub, open **Daemons → Register a daemon**, enter the code, and choose a friendly slug. Hub normalizes `Build Studio` to `build-studio`. See [Daemons](/docs/hub/daemons).
 
 ## 4. Create a project
 
-Open **Projects → New project**. On its **Configuration** tab, pick a repository and choose **Use for configuration**. Hub now reads `.paseo/hub.yml` from that repository's default branch.
+Open **Projects → New project**. On its **Configuration** tab, pick a repository and choose **Use for configuration**. Hub now reads `.vincu/hub.yml` from that repository's default branch.
 
 ## 5. Commit the configuration
 
-Add `.paseo/hub.yml` to that repository:
+Add `.vincu/hub.yml` to that repository:
 
 ```yaml
 project: your-project
@@ -53,7 +53,7 @@ triggers:
     max_runtime: 2h
     filters:
       repo: yourname/your-repo
-      contains: "@paseo"
+      contains: "@vincu"
       from_users: [your-github-login]
     steps:
       - id: work
@@ -66,12 +66,12 @@ triggers:
         prompt:
           - text: |
               Someone asked for help.
-              ${{ paseo.prompt }}
+              ${{ vincu.prompt }}
 ```
 
 `project` is the project slug from step 4. The deploy CLI reads it as deployment metadata; it does not affect workflow behavior. `daemon` is the normalized slug from step 3. `cwd` is a directory on that machine.
 
-If a prompt uses an `include` block, store the file below `.paseo/partials/`. The deploy CLI bundles only the files referenced by `.paseo/hub.yml`; nested include-looking text inside a partial is not resolved.
+If a prompt uses an `include` block, store the file below `.vincu/partials/`. The deploy CLI bundles only the files referenced by `.vincu/hub.yml`; nested include-looking text inside a partial is not resolved.
 
 ## 6. Push
 
@@ -82,17 +82,17 @@ If the file is invalid, Hub records the failure and keeps the previous revision 
 To deploy the file directly instead, create an organization API key with the `configuration:install` scope, then run:
 
 ```sh
-export PASEO_HUB_URL=https://your-hub.example.com
-export PASEO_HUB_API_KEY=paseo_pk_...
-paseo hub deploy
+export VINCU_HUB_URL=https://your-hub.example.com
+export VINCU_HUB_API_KEY=vincu_pk_...
+vincu hub deploy
 ```
 
-The command reads exactly `.paseo/hub.yml` from the current directory. It does not search parent directories. Use `paseo hub deploy path/to/config.yml` for another file. `-p, --project <slug>` overrides the file's `project` metadata. See [Hub configuration](/docs/hub/configuration#deploy-from-the-cli) for every deploy option and the current authentication limits.
+The command reads exactly `.vincu/hub.yml` from the current directory. It does not search parent directories. Use `vincu hub deploy path/to/config.yml` for another file. `-p, --project <slug>` overrides the file's `project` metadata. See [Hub configuration](/docs/hub/configuration#deploy-from-the-cli) for every deploy option and the current authentication limits.
 
 ## 7. Trigger it
 
-Comment `@paseo have a look at this` on an issue in that repository, from the account you listed in `from_users`.
+Comment `@vincu have a look at this` on an issue in that repository, from the account you listed in `from_users`.
 
-Open the project's **Activity** tab. You should see the event received and routed, and an execution in **Executions**. The agent itself appears in the Paseo app on that machine.
+Open the project's **Activity** tab. You should see the event received and routed, and an execution in **Executions**. The agent itself appears in the Vincu app on that machine.
 
 Nothing happened? [Activity](/docs/hub/activity) has the checklist.

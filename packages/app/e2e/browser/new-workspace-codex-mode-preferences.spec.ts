@@ -13,7 +13,7 @@ import { seedWorkspace } from "../support/helpers/seed-client";
 import { getServerId } from "../support/helpers/server-id";
 import { waitForSidebarHydration } from "../support/helpers/workspace-ui";
 
-const CREATE_AGENT_PREFERENCES_KEY = "@paseo:create-agent-preferences";
+const CREATE_AGENT_PREFERENCES_KEY = "@vincu:create-agent-preferences";
 
 type WebSocketMessage = string | Buffer;
 

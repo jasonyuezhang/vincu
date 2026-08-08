@@ -8,12 +8,12 @@ category: Hub
 
 # Hub workflows
 
-A workflow is the work Hub performs after a trigger matches an event. You describe it in `.paseo/hub.yml`, next to the environments where your agents run.
+A workflow is the work Hub performs after a trigger matches an event. You describe it in `.vincu/hub.yml`, next to the environments where your agents run.
 
 The basic shape is small:
 
 ```text
-Slack mention → Hub trigger → workflow step → Paseo daemon → agent
+Slack mention → Hub trigger → workflow step → Vincu daemon → agent
 ```
 
 You can stop there with one step. Add deterministic inputs when the person invoking the workflow should choose a route. Add structured outputs when an agent should make a decision for a later step.
@@ -48,7 +48,7 @@ triggers:
         prompt:
           - text: |
               Help with this request:
-              ${{ paseo.prompt }}
+              ${{ vincu.prompt }}
         allow_outputs:
           - type: slack.reply
 ```
@@ -56,10 +56,10 @@ triggers:
 Mention the bot in the configured channel:
 
 ```text
-@Paseo how do I run the project locally?
+@Vincu how do I run the project locally?
 ```
 
-Hub removes the mention and gives the agent `how do I run the project locally?` as `${{ paseo.prompt }}`. The agent can use the configured `slack.reply` capability to answer in the thread.
+Hub removes the mention and gives the agent `how do I run the project locally?` as `${{ vincu.prompt }}`. The agent can use the configured `slack.reply` capability to answer in the thread.
 
 What happens next:
 
@@ -81,7 +81,7 @@ Declare the input on the trigger:
 inputs:
   repo:
     type: string
-    choices: [project, paseo]
+    choices: [project, vincu]
   agent:
     type: string
     default: codex
@@ -91,15 +91,15 @@ inputs:
 The caller puts declared inputs at the start of the message:
 
 ```text
-@Paseo repo=project agent=claude investigate the failed sync
+@Vincu repo=project agent=claude investigate the failed sync
 ```
 
-Hub stores these values under `paseo.inputs` and passes the remaining text as the prompt:
+Hub stores these values under `vincu.inputs` and passes the remaining text as the prompt:
 
 ```text
-paseo.inputs.repo  = "project"
-paseo.inputs.agent = "claude"
-paseo.prompt       = "investigate the failed sync"
+vincu.inputs.repo  = "project"
+vincu.inputs.agent = "claude"
+vincu.prompt       = "investigate the failed sync"
 ```
 
 Inputs can be `string`, `number`, or `boolean`. Add `required`, `default`, or `choices` when needed. A value that does not match its type or choices, a missing required value, or a duplicate input creates a rejected Activity record and starts no agent.
@@ -107,7 +107,7 @@ Inputs can be `string`, `number`, or `boolean`. Add `required`, `default`, or `c
 The first word that is not a declared input starts the prompt. This lets ordinary text remain ordinary text:
 
 ```text
-@Paseo repo=project status=blocked explain the failure
+@Vincu repo=project status=blocked explain the failure
 ```
 
 If `status` is not declared, the prompt is `status=blocked explain the failure`. It is not treated as workflow input.
@@ -123,7 +123,7 @@ filters:
     repo: project
 ```
 
-Create a second trigger with `repo: paseo` and the same input declaration. The two routes are exclusive for a supplied `repo` value. See [Repository routing](/docs/hub/configuration/examples#repository-routing) for a complete configuration.
+Create a second trigger with `repo: vincu` and the same input declaration. The two routes are exclusive for a supplied `repo` value. See [Repository routing](/docs/hub/configuration/examples#repository-routing) for a complete configuration.
 
 ## Structured outputs
 
@@ -142,7 +142,7 @@ steps:
       mode: read-only
     prompt:
       - text: Classify the request as answer or implementation.
-      - text: ${{ paseo.prompt }}
+      - text: ${{ vincu.prompt }}
     output:
       schema:
         type: object
@@ -162,7 +162,7 @@ steps:
       mode: read-only
     prompt:
       - text: Answer the request without changing files.
-      - text: ${{ paseo.prompt }}
+      - text: ${{ vincu.prompt }}
 
   - id: implementation
     if: ${{ steps.classify.outputs.kind == 'implementation' }}
@@ -174,7 +174,7 @@ steps:
       mode: full-access
     prompt:
       - text: Implement the request and verify the result.
-      - text: ${{ paseo.prompt }}
+      - text: ${{ vincu.prompt }}
 ```
 
 The classifier calls the `finish_execution` capability with:
@@ -201,7 +201,7 @@ An agent-produced value cannot grant arbitrary authority. If an output selects a
 
 The namespaces stay separate:
 
-- `${{ paseo.inputs.repo }}` — deterministic caller evidence.
+- `${{ vincu.inputs.repo }}` — deterministic caller evidence.
 - `${{ steps.classify.outputs.repo }}` — structured agent evidence.
 - `${{ values.selected_repo }}` — a composed value.
 
@@ -209,11 +209,11 @@ Compose an override and fallback with `??`:
 
 ```yaml
 values:
-  selected_repo: ${{ paseo.inputs.repo ?? steps.classify.outputs.repo }}
+  selected_repo: ${{ vincu.inputs.repo ?? steps.classify.outputs.repo }}
 
 steps:
   - id: classify
-    if: ${{ paseo.inputs.repo == null }}
+    if: ${{ vincu.inputs.repo == null }}
     # ...
 ```
 

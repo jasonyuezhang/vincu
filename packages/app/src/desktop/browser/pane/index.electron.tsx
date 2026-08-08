@@ -318,14 +318,14 @@ function ignoreWebviewJavaScriptError() {}
 function destroyWebviewSelector(webview: ElectronWebview): void {
   void executeWebviewJavaScript(
     webview,
-    "if(window.__paseoSelector) window.__paseoSelector.destroy();",
+    "if(window.__vincuSelector) window.__vincuSelector.destroy();",
   ).catch(ignoreWebviewJavaScriptError);
 }
 
 function clearWebviewSelector(webview: ElectronWebview): void {
   void executeWebviewJavaScript(
     webview,
-    "if(window.__paseoSelector) window.__paseoSelector.destroy(); window.__paseoSelectorResult = null;",
+    "if(window.__vincuSelector) window.__vincuSelector.destroy(); window.__vincuSelectorResult = null;",
   ).catch(ignoreWebviewJavaScriptError);
 }
 
@@ -345,7 +345,7 @@ function buildAnnotationMarkerScript(markers: readonly BrowserAnnotationMarker[]
   return `
     (function() {
       var markers = ${payload};
-      if (window.__paseoAnnotationMarkers) { window.__paseoAnnotationMarkers.update(markers); return true; }
+      if (window.__vincuAnnotationMarkers) { window.__vincuAnnotationMarkers.update(markers); return true; }
       var host = document.createElement('div');
       host.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;z-index:2147483646;pointer-events:none;';
       (document.body || document.documentElement).appendChild(host);
@@ -381,14 +381,14 @@ function buildAnnotationMarkerScript(markers: readonly BrowserAnnotationMarker[]
       }
       window.addEventListener('scroll', schedule, true);
       window.addEventListener('resize', schedule, true);
-      window.__paseoAnnotationMarkers = {
+      window.__vincuAnnotationMarkers = {
         update: function(next) { current = next; schedule(); },
         destroy: function() {
           window.removeEventListener('scroll', schedule, true);
           window.removeEventListener('resize', schedule, true);
           clearBadges();
           if (host.parentNode) host.parentNode.removeChild(host);
-          window.__paseoAnnotationMarkers = null;
+          window.__vincuAnnotationMarkers = null;
         }
       };
       reposition();
@@ -409,7 +409,7 @@ function applyAnnotationMarkers(
 function clearAnnotationMarkers(webview: ElectronWebview): void {
   void executeWebviewJavaScript(
     webview,
-    "if(window.__paseoAnnotationMarkers) window.__paseoAnnotationMarkers.destroy();",
+    "if(window.__vincuAnnotationMarkers) window.__vincuAnnotationMarkers.destroy();",
   ).catch(ignoreWebviewJavaScriptError);
 }
 
@@ -448,7 +448,7 @@ function startSelectorResultPolling(input: {
       try {
         const raw = await executeWebviewJavaScript(
           webview,
-          "JSON.stringify(window.__paseoSelectorResult || null)",
+          "JSON.stringify(window.__vincuSelectorResult || null)",
         );
         const result = typeof raw === "string" ? JSON.parse(raw) : null;
         if (!result) {
@@ -456,7 +456,7 @@ function startSelectorResultPolling(input: {
         }
         window.clearInterval(poll);
         onDone();
-        await executeWebviewJavaScript(webview, "window.__paseoSelectorResult = null;");
+        await executeWebviewJavaScript(webview, "window.__vincuSelectorResult = null;");
         if (!result.__cancelled) {
           onSelection(result as BrowserElementSelection);
         }
@@ -1243,26 +1243,26 @@ export function BrowserPane({
 
       const js = `
       (function() {
-        if (window.__paseoSelector) { window.__paseoSelector.destroy(); }
+        if (window.__vincuSelector) { window.__vincuSelector.destroy(); }
         var overlay = null;
         var style = document.createElement('style');
         style.textContent = [
-          '.__paseo-hover { outline: 2px solid #3b82f6 !important; outline-offset: 2px !important; cursor: crosshair !important; }',
-          '.__paseo-select-mode, .__paseo-select-mode * { cursor: crosshair !important; pointer-events: auto !important; user-select: none !important; }',
-          '.__paseo-select-mode *, .__paseo-select-mode *::before, .__paseo-select-mode *::after { animation: none !important; transition: none !important; }',
-          '.__paseo-select-mode a, .__paseo-select-mode button, .__paseo-select-mode input, .__paseo-select-mode select, .__paseo-select-mode textarea, .__paseo-select-mode [role="button"], .__paseo-select-mode [onclick] { pointer-events: none !important; }',
-          '.__paseo-select-mode iframe, .__paseo-select-mode video, .__paseo-select-mode audio { pointer-events: none !important; }',
-          '.__paseo-hover-label { position: fixed; z-index: 2147483647; pointer-events: none; max-width: 360px; padding: 4px 8px; border-radius: 6px; background: rgba(24,24,27,0.96); color: #fff; font: 500 11px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace; box-shadow: 0 2px 10px rgba(0,0,0,0.35); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }',
-          '.__paseo-hover-label .__paseo-tag { color: #93c5fd; }',
-          '.__paseo-hover-label .__paseo-id { color: #fca5a5; }',
-          '.__paseo-hover-label .__paseo-cls { color: #fcd34d; }',
-          '.__paseo-hover-label .__paseo-dim { color: #a1a1aa; margin-left: 6px; }',
-          '.__paseo-hover-label .__paseo-comp { color: #86efac; margin-left: 6px; }',
+          '.__vincu-hover { outline: 2px solid #3b82f6 !important; outline-offset: 2px !important; cursor: crosshair !important; }',
+          '.__vincu-select-mode, .__vincu-select-mode * { cursor: crosshair !important; pointer-events: auto !important; user-select: none !important; }',
+          '.__vincu-select-mode *, .__vincu-select-mode *::before, .__vincu-select-mode *::after { animation: none !important; transition: none !important; }',
+          '.__vincu-select-mode a, .__vincu-select-mode button, .__vincu-select-mode input, .__vincu-select-mode select, .__vincu-select-mode textarea, .__vincu-select-mode [role="button"], .__vincu-select-mode [onclick] { pointer-events: none !important; }',
+          '.__vincu-select-mode iframe, .__vincu-select-mode video, .__vincu-select-mode audio { pointer-events: none !important; }',
+          '.__vincu-hover-label { position: fixed; z-index: 2147483647; pointer-events: none; max-width: 360px; padding: 4px 8px; border-radius: 6px; background: rgba(24,24,27,0.96); color: #fff; font: 500 11px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace; box-shadow: 0 2px 10px rgba(0,0,0,0.35); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }',
+          '.__vincu-hover-label .__vincu-tag { color: #93c5fd; }',
+          '.__vincu-hover-label .__vincu-id { color: #fca5a5; }',
+          '.__vincu-hover-label .__vincu-cls { color: #fcd34d; }',
+          '.__vincu-hover-label .__vincu-dim { color: #a1a1aa; margin-left: 6px; }',
+          '.__vincu-hover-label .__vincu-comp { color: #86efac; margin-left: 6px; }',
         ].join('\\n');
         document.head.appendChild(style);
-        document.documentElement.classList.add('__paseo-select-mode');
+        document.documentElement.classList.add('__vincu-select-mode');
         var hoverLabel = document.createElement('div');
-        hoverLabel.className = '__paseo-hover-label';
+        hoverLabel.className = '__vincu-hover-label';
         hoverLabel.style.display = 'none';
         document.documentElement.appendChild(hoverLabel);
         var last = null;
@@ -1273,23 +1273,23 @@ export function BrowserPane({
         }
         function describeElement(el) {
           var tag = el.tagName ? el.tagName.toLowerCase() : 'node';
-          var parts = ['<span class="__paseo-tag">' + escapeHtml(tag) + '</span>'];
+          var parts = ['<span class="__vincu-tag">' + escapeHtml(tag) + '</span>'];
           if (el.id) {
-            parts.push('<span class="__paseo-id">#' + escapeHtml(el.id) + '</span>');
+            parts.push('<span class="__vincu-id">#' + escapeHtml(el.id) + '</span>');
           }
           if (el.classList && el.classList.length) {
             var cls = Array.prototype.slice.call(el.classList, 0, 2)
-              .filter(function(c) { return c.indexOf('__paseo') !== 0; })
+              .filter(function(c) { return c.indexOf('__vincu') !== 0; })
               .map(function(c) { return '.' + escapeHtml(c); })
               .join('');
-            if (cls) parts.push('<span class="__paseo-cls">' + cls + '</span>');
+            if (cls) parts.push('<span class="__vincu-cls">' + cls + '</span>');
           }
           var comp = getReactSource(el);
           if (comp && comp.componentName) {
-            parts.push('<span class="__paseo-comp">&lt;' + escapeHtml(comp.componentName) + '&gt;</span>');
+            parts.push('<span class="__vincu-comp">&lt;' + escapeHtml(comp.componentName) + '&gt;</span>');
           }
           var rect = el.getBoundingClientRect();
-          parts.push('<span class="__paseo-dim">' + Math.round(rect.width) + '×' + Math.round(rect.height) + '</span>');
+          parts.push('<span class="__vincu-dim">' + Math.round(rect.width) + '×' + Math.round(rect.height) + '</span>');
           return { html: parts.join(''), rect: rect };
         }
         function positionLabel(rect, e) {
@@ -1308,9 +1308,9 @@ export function BrowserPane({
         function onMove(e) {
           e.preventDefault();
           e.stopPropagation();
-          if (last) last.classList.remove('__paseo-hover');
+          if (last) last.classList.remove('__vincu-hover');
           var el = e.target;
-          el.classList.add('__paseo-hover');
+          el.classList.add('__vincu-hover');
           last = el;
           try {
             var info = describeElement(el);
@@ -1395,7 +1395,7 @@ export function BrowserPane({
           e.stopPropagation();
           e.stopImmediatePropagation();
           var el = e.target;
-          if (last) last.classList.remove('__paseo-hover');
+          if (last) last.classList.remove('__vincu-hover');
           hoverLabel.style.display = 'none';
           var attrs = {};
           for (var i = 0; i < el.attributes.length; i++) {
@@ -1416,10 +1416,10 @@ export function BrowserPane({
             children: getChildSummary(el, 8)
           };
           destroy();
-          window.__paseoSelectorResult = result;
+          window.__vincuSelectorResult = result;
         }
         function onKey(e) {
-          if (e.key === 'Escape') { destroy(); window.__paseoSelectorResult = { __cancelled: true }; }
+          if (e.key === 'Escape') { destroy(); window.__vincuSelectorResult = { __cancelled: true }; }
         }
         function blockEvent(e) {
           e.preventDefault();
@@ -1438,11 +1438,11 @@ export function BrowserPane({
           document.removeEventListener('touchend', blockEvent, true);
           document.removeEventListener('focus', blockEvent, true);
           document.removeEventListener('submit', blockEvent, true);
-          document.documentElement.classList.remove('__paseo-select-mode');
-          if (last) last.classList.remove('__paseo-hover');
+          document.documentElement.classList.remove('__vincu-select-mode');
+          if (last) last.classList.remove('__vincu-hover');
           if (hoverLabel.parentNode) hoverLabel.parentNode.removeChild(hoverLabel);
           style.remove();
-          window.__paseoSelector = null;
+          window.__vincuSelector = null;
         }
         document.addEventListener('mousemove', onMove, true);
         document.addEventListener('click', onClick, true);
@@ -1455,7 +1455,7 @@ export function BrowserPane({
         document.addEventListener('touchend', blockEvent, true);
         document.addEventListener('focus', blockEvent, true);
         document.addEventListener('submit', blockEvent, true);
-        window.__paseoSelector = { destroy: destroy };
+        window.__vincuSelector = { destroy: destroy };
       })()
     `;
 

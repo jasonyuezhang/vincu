@@ -15,14 +15,14 @@ describe("Hub device authorization", () => {
       launch: async (command, args) => void launches.push({ command, args }),
     });
 
-    await browser.open("https://cloud.paseo.test/activate?code=ABCD-EFGH-JKLMN");
+    await browser.open("https://cloud.vincu.test/activate?code=ABCD-EFGH-JKLMN");
 
     assert.deepEqual(launches, [
       {
         command: "rundll32.exe",
         args: [
           "url.dll,FileProtocolHandler",
-          "https://cloud.paseo.test/activate?code=ABCD-EFGH-JKLMN",
+          "https://cloud.vincu.test/activate?code=ABCD-EFGH-JKLMN",
         ],
       },
     ]);
@@ -36,31 +36,31 @@ describe("Hub device authorization", () => {
     ]);
     const authorization = new AuthorizationJourney(cloud);
 
-    const token = await authorization.approve("https://cloud.paseo.test", "Studio Mac");
+    const token = await authorization.approve("https://cloud.vincu.test", "Studio Mac");
 
     assert.equal(token, "approved-enrollment-token-1234567890");
     assert.deepEqual(authorization.observed(), {
-      starts: [{ hubUrl: "https://cloud.paseo.test", displayName: "Studio Mac" }],
+      starts: [{ hubUrl: "https://cloud.vincu.test", displayName: "Studio Mac" }],
       polls: [
         {
-          hubUrl: "https://cloud.paseo.test",
+          hubUrl: "https://cloud.vincu.test",
           deviceCode: "device-code-with-more-than-thirty-two-characters",
           timeoutMilliseconds: 595_000,
         },
         {
-          hubUrl: "https://cloud.paseo.test",
+          hubUrl: "https://cloud.vincu.test",
           deviceCode: "device-code-with-more-than-thirty-two-characters",
           timeoutMilliseconds: 590_000,
         },
         {
-          hubUrl: "https://cloud.paseo.test",
+          hubUrl: "https://cloud.vincu.test",
           deviceCode: "device-code-with-more-than-thirty-two-characters",
           timeoutMilliseconds: 580_000,
         },
       ],
       waits: [5_000, 5_000, 10_000],
-      opened: ["https://cloud.paseo.test/activate?code=ABCD-EFGH-JKLMN"],
-      instructions: ["https://cloud.paseo.test/activate ABCD-EFGH-JKLMN"],
+      opened: ["https://cloud.vincu.test/activate?code=ABCD-EFGH-JKLMN"],
+      instructions: ["https://cloud.vincu.test/activate ABCD-EFGH-JKLMN"],
     });
   });
 
@@ -69,7 +69,7 @@ describe("Hub device authorization", () => {
       new FakeCloud([{ status: "denied", interval: 5 }]),
     );
 
-    await assert.rejects(authorization.approve("https://cloud.paseo.test", "Studio Mac"), {
+    await assert.rejects(authorization.approve("https://cloud.vincu.test", "Studio Mac"), {
       message: "Daemon registration was denied",
     });
   });
@@ -86,7 +86,7 @@ describe("Hub device authorization", () => {
       ]),
     );
 
-    const token = await authorization.approve("https://cloud.paseo.test", "Studio Mac");
+    const token = await authorization.approve("https://cloud.vincu.test", "Studio Mac");
 
     assert.equal(token, "stable-enrollment-token-after-response-loss");
     assert.deepEqual(authorization.observed().waits, [5_000, 5_000]);
@@ -100,7 +100,7 @@ describe("Hub device authorization", () => {
       ),
     );
 
-    await assert.rejects(authorization.approve("https://cloud.paseo.test", "Studio Mac"), {
+    await assert.rejects(authorization.approve("https://cloud.vincu.test", "Studio Mac"), {
       message: "Daemon registration expired",
     });
     assert.deepEqual(authorization.observed().waits, [5_000, 5_000, 1_000]);
@@ -115,7 +115,7 @@ describe("Hub device authorization", () => {
       new FakeCloud([{ status: "expired", interval: 5 }]),
     );
 
-    await assert.rejects(authorization.approve("https://cloud.paseo.test", "Studio Mac"), {
+    await assert.rejects(authorization.approve("https://cloud.vincu.test", "Studio Mac"), {
       message: "Daemon registration expired",
     });
   });
@@ -126,18 +126,18 @@ describe("Hub device authorization", () => {
     await createHubCommand({
       connect: async () => daemon,
       authorize: async (url, displayName) => {
-        assert.equal(url, "https://cloud.paseo.test");
+        assert.equal(url, "https://cloud.vincu.test");
         assert.equal(displayName, "Studio Mac");
         return "approved-enrollment-token-1234567890";
       },
       displayName: () => "Studio Mac",
-    }).parseAsync(["node", "paseo hub", "connect", "https://cloud.paseo.test", "--json"], {
+    }).parseAsync(["node", "vincu hub", "connect", "https://cloud.vincu.test", "--json"], {
       from: "node",
     });
 
     assert.deepEqual(daemon.connections, [
       {
-        url: "https://cloud.paseo.test",
+        url: "https://cloud.vincu.test",
         token: "approved-enrollment-token-1234567890",
       },
     ]);
@@ -155,7 +155,7 @@ describe("Hub device authorization", () => {
         return "approved-enrollment-token-1234567890";
       },
       displayName: () => `  ${"very-long-hostname".repeat(10)}  `,
-    }).parseAsync(["node", "paseo hub", "connect", "https://cloud.paseo.test", "--json"], {
+    }).parseAsync(["node", "vincu hub", "connect", "https://cloud.vincu.test", "--json"], {
       from: "node",
     });
 
@@ -220,8 +220,8 @@ class FakeCloud implements CloudDeviceAuthorization {
     return {
       deviceCode: "device-code-with-more-than-thirty-two-characters",
       userCode: "ABCD-EFGH-JKLMN",
-      verificationUri: "https://cloud.paseo.test/activate",
-      verificationUriComplete: "https://cloud.paseo.test/activate?code=ABCD-EFGH-JKLMN",
+      verificationUri: "https://cloud.vincu.test/activate",
+      verificationUriComplete: "https://cloud.vincu.test/activate?code=ABCD-EFGH-JKLMN",
       expiresAt: this.expiresAt,
       interval: 5,
     };
@@ -265,7 +265,7 @@ function hubStatus(state: string) {
   return {
     state,
     daemonId: state === "connected" ? "daemon-1" : null,
-    hubOrigin: state === "connected" ? "https://cloud.paseo.test" : null,
+    hubOrigin: state === "connected" ? "https://cloud.vincu.test" : null,
     scopes: state === "connected" ? ["hub.execution.*"] : [],
     connectedAt: null,
     lastError: null,

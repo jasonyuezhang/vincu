@@ -31,18 +31,18 @@ export async function runHubDeploy(
   options: HubDeployOptions,
   environment: HubDeployEnvironment = { cwd: process.cwd(), env: process.env },
 ): Promise<SingleResult<HubInstallResult>> {
-  const origin = options.hub ?? environment.env.PASEO_HUB_URL;
-  const apiKey = options.apiKey ?? environment.env.PASEO_HUB_API_KEY;
+  const origin = options.hub ?? environment.env.VINCU_HUB_URL;
+  const apiKey = options.apiKey ?? environment.env.VINCU_HUB_API_KEY;
   if (!origin) {
     throw new HubDeployError(
       "HUB_ORIGIN_REQUIRED",
-      "Hub origin is required. Pass --hub <origin> or set PASEO_HUB_URL.",
+      "Hub origin is required. Pass --hub <origin> or set VINCU_HUB_URL.",
     );
   }
   if (!apiKey) {
     throw new HubDeployError(
       "HUB_API_KEY_REQUIRED",
-      "Hub API key is required. Pass --api-key <secret> or set PASEO_HUB_API_KEY.",
+      "Hub API key is required. Pass --api-key <secret> or set VINCU_HUB_API_KEY.",
     );
   }
 
@@ -66,9 +66,9 @@ export function addHubDeployCommand(hub: Command): void {
     hub
       .command("deploy")
       .description("Install and activate a Hub configuration")
-      .argument("[file]", "Hub configuration YAML", ".paseo/hub.yml")
+      .argument("[file]", "Hub configuration YAML", ".vincu/hub.yml")
       .option("-p, --project <slug>", "Target project slug")
-      .option("--hub <origin>", "Paseo Hub origin")
+      .option("--hub <origin>", "Vincu Hub origin")
       .option("--api-key <secret>", "Organization API key"),
   ).action(
     withOutput(async (...args) => {

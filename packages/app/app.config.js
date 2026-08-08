@@ -5,8 +5,8 @@ const withAndroidProfileable = require("./plugins/with-android-profileable");
 const withFdroidAutolinking = require("./plugins/with-fdroid-autolinking");
 const { getNativeReleaseVersion } = require("./native-release-version");
 const appVariant = process.env.APP_VARIANT ?? "production";
-const isFdroidBuild = process.env.PASEO_FDROID_BUILD === "1";
-const isProfileBuild = process.env.PASEO_PROFILE_BUILD === "1";
+const isFdroidBuild = process.env.VINCU_FDROID_BUILD === "1";
+const isProfileBuild = process.env.VINCU_PROFILE_BUILD === "1";
 
 const buildProfile = isFdroidBuild
   ? {
@@ -64,8 +64,8 @@ function resolveSecretFile(params) {
 
 const variants = {
   production: {
-    name: "Paseo",
-    packageId: "sh.paseo",
+    name: "Vincu",
+    packageId: "sh.vincu",
     googleServicesFile: resolveSecretFile({
       envKey: "GOOGLE_SERVICES_FILE_PROD",
       fallbackRelativePath: "./.secrets/google-services.prod.json",
@@ -76,8 +76,8 @@ const variants = {
     }),
   },
   development: {
-    name: "Paseo Debug",
-    packageId: "sh.paseo.debug",
+    name: "Vincu Debug",
+    packageId: "sh.vincu.debug",
     googleServicesFile: resolveSecretFile({
       envKey: "GOOGLE_SERVICES_FILE_DEBUG",
       fallbackRelativePath: "./.secrets/google-services.debug.json",
@@ -99,7 +99,7 @@ export default {
     version: nativeReleaseVersion.appVersion,
     orientation: "portrait",
     icon: "./assets/images/icon.png",
-    scheme: "paseo",
+    scheme: "vincu",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     ios: {
@@ -187,6 +187,6 @@ export default {
         projectId: "0e7f65ce-0367-46c8-a238-2b65963d235a",
       },
     },
-    owner: "getpaseo",
+    owner: "getvincu",
   },
 };

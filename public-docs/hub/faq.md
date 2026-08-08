@@ -1,6 +1,6 @@
 ---
 title: Hub FAQ
-description: Common questions about projects, connections, configuration, and daemons in Paseo Hub.
+description: Common questions about projects, connections, configuration, and daemons in Vincu Hub.
 nav: FAQ
 order: 77
 category: Hub
@@ -8,9 +8,9 @@ category: Hub
 
 # Hub FAQ
 
-## Do I need Hub to use Paseo?
+## Do I need Hub to use Vincu?
 
-No. Paseo runs agents on your machines without it. Hub adds what a single daemon cannot do on its own: starting agents from external activity, versioned configuration, a shared record of what ran, and team access.
+No. Vincu runs agents on your machines without it. Hub adds what a single daemon cannot do on its own: starting agents from external activity, versioned configuration, a shared record of what ran, and team access.
 
 ## Can one organization connect several GitHub organizations?
 
@@ -28,7 +28,7 @@ Yes. Both run. Repositories are not owned by a project.
 
 ## Can the configuration live somewhere other than the repository being watched?
 
-Yes. `filters.repo` can name any repository the organization can reach, so a private repository can hold `.paseo/hub.yml` for triggers that watch public ones. Push access to that repository grants access to the organization's connections, which is a good reason to keep it private and protected.
+Yes. `filters.repo` can name any repository the organization can reach, so a private repository can hold `.vincu/hub.yml` for triggers that watch public ones. Push access to that repository grants access to the organization's connections, which is a good reason to keep it private and protected.
 
 ## Can I edit configuration in the dashboard?
 

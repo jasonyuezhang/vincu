@@ -5,10 +5,10 @@ import type { CheckoutSnapshotFacts, CheckoutStatusGit } from "../utils/checkout
 import { CheckoutDiffManager } from "./checkout-diff-manager.js";
 import { WorkspaceGitServiceImpl } from "./workspace-git-service.js";
 
-const REPO_CWD = path.resolve("/tmp/paseo-observation-repo");
+const REPO_CWD = path.resolve("/tmp/vincu-observation-repo");
 const GIT_DIR = path.join(REPO_CWD, ".git");
-const WORKTREE_A = path.resolve("/tmp/paseo-observation-worktree-a");
-const WORKTREE_B = path.resolve("/tmp/paseo-observation-worktree-b");
+const WORKTREE_A = path.resolve("/tmp/vincu-observation-worktree-a");
+const WORKTREE_B = path.resolve("/tmp/vincu-observation-worktree-b");
 
 interface WatchEvent {
   path: string;
@@ -55,7 +55,7 @@ function createCheckoutFacts(cwd: string): CheckoutSnapshotFacts {
     remoteUrl: null,
     absoluteGitDir: path.join(cwd, ".git"),
     gitCommonDir: path.join(cwd, ".git"),
-    paseoWorktree: { isPaseoOwnedWorktree: false },
+    vincuWorktree: { isVincuOwnedWorktree: false },
     storedBaseRef: null,
     resolvedBaseRef: "main",
     mainRepoRoot: null,
@@ -94,7 +94,7 @@ function createCheckoutStatus(
     behindOfOrigin: null,
     hasRemote: false,
     remoteUrl: null,
-    isPaseoOwnedWorktree: false,
+    isVincuOwnedWorktree: false,
     ...overrides,
   };
 }
@@ -136,7 +136,7 @@ function createService(
     defaultGetCheckoutShortstat;
   return new WorkspaceGitServiceImpl({
     logger: createLogger(),
-    paseoHome: "/tmp/paseo-home",
+    vincuHome: "/tmp/vincu-home",
     deps: {
       subscribe: watcher.subscribe,
       getCheckoutSnapshotFacts: vi.fn(async (cwd: string) => createCheckoutFacts(cwd)),
@@ -298,7 +298,7 @@ describe("WorkspaceGitService checkout observation", () => {
     });
     const diffManager = new CheckoutDiffManager({
       logger: createLogger(),
-      paseoHome: "/tmp/paseo-home",
+      vincuHome: "/tmp/vincu-home",
       workspaceGitService: service,
     });
     const summaryListener = vi.fn();
@@ -616,7 +616,7 @@ describe("WorkspaceGitService checkout observation", () => {
     });
     const diffManager = new CheckoutDiffManager({
       logger: createLogger(),
-      paseoHome: "/tmp/paseo-home",
+      vincuHome: "/tmp/vincu-home",
       workspaceGitService: service,
     });
     const summaryListener = vi.fn();
@@ -671,7 +671,7 @@ describe("WorkspaceGitService checkout observation", () => {
     const service = createService(watcher, { getCheckoutDiff, getCheckoutWorktreeState });
     const diffManager = new CheckoutDiffManager({
       logger: createLogger(),
-      paseoHome: "/tmp/paseo-home",
+      vincuHome: "/tmp/vincu-home",
       workspaceGitService: service,
     });
     const diffSubscription = await diffManager.subscribe(
@@ -815,9 +815,9 @@ describe("WorkspaceGitService checkout observation", () => {
     const watcher = createWatcherHarness();
     const fetch = createDeferred<void>();
     const runGitFetch = vi.fn(() => fetch.promise);
-    const commonGitDir = path.resolve("/tmp/paseo-shared-repository.git");
+    const commonGitDir = path.resolve("/tmp/vincu-shared-repository.git");
     const worktrees = Array.from({ length: 10 }, (_, index) =>
-      path.resolve(`/tmp/paseo-shared-worktree-${index}`),
+      path.resolve(`/tmp/vincu-shared-worktree-${index}`),
     );
     const getCheckoutSnapshotFacts = vi.fn(
       async (cwd: string): Promise<CheckoutSnapshotFacts> => ({
@@ -1057,7 +1057,7 @@ describe("WorkspaceGitService checkout observation", () => {
     });
     const diffManager = new CheckoutDiffManager({
       logger: createLogger(),
-      paseoHome: "/tmp/paseo-home",
+      vincuHome: "/tmp/vincu-home",
       workspaceGitService: service,
     });
     const listener = vi.fn();

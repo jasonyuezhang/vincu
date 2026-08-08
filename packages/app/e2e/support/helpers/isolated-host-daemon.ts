@@ -15,7 +15,7 @@ import { withDisabledE2ESpeechEnv } from "./speech-env";
 export interface IsolatedHostDaemon {
   serverId: string;
   port: number;
-  paseoHome: string;
+  vincuHome: string;
   getPid(): number | undefined;
   restart(): Promise<void>;
   close(): Promise<void>;
@@ -27,7 +27,7 @@ export interface IsolatedHostDaemonOptions {
     enabled: boolean;
     endpoint?: string;
   };
-  paseoHome?: string;
+  vincuHome?: string;
   preserveHome?: boolean;
   publishedVersion?: string;
 }
@@ -105,11 +105,11 @@ export async function startIsolatedHostDaemon(
   const metroPort = process.env.E2E_METRO_PORT;
   if (!metroPort) throw new Error("E2E_METRO_PORT is required to start an isolated host daemon");
 
-  const paseoHome =
-    options.paseoHome ?? (await mkdtemp(path.join(tmpdir(), "paseo-e2e-secondary-host-")));
+  const vincuHome =
+    options.vincuHome ?? (await mkdtemp(path.join(tmpdir(), "vincu-e2e-secondary-host-")));
   let publishedPackageRoot: string | null = null;
   if (options.publishedVersion) {
-    publishedPackageRoot = await mkdtemp(path.join(tmpdir(), "paseo-e2e-published-server-"));
+    publishedPackageRoot = await mkdtemp(path.join(tmpdir(), "vincu-e2e-published-server-"));
     await writeFile(
       path.join(publishedPackageRoot, "package.json"),
       `${JSON.stringify({ private: true })}\n`,
@@ -123,7 +123,7 @@ export async function startIsolatedHostDaemon(
           "--no-audit",
           "--no-fund",
           "--no-package-lock",
-          `@getpaseo/server@${options.publishedVersion}`,
+          `@getvincu/server@${options.publishedVersion}`,
         ],
         { cwd: publishedPackageRoot, stdio: "ignore" },
       );
@@ -137,7 +137,7 @@ export async function startIsolatedHostDaemon(
       options.mutableRelay.endpoint ??
       (process.env.E2E_RELAY_PORT ? `127.0.0.1:${process.env.E2E_RELAY_PORT}` : "127.0.0.1:9");
     await writeFile(
-      path.join(paseoHome, "config.json"),
+      path.join(vincuHome, "config.json"),
       `${JSON.stringify({
         version: 1,
         daemon: {
@@ -153,7 +153,7 @@ export async function startIsolatedHostDaemon(
     );
   }
   const serverDir = publishedPackageRoot
-    ? path.join(publishedPackageRoot, "node_modules", "@getpaseo", "server")
+    ? path.join(publishedPackageRoot, "node_modules", "@getvincu", "server")
     : path.resolve(__dirname, "../../../../server");
   const tsxBin = execSync("which tsx").toString().trim();
   const spawnDaemon = async (): Promise<ChildProcess> => {
@@ -162,12 +162,12 @@ export async function startIsolatedHostDaemon(
       env: withDisabledE2ESpeechEnv({
         ...process.env,
         ...options.environment,
-        PASEO_HOME: paseoHome,
-        PASEO_SERVER_ID: serverId,
-        PASEO_LISTEN: `127.0.0.1:${port}`,
-        PASEO_CORS_ORIGINS: `http://localhost:${metroPort}`,
-        PASEO_RELAY_ENABLED: options.mutableRelay ? undefined : "0",
-        PASEO_NODE_ENV: "development",
+        VINCU_HOME: vincuHome,
+        VINCU_SERVER_ID: serverId,
+        VINCU_LISTEN: `127.0.0.1:${port}`,
+        VINCU_CORS_ORIGINS: `http://localhost:${metroPort}`,
+        VINCU_RELAY_ENABLED: options.mutableRelay ? undefined : "0",
+        VINCU_NODE_ENV: "development",
         NODE_ENV: "development",
       }),
       stdio: ["ignore", "ignore", "pipe"],
@@ -200,7 +200,7 @@ export async function startIsolatedHostDaemon(
     child = await spawnDaemon();
   } catch (error) {
     if (!options.preserveHome) {
-      await rm(paseoHome, { recursive: true, force: true });
+      await rm(vincuHome, { recursive: true, force: true });
     }
     if (publishedPackageRoot) {
       await rm(publishedPackageRoot, { recursive: true, force: true });
@@ -212,7 +212,7 @@ export async function startIsolatedHostDaemon(
   return {
     serverId,
     port,
-    paseoHome,
+    vincuHome,
     getPid: () => child.pid,
     restart: async () => {
       if (closed) throw new Error(`Cannot restart closed isolated daemon ${serverId}`);
@@ -224,7 +224,7 @@ export async function startIsolatedHostDaemon(
       closed = true;
       await stopProcess(child);
       if (!options.preserveHome) {
-        await rm(paseoHome, { recursive: true, force: true });
+        await rm(vincuHome, { recursive: true, force: true });
       }
       if (publishedPackageRoot) {
         await rm(publishedPackageRoot, { recursive: true, force: true });

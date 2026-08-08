@@ -4,7 +4,7 @@ import path from "node:path";
 import { expect, test } from "vitest";
 
 import { DaemonClient } from "../test-utils/daemon-client.js";
-import { createTestPaseoDaemon, type TestPaseoDaemon } from "../test-utils/paseo-daemon.js";
+import { createTestVincuDaemon, type TestVincuDaemon } from "../test-utils/vincu-daemon.js";
 
 const CREATED_AT = "2026-06-29T11:12:42.000Z";
 const HEALTHY_UPDATED_AT = "2026-06-29T11:40:00.000Z";
@@ -16,17 +16,17 @@ interface StaleAgentFixture {
   orphanWorkspaceId: string;
   healthyAgentId: string;
   orphanAgentId: string;
-  paseoHomeRoot: string;
+  vincuHomeRoot: string;
   cleanupPaths: string[];
 }
 
 test("agent fetch RPCs tolerate an agent whose workspace project record is gone", async () => {
   const fixture = seedStaleAgentFixture();
-  let daemon: TestPaseoDaemon | null = null;
+  let daemon: TestVincuDaemon | null = null;
   let client: DaemonClient | null = null;
 
   try {
-    daemon = await createTestPaseoDaemon({ paseoHomeRoot: fixture.paseoHomeRoot, cleanup: false });
+    daemon = await createTestVincuDaemon({ vincuHomeRoot: fixture.vincuHomeRoot, cleanup: false });
     client = new DaemonClient({ url: `ws://127.0.0.1:${daemon.port}/ws` });
     await client.connect();
 
@@ -75,15 +75,15 @@ test("agent fetch RPCs tolerate an agent whose workspace project record is gone"
 });
 
 function seedStaleAgentFixture(): StaleAgentFixture {
-  const healthyCwd = mkdtempSync(path.join(os.tmpdir(), "paseo-healthy-agent-"));
-  const orphanCwd = mkdtempSync(path.join(os.tmpdir(), "paseo-orphan-agent-"));
-  const paseoHomeRoot = mkdtempSync(path.join(os.tmpdir(), "paseo-orphan-agent-home-"));
-  const paseoHome = path.join(paseoHomeRoot, ".paseo");
-  const projectsDir = path.join(paseoHome, "projects");
-  const agentsDir = path.join(paseoHome, "agents");
+  const healthyCwd = mkdtempSync(path.join(os.tmpdir(), "vincu-healthy-agent-"));
+  const orphanCwd = mkdtempSync(path.join(os.tmpdir(), "vincu-orphan-agent-"));
+  const vincuHomeRoot = mkdtempSync(path.join(os.tmpdir(), "vincu-orphan-agent-home-"));
+  const vincuHome = path.join(vincuHomeRoot, ".vincu");
+  const projectsDir = path.join(vincuHome, "projects");
+  const agentsDir = path.join(vincuHome, "agents");
   const healthyProjectId = "proj-healthy-agent-rpc";
   const healthyWorkspaceId = "ws-healthy-agent-rpc";
-  const orphanWorkspaceId = "c:\\Users\\paseo\\stale-project";
+  const orphanWorkspaceId = "c:\\Users\\vincu\\stale-project";
   const orphanProjectId = "proj-removed-agent-rpc";
   const healthyAgentId = "agent-healthy-rpc";
   const orphanAgentId = "agent-orphan-rpc";
@@ -170,8 +170,8 @@ function seedStaleAgentFixture(): StaleAgentFixture {
     orphanWorkspaceId,
     healthyAgentId,
     orphanAgentId,
-    paseoHomeRoot,
-    cleanupPaths: [healthyCwd, orphanCwd, paseoHomeRoot],
+    vincuHomeRoot,
+    cleanupPaths: [healthyCwd, orphanCwd, vincuHomeRoot],
   };
 }
 

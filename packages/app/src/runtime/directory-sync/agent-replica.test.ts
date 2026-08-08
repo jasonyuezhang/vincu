@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { DaemonClient, FetchAgentsEntry } from "@getpaseo/client/internal/daemon-client";
-import type { AgentSnapshotPayload } from "@getpaseo/protocol/messages";
+import type { DaemonClient, FetchAgentsEntry } from "@getvincu/client/internal/daemon-client";
+import type { AgentSnapshotPayload } from "@getvincu/protocol/messages";
 import { useSessionStore } from "@/stores/session-store";
 import { AgentDirectoryReplica } from "./agent-replica";
 
@@ -43,7 +43,7 @@ function entry(agent: AgentSnapshotPayload): FetchAgentsEntry {
         currentBranch: null,
         remoteUrl: null,
         worktreeRoot: null,
-        isPaseoOwnedWorktree: false,
+        isVincuOwnedWorktree: false,
         mainRepoRoot: null,
       },
     },

@@ -17,7 +17,7 @@ import { useDaemonConfig } from "@/hooks/use-daemon-config";
 import { useHostRuntimeClient, useHostRuntimeSnapshot } from "@/runtime/host-runtime";
 import type { Theme } from "@/styles/theme";
 
-const RELAY_DOCS_URL = "https://paseo.sh/docs/security";
+const RELAY_DOCS_URL = "https://vincu.sh/docs/security";
 const FLEX_ONE_STYLE = { flex: 1 } as const;
 const ThemedLoadingSpinner = withUnistyles(LoadingSpinner);
 const ThemedShieldCheck = withUnistyles(ShieldCheck);

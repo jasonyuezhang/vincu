@@ -1069,8 +1069,8 @@ describe("usage bars escalate as they fill", () => {
   let codexHome: string;
 
   beforeEach(() => {
-    claudeHome = mkdtempSync(join(tmpdir(), "paseo-tone-claude-"));
-    codexHome = mkdtempSync(join(tmpdir(), "paseo-tone-codex-"));
+    claudeHome = mkdtempSync(join(tmpdir(), "vincu-tone-claude-"));
+    codexHome = mkdtempSync(join(tmpdir(), "vincu-tone-codex-"));
   });
 
   afterEach(() => {
@@ -1145,7 +1145,7 @@ describe("ClaudeQuotaProvider scoped weekly limits", () => {
   let claudeHome: string;
 
   beforeEach(() => {
-    claudeHome = mkdtempSync(join(tmpdir(), "paseo-claude-limits-"));
+    claudeHome = mkdtempSync(join(tmpdir(), "vincu-claude-limits-"));
   });
 
   afterEach(() => {
@@ -1296,7 +1296,7 @@ describe("ClaudeQuotaProvider scoped limit reconciliation", () => {
   let claudeHome: string;
 
   beforeEach(() => {
-    claudeHome = mkdtempSync(join(tmpdir(), "paseo-claude-matrix-"));
+    claudeHome = mkdtempSync(join(tmpdir(), "vincu-claude-matrix-"));
   });
 
   afterEach(() => {

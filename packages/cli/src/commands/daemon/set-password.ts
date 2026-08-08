@@ -6,7 +6,7 @@ import {
   loadPersistedConfig,
   savePersistedConfig,
   type PersistedConfig,
-} from "@getpaseo/server";
+} from "@getvincu/server";
 import type {
   CommandError,
   CommandOptions,
@@ -14,7 +14,7 @@ import type {
   OutputSchema,
   SingleResult,
 } from "../../output/index.js";
-import { resolveLocalPaseoHome } from "./local-daemon.js";
+import { resolveLocalVincuHome } from "./local-daemon.js";
 
 const CONFIG_FILENAME = "config.json";
 
@@ -81,9 +81,9 @@ export async function setDaemonPasswordInConfig(
   newPassword: string,
   options: SetPasswordOptions = {},
 ): Promise<SetPasswordResult> {
-  const paseoHome = resolveLocalPaseoHome(options.home);
-  const configPath = path.join(paseoHome, CONFIG_FILENAME);
-  const persisted = loadPersistedConfig(paseoHome);
+  const vincuHome = resolveLocalVincuHome(options.home);
+  const configPath = path.join(vincuHome, CONFIG_FILENAME);
+  const persisted = loadPersistedConfig(vincuHome);
   const nextConfig: PersistedConfig = {
     ...persisted,
     daemon: {
@@ -95,13 +95,13 @@ export async function setDaemonPasswordInConfig(
     },
   };
 
-  savePersistedConfig(paseoHome, nextConfig);
+  savePersistedConfig(vincuHome, nextConfig);
 
   return {
     action: "password_set",
     configPath,
-    restartCommand: "paseo daemon restart",
-    message: `Password written to ${configPath}\nRestart the daemon for the change to take effect.\nRun: paseo daemon restart`,
+    restartCommand: "vincu daemon restart",
+    message: `Password written to ${configPath}\nRestart the daemon for the change to take effect.\nRun: vincu daemon restart`,
   };
 }
 
