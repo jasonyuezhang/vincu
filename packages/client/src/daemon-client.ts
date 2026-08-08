@@ -139,6 +139,7 @@ import {
   normalizeProviderSnapshotUpdateMessage,
   normalizeProvidersSnapshotPayload,
 } from "./compat/normalize-provider-models.js";
+import { normalizePaseoOwnedWorktreeMessage } from "./compat/normalize-paseo-owned-worktree.js";
 import { TerminalStreamRouter, type TerminalStreamEvent } from "./terminal-stream-router.js";
 import type {
   BrowserAutomationExecuteRequest,
@@ -5543,9 +5544,13 @@ export class DaemonClient {
       return;
     }
 
+    // COMPAT(paseoOwnedWorktreeRename): AOT validation accepts the old field; rename
+    // for consumers. Remove with normalizePaseoOwnedWorktreeMessage after 2027-02-08.
+    const inboundMessage = normalizePaseoOwnedWorktreeMessage(parsed.data);
+
     this.consecutiveLivenessFailures = 0;
 
-    if (parsed.data.type === "pong") {
+    if (inboundMessage.type === "pong") {
       this.traceInstant("vincu.ws.message.inbound", {
         envelopeType: "pong",
         messageType: "pong",
@@ -5557,13 +5562,13 @@ export class DaemonClient {
 
     this.traceInstant("vincu.ws.message.inbound", {
       envelopeType: "session",
-      messageType: parsed.data.message.type,
+      messageType: inboundMessage.message.type,
     });
-    this.handleSessionMessage(parsed.data.message);
-    const msgType = parsed.data.message.type;
+    this.handleSessionMessage(inboundMessage.message);
+    const msgType = inboundMessage.message.type;
     this.runtimeMetrics?.recordMessage(msgType, bytes, perfNow() - startMs);
-    if (parsed.data.message.type === "agent_stream") {
-      this.runtimeMetrics?.recordAgentStream(parsed.data.message.payload);
+    if (inboundMessage.message.type === "agent_stream") {
+      this.runtimeMetrics?.recordAgentStream(inboundMessage.message.payload);
     }
   }
 
