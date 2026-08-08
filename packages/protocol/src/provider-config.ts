@@ -62,6 +62,7 @@ const BUILTIN_PROVIDER_IDS = [
   "codex",
   "copilot",
   "cursor",
+  "deepseek",
   "opencode",
   "pi",
   "omp",

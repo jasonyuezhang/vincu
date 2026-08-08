@@ -263,6 +263,14 @@ export const AGENT_PROVIDER_DEFINITIONS: AgentProviderDefinition[] = [
     defaultModeId: "full",
     modes: OMP_MODES,
   },
+  {
+    id: "deepseek",
+    label: "DeepSeek",
+    description: "DeepSeek V4 via Claude Code and DeepSeek's Anthropic-compatible API",
+    enabledByDefault: false,
+    defaultModeId: "auto",
+    modes: CLAUDE_MODES,
+  },
 ];
 
 export const DEV_AGENT_PROVIDER_DEFINITIONS: AgentProviderDefinition[] = [

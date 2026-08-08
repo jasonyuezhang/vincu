@@ -17,6 +17,7 @@ Work out of the box once the underlying CLI is installed and authenticated.
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Anthropic's coding agent with MCP support, streaming, and deep reasoning.
 - [Codex](/docs/codex). OpenAI's workspace agent with sandbox controls and optional network access.
 - [Cursor](https://cursor.com/docs/cli/overview). Cursor's coding agent via ACP (`cursor-agent` on `PATH`).
+- [DeepSeek](https://api-docs.deepseek.com/guides/coding_agents). DeepSeek V4 via Claude Code and DeepSeek’s Anthropic-compatible API (enable in Host → Providers; set `DEEPSEEK_API_KEY`).
 - [GitHub Copilot](https://github.com/features/copilot/cli/). GitHub's AI pair programmer via ACP.
 - [OpenCode](https://opencode.ai/). Open-source coding assistant with multi-provider model support.
 - [Pi](https://pi.dev). Minimal terminal-based coding agent with multi-provider LLM support.

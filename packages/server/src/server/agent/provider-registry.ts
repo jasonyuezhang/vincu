@@ -33,6 +33,8 @@ import { ClaudeAgentClient } from "./providers/claude/agent.js";
 import { CodexAppServerAgentClient } from "./providers/codex-app-server-agent.js";
 import { CopilotACPAgentClient } from "./providers/copilot-acp-agent.js";
 import { CursorACPAgentClient } from "./providers/cursor-acp-agent.js";
+import { createDeepSeekAgentClient } from "./providers/deepseek/client.js";
+import { DEEPSEEK_V4_MODELS } from "./providers/deepseek/defaults.js";
 import { GenericACPAgentClient } from "./providers/generic-acp-agent.js";
 import { KiroACPAgentClient } from "./providers/kiro-acp-agent.js";
 import { OpenCodeAgentClient } from "./providers/opencode-agent.js";
@@ -155,6 +157,11 @@ const PROVIDER_CLIENT_FACTORIES: Record<string, ProviderClientFactory> = {
       runtimeSettings,
       providerParams: options?.providerParams,
       runtime: options?.ompRuntime,
+    }),
+  deepseek: (logger, runtimeSettings) =>
+    createDeepSeekAgentClient({
+      logger,
+      runtimeSettings,
     }),
   mock: (logger) => new MockLoadTestAgentClient(logger),
   "mock-slow": () => new MockSlowProviderClient(),
@@ -621,10 +628,11 @@ function buildResolvedBuiltinProviders(
       toRuntimeSettings(override),
     );
 
+    const defaultProfileModels = definition.id === "deepseek" ? DEEPSEEK_V4_MODELS : [];
     resolvedProviders.set(definition.id, {
       definition: applyOverrideToDefinition(definition, override),
       runtimeSettings: mergedRuntimeSettings,
-      profileModels: override?.models ?? [],
+      profileModels: override?.models ?? defaultProfileModels,
       additionalModels: override?.additionalModels ?? [],
       profileModelsAreAdditive: false,
       enabled: override?.enabled ?? definition.enabledByDefault ?? true,
