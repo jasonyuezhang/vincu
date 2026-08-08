@@ -93,6 +93,7 @@ vi.mock("react-native-unistyles", () => ({
       typeof factory === "function" ? (factory as (t: typeof theme) => unknown)(theme) : factory,
   },
   useUnistyles: () => ({ theme, rt: { breakpoint: "md" } }),
+  withUnistyles: (Component: unknown) => Component,
 }));
 
 vi.mock("lucide-react-native", () => {
@@ -102,9 +103,70 @@ vi.mock("lucide-react-native", () => {
     Copy: icon("Copy"),
     ExternalLink: icon("ExternalLink"),
     LogIn: icon("LogIn"),
+    LogOut: icon("LogOut"),
+    MoreVertical: icon("MoreVertical"),
+    RefreshCw: icon("RefreshCw"),
     Trash2: icon("Trash2"),
   };
 });
+
+vi.mock("@/components/ui/dropdown-menu", () => ({
+  DropdownMenu: ({ children }: { children?: React.ReactNode }) =>
+    React.createElement("div", { "data-testid": "dropdown-menu" }, children),
+  DropdownMenuTrigger: ({
+    children,
+    onPressIn,
+    accessibilityRole,
+    accessibilityLabel,
+    testID,
+  }: {
+    children?:
+      | React.ReactNode
+      | ((state: { pressed: boolean; hovered: boolean; open: boolean }) => React.ReactNode);
+    onPressIn?: (event: { stopPropagation: () => void }) => void;
+    accessibilityRole?: string;
+    accessibilityLabel?: string;
+    testID?: string;
+  }) =>
+    React.createElement(
+      "button",
+      {
+        type: "button",
+        role: accessibilityRole,
+        "aria-label": accessibilityLabel,
+        "data-testid": testID,
+        onMouseDown: (event: React.MouseEvent) => onPressIn?.(event),
+        onClick: (event: React.MouseEvent) => event.stopPropagation(),
+      },
+      typeof children === "function"
+        ? children({ pressed: false, hovered: false, open: false })
+        : children,
+    ),
+  DropdownMenuContent: ({ children }: { children?: React.ReactNode }) =>
+    React.createElement("div", { "data-testid": "dropdown-menu-content" }, children),
+  DropdownMenuItem: ({
+    children,
+    onSelect,
+    testID,
+  }: {
+    children?: React.ReactNode;
+    onSelect?: () => void;
+    testID?: string;
+  }) =>
+    React.createElement(
+      "button",
+      {
+        type: "button",
+        "data-testid": testID,
+        onClick: (event: React.MouseEvent) => {
+          event.stopPropagation();
+          onSelect?.();
+        },
+      },
+      children,
+    ),
+  DropdownMenuSeparator: () => React.createElement("hr"),
+}));
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
