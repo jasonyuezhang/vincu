@@ -155,21 +155,35 @@ export async function startIsolatedHostDaemon(
     );
   }
   const serverDir = publishedPackageRoot
-    ? path.join(publishedPackageRoot, "node_modules", "@getvincu", "server")
+    ? // Historical published versions are still scoped @getpaseo.
+      path.join(publishedPackageRoot, "node_modules", "@getpaseo", "server")
     : path.resolve(__dirname, "../../../../server");
   const tsxBin = execSync("which tsx").toString().trim();
   const spawnDaemon = async (): Promise<ChildProcess> => {
+    const homeEnv = publishedPackageRoot
+      ? {
+          // 0.2.x published daemons only understand the pre-rename env names.
+          PASEO_HOME: vincuHome,
+          PASEO_SERVER_ID: serverId,
+          PASEO_LISTEN: `127.0.0.1:${port}`,
+          PASEO_CORS_ORIGINS: `http://localhost:${metroPort}`,
+          PASEO_RELAY_ENABLED: options.mutableRelay ? undefined : "0",
+          PASEO_NODE_ENV: "development",
+        }
+      : {
+          VINCU_HOME: vincuHome,
+          VINCU_SERVER_ID: serverId,
+          VINCU_LISTEN: `127.0.0.1:${port}`,
+          VINCU_CORS_ORIGINS: `http://localhost:${metroPort}`,
+          VINCU_RELAY_ENABLED: options.mutableRelay ? undefined : "0",
+          VINCU_NODE_ENV: "development",
+        };
     const spawnOptions: SpawnOptions = {
       cwd: serverDir,
       env: withDisabledE2ESpeechEnv({
         ...process.env,
         ...options.environment,
-        VINCU_HOME: vincuHome,
-        VINCU_SERVER_ID: serverId,
-        VINCU_LISTEN: `127.0.0.1:${port}`,
-        VINCU_CORS_ORIGINS: `http://localhost:${metroPort}`,
-        VINCU_RELAY_ENABLED: options.mutableRelay ? undefined : "0",
-        VINCU_NODE_ENV: "development",
+        ...homeEnv,
         NODE_ENV: "development",
       }),
       stdio: ["ignore", "ignore", "pipe"],
