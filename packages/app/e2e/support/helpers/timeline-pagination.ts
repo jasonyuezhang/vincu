@@ -286,7 +286,7 @@ export async function reloadAgentTimelineFromPersistedReplica(
   await expect
     .poll(() =>
       page.evaluate((agentId) => {
-        const raw = localStorage.getItem("@paseo:replica-cache");
+        const raw = localStorage.getItem("@vincu:replica-cache");
         if (!raw) return false;
         const cache = JSON.parse(raw) as {
           hosts?: Array<{

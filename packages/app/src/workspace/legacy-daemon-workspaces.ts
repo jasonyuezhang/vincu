@@ -2,11 +2,11 @@ import type {
   DaemonClient,
   FetchAgentsEntry,
   FetchAgentsOptions,
-} from "@getpaseo/client/internal/daemon-client";
+} from "@getvincu/client/internal/daemon-client";
 import {
   deriveAgentStateBucket,
   getWorkspaceStateBucketPriority,
-} from "@getpaseo/protocol/agent-state-bucket";
+} from "@getvincu/protocol/agent-state-bucket";
 import type {
   Agent,
   DaemonServerInfo,
@@ -335,7 +335,7 @@ function createLegacyWorkspace(
       ? {
           currentBranch: checkout.currentBranch,
           remoteUrl: checkout.remoteUrl,
-          isPaseoOwnedWorktree: checkout.isPaseoOwnedWorktree,
+          isVincuOwnedWorktree: checkout.isVincuOwnedWorktree,
           isDirty: null,
           aheadBehind: null,
           aheadOfOrigin: null,
@@ -353,7 +353,7 @@ function resolveLegacyWorkspaceKind(
   if (!checkout.isGit) {
     return "directory";
   }
-  if (checkout.isPaseoOwnedWorktree) {
+  if (checkout.isVincuOwnedWorktree) {
     return "worktree";
   }
   return "checkout";

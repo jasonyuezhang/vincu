@@ -82,7 +82,7 @@ function writeJson(filePath, value) {
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
 }
 
-function seedPaseoHome(paseoHome, listen, workspaceRoot) {
+function seedVincuHome(vincuHome, listen, workspaceRoot) {
   const timestamp = "2026-01-01T00:00:00.000Z";
   const projects = workspaceIds.map((workspaceId, index) => {
     const cwd = path.join(workspaceRoot, `workspace-${index + 1}`);
@@ -113,7 +113,7 @@ function seedPaseoHome(paseoHome, listen, workspaceRoot) {
     pinnedAt: null,
   }));
 
-  writeJson(path.join(paseoHome, "config.json"), {
+  writeJson(path.join(vincuHome, "config.json"), {
     version: 1,
     daemon: {
       listen,
@@ -123,8 +123,8 @@ function seedPaseoHome(paseoHome, listen, workspaceRoot) {
       cors: { allowedOrigins: ["*"] },
     },
   });
-  writeJson(path.join(paseoHome, "projects", "projects.json"), projects);
-  writeJson(path.join(paseoHome, "projects", "workspaces.json"), workspaces);
+  writeJson(path.join(vincuHome, "projects", "projects.json"), projects);
+  writeJson(path.join(vincuHome, "projects", "workspaces.json"), workspaces);
 }
 
 function spawnLogged(name, command, args, options, logDir) {
@@ -176,8 +176,8 @@ async function waitForDesktopStatus(page) {
   while (Date.now() < deadline) {
     try {
       const status = await page.evaluate(async () => {
-        if (typeof window.paseoDesktop?.invoke !== "function") return null;
-        return await window.paseoDesktop.invoke("desktop_daemon_status");
+        if (typeof window.vincuDesktop?.invoke !== "function") return null;
+        return await window.vincuDesktop.invoke("desktop_daemon_status");
       });
       if (typeof status?.serverId === "string") return status;
     } catch (error) {
@@ -267,7 +267,7 @@ async function createCallerAgent(daemonPort) {
 
 async function readGuest(page, browserId) {
   return await page.evaluate((id) => {
-    const webview = document.querySelector(`[data-paseo-browser-id="${id}"]`);
+    const webview = document.querySelector(`[data-vincu-browser-id="${id}"]`);
     if (!(webview instanceof HTMLElement) || typeof webview.getWebContentsId !== "function") {
       return null;
     }
@@ -282,12 +282,12 @@ async function readGuest(page, browserId) {
 
 async function readPresentation(page, browserId) {
   return await page.evaluate((id) => {
-    const surface = document.querySelector(`[data-paseo-browser-surface="${id}"]`);
+    const surface = document.querySelector(`[data-vincu-browser-surface="${id}"]`);
     const clip = document.querySelector(`[data-testid="browser-webview-clip-${id}"]`);
     if (!(surface instanceof HTMLElement) || !(clip instanceof HTMLElement)) return null;
     const surfaceRect = surface.getBoundingClientRect();
     const clipRect = clip.getBoundingClientRect();
-    const webview = surface.querySelector(`[data-paseo-browser-id="${id}"]`);
+    const webview = surface.querySelector(`[data-vincu-browser-id="${id}"]`);
     if (!(webview instanceof HTMLElement)) return null;
     const webviewRect = webview.getBoundingClientRect();
     const outsidePoint = {
@@ -338,7 +338,7 @@ async function clickGuestElement(page, client, browserId, selector) {
   const elementRect = JSON.parse(evaluated.resultJson);
   assert(elementRect, `Guest element ${selector} was unavailable`);
   const webviewRect = await page.evaluate((id) => {
-    const webview = document.querySelector(`[data-paseo-browser-id="${id}"]`);
+    const webview = document.querySelector(`[data-vincu-browser-id="${id}"]`);
     if (!(webview instanceof HTMLElement)) return null;
     const rect = webview.getBoundingClientRect();
     return { x: rect.x, y: rect.y };
@@ -410,8 +410,8 @@ async function runRegression({ page, client, serverId, targetUrl, callerAgentId 
   await originalDeck.getByTestId(`workspace-tab-browser_${browserId}`).click();
   await page.waitForFunction(
     (id) => {
-      const webview = document.querySelector(`[data-paseo-browser-id="${id}"]`);
-      return webview && webview.parentElement?.id !== "paseo-browser-resident-webviews";
+      const webview = document.querySelector(`[data-vincu-browser-id="${id}"]`);
+      return webview && webview.parentElement?.id !== "vincu-browser-resident-webviews";
     },
     browserId,
     { timeout: timeoutMs },
@@ -435,7 +435,7 @@ async function runRegression({ page, client, serverId, targetUrl, callerAgentId 
     "Physical browser click did not focus the guest input",
   );
   const focusedGuest = await page.evaluate(
-    (id) => window.paseoDesktop?.browser?.focus?.(id),
+    (id) => window.vincuDesktop?.browser?.focus?.(id),
     browserId,
   );
   assert(focusedGuest === true, "Electron did not focus the registered browser guest");
@@ -473,7 +473,7 @@ async function runRegression({ page, client, serverId, targetUrl, callerAgentId 
   );
   await page.waitForFunction(
     ({ id, width, height }) => {
-      const webview = document.querySelector(`[data-paseo-browser-id="${id}"]`);
+      const webview = document.querySelector(`[data-vincu-browser-id="${id}"]`);
       return (
         webview instanceof HTMLElement &&
         Math.round(webview.getBoundingClientRect().width) === width &&
@@ -531,19 +531,19 @@ async function runRegression({ page, client, serverId, targetUrl, callerAgentId 
   await callBrowserTool(client, "browser_evaluate", {
     browserId,
     function: `() => {
-      globalThis.__paseoFocusContinuity = ${JSON.stringify(focusContinuitySentinel)};
-      globalThis.__paseoViewportTransitions = [{ width: innerWidth, height: innerHeight }];
+      globalThis.__vincuFocusContinuity = ${JSON.stringify(focusContinuitySentinel)};
+      globalThis.__vincuViewportTransitions = [{ width: innerWidth, height: innerHeight }];
       addEventListener('resize', () => {
-        globalThis.__paseoViewportTransitions.push({ width: innerWidth, height: innerHeight });
+        globalThis.__vincuViewportTransitions.push({ width: innerWidth, height: innerHeight });
       });
-      return globalThis.__paseoFocusContinuity;
+      return globalThis.__vincuFocusContinuity;
     }`,
   });
   await page.evaluate((id) => {
-    const webview = document.querySelector(`[data-paseo-browser-id="${id}"]`);
+    const webview = document.querySelector(`[data-vincu-browser-id="${id}"]`);
     if (!webview) throw new Error(`Browser webview ${id} was unavailable`);
     const events = [];
-    globalThis.__paseoBrowserReactivationEvents = events;
+    globalThis.__vincuBrowserReactivationEvents = events;
     for (const name of [
       "did-start-loading",
       "did-navigate-in-page",
@@ -563,9 +563,9 @@ async function runRegression({ page, client, serverId, targetUrl, callerAgentId 
   await originalDeck.getByTestId(`workspace-tab-browser_${browserId}`).click();
   await page.waitForFunction(
     ({ id, webContentsId }) => {
-      const webview = document.querySelector(`[data-paseo-browser-id="${id}"]`);
+      const webview = document.querySelector(`[data-vincu-browser-id="${id}"]`);
       return (
-        webview?.parentElement?.getAttribute("data-paseo-browser-surface") === id &&
+        webview?.parentElement?.getAttribute("data-vincu-browser-surface") === id &&
         webview.parentElement.style.pointerEvents === "auto" &&
         webview.getWebContentsId() === webContentsId
       );
@@ -575,7 +575,7 @@ async function runRegression({ page, client, serverId, targetUrl, callerAgentId 
   );
   await page.waitForTimeout(1_500);
   const reactivationEvents = await page.evaluate(
-    () => globalThis.__paseoBrowserReactivationEvents ?? [],
+    () => globalThis.__vincuBrowserReactivationEvents ?? [],
   );
   const unexpectedReactivationCommits = reactivationEvents.filter(
     (event) => event.name === "did-navigate-in-page" || event.name === "load-commit",
@@ -586,7 +586,7 @@ async function runRegression({ page, client, serverId, targetUrl, callerAgentId 
   );
   const viewportTransitionsResult = await callBrowserTool(client, "browser_evaluate", {
     browserId,
-    function: "() => globalThis.__paseoViewportTransitions ?? []",
+    function: "() => globalThis.__vincuViewportTransitions ?? []",
   });
   const viewportTransitions = JSON.parse(viewportTransitionsResult.resultJson);
   const collapsedViewport = viewportTransitions.find(
@@ -598,7 +598,7 @@ async function runRegression({ page, client, serverId, targetUrl, callerAgentId 
   );
   const continuityResult = await callBrowserTool(client, "browser_evaluate", {
     browserId,
-    function: "() => globalThis.__paseoFocusContinuity ?? null",
+    function: "() => globalThis.__vincuFocusContinuity ?? null",
   });
   const continuityValue = JSON.parse(continuityResult.resultJson);
   if (continuityValue !== focusContinuitySentinel) {
@@ -616,9 +616,9 @@ async function runRegression({ page, client, serverId, targetUrl, callerAgentId 
 
   await page.waitForFunction(
     ({ id, previousWebContentsId }) => {
-      const webview = document.querySelector(`[data-paseo-browser-id="${id}"]`);
+      const webview = document.querySelector(`[data-vincu-browser-id="${id}"]`);
       return (
-        webview?.parentElement?.getAttribute("data-paseo-browser-surface") === id &&
+        webview?.parentElement?.getAttribute("data-vincu-browser-surface") === id &&
         webview.parentElement.style.width === "1px" &&
         typeof webview.getWebContentsId === "function" &&
         webview.getWebContentsId() === previousWebContentsId
@@ -655,9 +655,9 @@ async function runRegression({ page, client, serverId, targetUrl, callerAgentId 
   await originalDeck.getByTestId(`workspace-tab-browser_${browserId}`).click();
   await page.waitForFunction(
     ({ id, webContentsId }) => {
-      const webview = document.querySelector(`[data-paseo-browser-id="${id}"]`);
+      const webview = document.querySelector(`[data-vincu-browser-id="${id}"]`);
       return (
-        webview?.parentElement?.getAttribute("data-paseo-browser-surface") === id &&
+        webview?.parentElement?.getAttribute("data-vincu-browser-surface") === id &&
         webview.parentElement.style.pointerEvents === "auto" &&
         webview.getWebContentsId() === webContentsId
       );
@@ -676,7 +676,7 @@ async function runRegression({ page, client, serverId, targetUrl, callerAgentId 
   await page.waitForTimeout(250);
   const selectorResult = await callBrowserTool(client, "browser_evaluate", {
     browserId,
-    function: "() => Boolean(globalThis.__paseoSelector)",
+    function: "() => Boolean(globalThis.__vincuSelector)",
   });
   if (JSON.parse(selectorResult.resultJson) !== true) {
     failures.push("reused loaded browser remains ready for element annotation after remount");
@@ -702,14 +702,14 @@ async function runRegression({ page, client, serverId, targetUrl, callerAgentId 
 
 async function main() {
   const artifactDir =
-    process.env.PASEO_DESKTOP_BROWSER_E2E_ARTIFACT_DIR ??
-    fs.mkdtempSync(path.join(os.tmpdir(), "paseo-desktop-browser-e2e-artifacts-"));
-  const runtimeDir = fs.mkdtempSync(path.join(os.tmpdir(), "paseo-desktop-browser-e2e-"));
+    process.env.VINCU_DESKTOP_BROWSER_E2E_ARTIFACT_DIR ??
+    fs.mkdtempSync(path.join(os.tmpdir(), "vincu-desktop-browser-e2e-artifacts-"));
+  const runtimeDir = fs.mkdtempSync(path.join(os.tmpdir(), "vincu-desktop-browser-e2e-"));
   fs.mkdirSync(artifactDir, { recursive: true });
-  const paseoHome = path.join(runtimeDir, "paseo-home");
+  const vincuHome = path.join(runtimeDir, "vincu-home");
   const userData = path.join(runtimeDir, "electron-user-data");
   const workspaceRoot = path.join(runtimeDir, "workspaces");
-  fs.mkdirSync(paseoHome, { recursive: true });
+  fs.mkdirSync(vincuHome, { recursive: true });
 
   const [daemonPort, expoPort, cdpPort] = await Promise.all([
     reservePort(),
@@ -717,7 +717,7 @@ async function main() {
     reservePort(),
   ]);
   const listen = `127.0.0.1:${daemonPort}`;
-  seedPaseoHome(paseoHome, listen, workspaceRoot);
+  seedVincuHome(vincuHome, listen, workspaceRoot);
   const target = await startTargetPage();
   const children = [];
   let browser = null;
@@ -726,13 +726,13 @@ async function main() {
   try {
     const commonEnv = {
       ...process.env,
-      PASEO_HOME: paseoHome,
-      PASEO_LISTEN: listen,
-      PASEO_DAEMON_ENDPOINT: `localhost:${daemonPort}`,
-      PASEO_CORS_ORIGINS: "*",
-      PASEO_LOCAL_SPEECH_AUTO_DOWNLOAD: "0",
-      PASEO_DICTATION_ENABLED: "0",
-      PASEO_VOICE_MODE_ENABLED: "0",
+      VINCU_HOME: vincuHome,
+      VINCU_LISTEN: listen,
+      VINCU_DAEMON_ENDPOINT: `localhost:${daemonPort}`,
+      VINCU_CORS_ORIGINS: "*",
+      VINCU_LOCAL_SPEECH_AUTO_DOWNLOAD: "0",
+      VINCU_DICTATION_ENABLED: "0",
+      VINCU_VOICE_MODE_ENABLED: "0",
       FORCE_COLOR: "0",
       NO_COLOR: "1",
     };
@@ -740,7 +740,7 @@ async function main() {
       "daemon",
       process.execPath,
       ["--import", "tsx", path.join(rootDir, "packages/server/scripts/dev-runner.ts")],
-      { cwd: rootDir, env: { ...commonEnv, PASEO_NODE_ENV: "development" } },
+      { cwd: rootDir, env: { ...commonEnv, VINCU_NODE_ENV: "development" } },
       artifactDir,
     );
     children.push(daemon.child);
@@ -766,9 +766,9 @@ async function main() {
           ...commonEnv,
           EXPO_PORT: String(expoPort),
           EXPO_DEV_URL: `http://localhost:${expoPort}`,
-          PASEO_ELECTRON_REMOTE_DEBUGGING_PORT: String(cdpPort),
-          PASEO_ELECTRON_USER_DATA_DIR: userData,
-          PASEO_ELECTRON_FLAGS: `--remote-debugging-address=127.0.0.1 --remote-debugging-port=${cdpPort}`,
+          VINCU_ELECTRON_REMOTE_DEBUGGING_PORT: String(cdpPort),
+          VINCU_ELECTRON_USER_DATA_DIR: userData,
+          VINCU_ELECTRON_FLAGS: `--remote-debugging-address=127.0.0.1 --remote-debugging-port=${cdpPort}`,
         },
       },
       artifactDir,

@@ -63,7 +63,7 @@ interface RestartDaemonClientConfig {
 }
 
 interface SeededRestartHome {
-  paseoHome: string;
+  vincuHome: string;
   cwd: string;
   projectId: string;
   projectDisplayName: string;
@@ -82,10 +82,10 @@ function nowIso(): string {
 }
 
 async function seedRestartHome(): Promise<SeededRestartHome> {
-  const paseoHome = mkdtempSync(path.join(tmpdir(), "paseo-playwright-restart-home-"));
-  const cwd = mkdtempSync(path.join(tmpdir(), "paseo-playwright-restart-cwd-"));
-  const projectsDir = path.join(paseoHome, "projects");
-  const agentDir = path.join(paseoHome, "agents", projectDirNameFromCwd(cwd));
+  const vincuHome = mkdtempSync(path.join(tmpdir(), "vincu-playwright-restart-home-"));
+  const cwd = mkdtempSync(path.join(tmpdir(), "vincu-playwright-restart-cwd-"));
+  const projectsDir = path.join(vincuHome, "projects");
+  const agentDir = path.join(vincuHome, "agents", projectDirNameFromCwd(cwd));
   mkdirSync(projectsDir, { recursive: true });
   mkdirSync(agentDir, { recursive: true });
 
@@ -152,14 +152,14 @@ async function seedRestartHome(): Promise<SeededRestartHome> {
   );
 
   return {
-    paseoHome,
+    vincuHome,
     cwd,
     projectId: project.projectId,
     projectDisplayName,
     workspaceA: workspaceA.workspaceId,
     workspaceB: workspaceB.workspaceId,
     cleanup: () => {
-      rmSync(paseoHome, { recursive: true, force: true });
+      rmSync(vincuHome, { recursive: true, force: true });
       rmSync(cwd, { recursive: true, force: true });
     },
   };
@@ -241,7 +241,7 @@ async function stopProcess(child: ChildProcess): Promise<void> {
 }
 
 async function startRestartDaemon(input: {
-  paseoHome: string;
+  vincuHome: string;
   origin: string;
 }): Promise<StartedDaemon> {
   const port = await getAvailablePort();
@@ -255,12 +255,12 @@ async function startRestartDaemon(input: {
     cwd: serverDir,
     env: withDisabledE2ESpeechEnv({
       ...process.env,
-      PASEO_HOME: input.paseoHome,
-      PASEO_SERVER_ID: SERVER_ID,
-      PASEO_LISTEN: `127.0.0.1:${port}`,
-      PASEO_CORS_ORIGINS: input.origin,
-      PASEO_RELAY_ENABLED: "0",
-      PASEO_NODE_ENV: "development",
+      VINCU_HOME: input.vincuHome,
+      VINCU_SERVER_ID: SERVER_ID,
+      VINCU_LISTEN: `127.0.0.1:${port}`,
+      VINCU_CORS_ORIGINS: input.origin,
+      VINCU_RELAY_ENABLED: "0",
+      VINCU_NODE_ENV: "development",
       NODE_ENV: "development",
     }),
     stdio: ["ignore", "ignore", "pipe"],
@@ -340,10 +340,10 @@ async function seedBrowserForDaemon(page: Page, input: { serverId: string; port:
   });
   await page.evaluate(
     ({ daemon, preferences }) => {
-      localStorage.setItem("@paseo:e2e", "1");
-      localStorage.setItem("@paseo:daemon-registry", JSON.stringify([daemon]));
-      localStorage.removeItem("@paseo:settings");
-      localStorage.setItem("@paseo:create-agent-preferences", JSON.stringify(preferences));
+      localStorage.setItem("@vincu:e2e", "1");
+      localStorage.setItem("@vincu:daemon-registry", JSON.stringify([daemon]));
+      localStorage.removeItem("@vincu:settings");
+      localStorage.setItem("@vincu:create-agent-preferences", JSON.stringify(preferences));
     },
     {
       daemon: host,
@@ -438,7 +438,7 @@ test.describe("Workspace model restart regressions", () => {
     test.setTimeout(90_000);
     const seeded = await seedRestartHome();
     const origin = new URL(baseURL ?? "http://localhost").origin;
-    const daemon = await startRestartDaemon({ paseoHome: seeded.paseoHome, origin });
+    const daemon = await startRestartDaemon({ vincuHome: seeded.vincuHome, origin });
     const serverId = SERVER_ID;
     const client = await connectRestartDaemonClient(daemon.port);
 

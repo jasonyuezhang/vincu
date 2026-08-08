@@ -22,8 +22,8 @@ interface CleanupTask {
 }
 
 const cleanupTasks: CleanupTask[] = [];
-const APP_SETTINGS_KEY = "@paseo:app-settings";
-const CHANGES_PREFERENCES_KEY = "@paseo:changes-preferences";
+const APP_SETTINGS_KEY = "@vincu:app-settings";
+const CHANGES_PREFERENCES_KEY = "@vincu:changes-preferences";
 
 const BEFORE = `import { useLayoutEffect, useMemo, useRef, useState } from "react";
 

@@ -8,7 +8,7 @@ import { createSkillSelectionStore } from "./selection-store";
 const directories = new Set<string>();
 
 async function createTempUserDataDir(): Promise<string> {
-  const dir = await mkdtemp(path.join(os.tmpdir(), "paseo-skill-selection-"));
+  const dir = await mkdtemp(path.join(os.tmpdir(), "vincu-skill-selection-"));
   directories.add(dir);
   return dir;
 }
@@ -42,12 +42,12 @@ describe("createSkillSelectionStore", () => {
 
     const saved = await createSkillSelectionStore({ userDataPath }).set({
       mode: "custom",
-      skills: ["paseo", "paseo-loop"],
+      skills: ["vincu", "vincu-loop"],
     });
     const reloaded = await createSkillSelectionStore({ userDataPath }).get();
 
-    expect(saved).toEqual({ mode: "custom", skills: ["paseo", "paseo-loop"] });
-    expect(reloaded).toEqual({ mode: "custom", skills: ["paseo", "paseo-loop"] });
+    expect(saved).toEqual({ mode: "custom", skills: ["vincu", "vincu-loop"] });
+    expect(reloaded).toEqual({ mode: "custom", skills: ["vincu", "vincu-loop"] });
     expect(await readdir(userDataPath)).toEqual(["skill-selection.json"]);
   });
 
@@ -57,13 +57,13 @@ describe("createSkillSelectionStore", () => {
 
     const saved = await store.set({
       mode: "custom",
-      skills: ["paseo-loop", "paseo", "paseo-loop", "  ", 7, null],
+      skills: ["vincu-loop", "vincu", "vincu-loop", "  ", 7, null],
     });
 
-    expect(saved).toEqual({ mode: "custom", skills: ["paseo", "paseo-loop"] });
+    expect(saved).toEqual({ mode: "custom", skills: ["vincu", "vincu-loop"] });
     expect(JSON.parse(await readFile(selectionFilePath(userDataPath), "utf8"))).toEqual({
       version: 1,
-      selection: { mode: "custom", skills: ["paseo", "paseo-loop"] },
+      selection: { mode: "custom", skills: ["vincu", "vincu-loop"] },
     });
   });
 
@@ -81,7 +81,7 @@ describe("createSkillSelectionStore", () => {
   it("switches back to all and forgets the previous custom names", async () => {
     const userDataPath = await createTempUserDataDir();
     const store = createSkillSelectionStore({ userDataPath });
-    await store.set({ mode: "custom", skills: ["paseo"] });
+    await store.set({ mode: "custom", skills: ["vincu"] });
 
     const saved = await store.set({ mode: "all" });
 
@@ -100,7 +100,7 @@ describe("createSkillSelectionStore", () => {
     const userDataPath = await createTempUserDataDir();
     await seedSelectionFile(
       userDataPath,
-      JSON.stringify({ version: 1, selection: { mode: "some-future-mode", skills: ["paseo"] } }),
+      JSON.stringify({ version: 1, selection: { mode: "some-future-mode", skills: ["vincu"] } }),
     );
 
     expect(await createSkillSelectionStore({ userDataPath }).get()).toEqual({ mode: "all" });
@@ -112,13 +112,13 @@ describe("createSkillSelectionStore", () => {
       userDataPath,
       JSON.stringify({
         version: 1,
-        selection: { mode: "custom", skills: ["paseo-loop", 3, "paseo", "paseo"] },
+        selection: { mode: "custom", skills: ["vincu-loop", 3, "vincu", "vincu"] },
       }),
     );
 
     expect(await createSkillSelectionStore({ userDataPath }).get()).toEqual({
       mode: "custom",
-      skills: ["paseo", "paseo-loop"],
+      skills: ["vincu", "vincu-loop"],
     });
   });
 
@@ -140,9 +140,9 @@ describe("createSkillSelectionStore", () => {
     const store = createSkillSelectionStore({ userDataPath });
 
     await Promise.all([
-      store.set({ mode: "custom", skills: ["paseo"] }),
+      store.set({ mode: "custom", skills: ["vincu"] }),
       store.set({ mode: "all" }),
-      store.set({ mode: "custom", skills: ["paseo-loop"] }),
+      store.set({ mode: "custom", skills: ["vincu-loop"] }),
     ]);
 
     expect(await readdir(userDataPath)).toEqual(["skill-selection.json"]);

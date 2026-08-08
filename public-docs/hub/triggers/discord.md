@@ -32,10 +32,10 @@ Turn on Developer Mode to copy IDs. `from_users` matches the author's user id, `
 Put leading inputs directly after the mention:
 
 ```text
-@Paseo repo=project investigate the failed sync
+@Vincu repo=project investigate the failed sync
 ```
 
-Hub consumes only declared consecutive headers and passes `investigate the failed sync` as `${{ paseo.prompt }}`. See [Hub workflows](/docs/hub/workflows) for the provider-neutral input contract.
+Hub consumes only declared consecutive headers and passes `investigate the failed sync` as `${{ vincu.prompt }}`. See [Hub workflows](/docs/hub/workflows) for the provider-neutral input contract.
 
 ## Replies and repository access
 

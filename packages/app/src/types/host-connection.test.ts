@@ -166,7 +166,7 @@ describe("normalizeStoredHostProfile", () => {
     const profile = normalizeStoredHostProfile({
       serverId: "srv_old",
       connections: [
-        { id: "socket:/tmp/paseo.sock", type: "directSocket", path: "/tmp/paseo.sock" },
+        { id: "socket:/tmp/vincu.sock", type: "directSocket", path: "/tmp/vincu.sock" },
       ],
     });
 
@@ -178,7 +178,7 @@ describe("normalizeStoredHostProfile", () => {
       serverId: "srv_new",
       appearance: { color: "teal", badgeDisplay: "icon" },
       connections: [
-        { id: "socket:/tmp/paseo.sock", type: "directSocket", path: "/tmp/paseo.sock" },
+        { id: "socket:/tmp/vincu.sock", type: "directSocket", path: "/tmp/vincu.sock" },
       ],
     });
 
@@ -188,9 +188,9 @@ describe("normalizeStoredHostProfile", () => {
 
 describe("upsertHostConnectionInProfiles", () => {
   const connection: HostConnection = {
-    id: "socket:/tmp/paseo.sock",
+    id: "socket:/tmp/vincu.sock",
     type: "directSocket",
-    path: "/tmp/paseo.sock",
+    path: "/tmp/vincu.sock",
   };
 
   it("gives a newly discovered host the default appearance", () => {

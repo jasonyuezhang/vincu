@@ -638,7 +638,7 @@ export const ru: TranslationResources = {
       },
       routes: {
         public: "Обратный прокси",
-        paseo: "Memorable",
+        vincu: "Memorable",
         direct: "Прямой адрес",
       },
       states: {
@@ -754,7 +754,7 @@ export const ru: TranslationResources = {
             "Обновление недоступно, поскольку эта ветка уже обновлена ​​до версии{{baseRef}}.",
           mergePrNoGithub: "Объединение PR сейчас недоступно, поскольку GitHub не подключен.",
           archiveNotWorktree:
-            "Архив здесь недоступен, поскольку это рабочее пространство не было создано как рабочее дерево Paseo.",
+            "Архив здесь недоступен, поскольку это рабочее пространство не было создано как рабочее дерево Vincu.",
           mergePrNoForge:
             "Объединение {{noun}} сейчас недоступно, поскольку {{brand}} не подключен.",
           mergePrMissing: "Объединение PR недоступно, поскольку еще нет запроса на включение",
@@ -971,7 +971,7 @@ export const ru: TranslationResources = {
       discord: "Discord",
       github: "Создать issue в GitHub",
       whatsNew: "Что нового",
-      appName: "Paseo",
+      appName: "Vincu",
     },
     sections: {
       sessions: "История",
@@ -1103,7 +1103,7 @@ export const ru: TranslationResources = {
   },
   desktop: {
     quitting: {
-      title: "Выход из Paseo...",
+      title: "Выход из Vincu...",
       detail: "Остановка локального демона.",
     },
     daemon: {
@@ -1117,20 +1117,20 @@ export const ru: TranslationResources = {
       },
       management: {
         title: "Управление встроенным демоном",
-        hint: "Позвольте Paseo запустить и остановить встроенный демон.",
+        hint: "Позвольте Vincu запустить и остановить встроенный демон.",
         pauseTitle: "Приостановить встроенный демон",
         pauseMessage:
           "Это немедленно остановит встроенный демон. Запущенные агенты и терминалы, подключенные к встроенному демону, будут остановлены.",
         pauseAndStop: "Пауза и остановка",
         registrationFailed:
-          "Built-in daemon started, but Paseo could not save the localhost connection. Toggle daemon management off and on again, or add localhost manually.",
+          "Built-in daemon started, but Vincu could not save the localhost connection. Toggle daemon management off and on again, or add localhost manually.",
         pausedStopFailed:
-          "Встроенное управление демоном было приостановлено, но Paseo не смог остановить демон.",
+          "Встроенное управление демоном было приостановлено, но Vincu не смог остановить демон.",
         updateFailed: "Невозможно обновить встроенное управление демонами.",
       },
       keepRunning: {
         title: "Продолжать работу демона после выхода",
-        hint: "Daemon продолжает работать, когда вы выходите из Paseo",
+        hint: "Daemon продолжает работать, когда вы выходите из Vincu",
       },
       logs: {
         title: "Файл журнала",
@@ -1145,7 +1145,7 @@ export const ru: TranslationResources = {
       fullStatus: {
         title: "Полный статус",
         modalTitle: "Статус Daemon",
-        hint: "Запускает`paseo daemon status`и показывает результат",
+        hint: "Запускает`vincu daemon status`и показывает результат",
         view: "Посмотреть статус",
         copied: "Статус скопирован в буфер обмена.",
         fetchFailed: "Не удалось получить статус демона:{{message}}.",
@@ -1200,7 +1200,7 @@ export const ru: TranslationResources = {
     },
     rosetta: {
       title: "Загрузите сборку Apple Silicon",
-      runningIntel: "Вы используете сборку Intel для Paseo под Rosetta на Apple Silicon.",
+      runningIntel: "Вы используете сборку Intel для Vincu под Rosetta на Apple Silicon.",
       highCpu:
         "Это приводит к высокой загрузке ЦП. Загрузите сборку Apple Silicon, чтобы исправить это.",
       download: "Скачать",
@@ -1245,7 +1245,7 @@ export const ru: TranslationResources = {
         microphone: "Состояние микрофона еще не проверялось.",
       },
       testNotification: {
-        title: "Тест уведомлений Paseo",
+        title: "Тест уведомлений Vincu",
         body: "Если вы это видите, уведомления на рабочем столе работают.",
         notDelivered:
           "Уведомление не было доставлено. Проверьте Системные настройки > Уведомления.",
@@ -1255,7 +1255,7 @@ export const ru: TranslationResources = {
     integrations: {
       cli: {
         statusFailed: "Невозможно проверить статус установки CLI.",
-        installFailed: "Невозможно установить PaseoCLI.",
+        installFailed: "Невозможно установить VincuCLI.",
       },
       skills: {
         statusFailed: "Невозможно проверить статус навыков оркестровки.",
@@ -1268,7 +1268,7 @@ export const ru: TranslationResources = {
   },
   rootError: {
     kicker: "Что-то пошло не так",
-    title: "В Paseo возникла проблема.",
+    title: "В Vincu возникла проблема.",
     body: "Попробуйте снова перезагрузить приложение. Если это повторяется, приложите приведенные ниже подробности к отчету.",
     details: "Подробности",
   },
@@ -1364,7 +1364,7 @@ export const ru: TranslationResources = {
     },
   },
   onboarding: {
-    title: "Добро пожаловать в Paseo",
+    title: "Добро пожаловать в Vincu",
     subtitle: "Подключите компьютер, чтобы начать",
     actions: {
       settings: "Настройки",
@@ -1440,7 +1440,7 @@ export const ru: TranslationResources = {
     },
     direct: {
       title: "Прямое подключение",
-      helper: "Введите адрес сервера Paseo.",
+      helper: "Введите адрес сервера Vincu.",
       fields: {
         host: "Host",
         port: "Порт",
@@ -1536,15 +1536,15 @@ export const ru: TranslationResources = {
       enableDescription:
         "Реле позволяет подключаться с этого устройства откуда угодно. Трафик сопряжения защищён сквозным шифрованием.",
       relayDocs: "Как работает реле",
-      relayDocsAccessibility: "Прочитать, как работает реле Paseo",
+      relayDocsAccessibility: "Прочитать, как работает реле Vincu",
       enableRelay: "Включить реле",
       enablingRelay: "Включение...",
       notNow: "Не сейчас",
       directConnectionHint:
         "Без реле подключайтесь напрямую через TCP, Tailscale или другую VPN. QR-код не создаётся.",
-      updateRequired: "Обновите хост, чтобы включить реле из Paseo Desktop.",
+      updateRequired: "Обновите хост, чтобы включить реле из Vincu Desktop.",
       unavailable: "Предложение по сопряжению недоступно.",
-      hint: "Отсканируйте этот код QR с помощью Paseo на своем телефоне или скопируйте ссылку ниже.",
+      hint: "Отсканируйте этот код QR с помощью Vincu на своем телефоне или скопируйте ссылку ниже.",
       qrUnavailable: "Код QR недоступен.",
       qrAccessibility: "QR-код сопряжения",
       retry: "Повторить попытку",
@@ -1577,7 +1577,7 @@ export const ru: TranslationResources = {
   serviceUrl: {
     title: "Открыть сервис URL",
     message: "Открыть{{url}}?",
-    inPaseo: "В Paseo",
+    inVincu: "В Vincu",
     externalBrowser: "Внешний браузер",
     dontAskAgain: "Не спрашивай больше",
   },
@@ -1674,9 +1674,9 @@ export const ru: TranslationResources = {
       one: "использован {{count}} другой инструмент",
       other: "использовано {{count}} других инструментов",
     },
-    paseoCalls: {
-      one: "Paseo вызван {{count}} раз",
-      other: "Paseo вызван {{count}} раз",
+    vincuCalls: {
+      one: "Vincu вызван {{count}} раз",
+      other: "Vincu вызван {{count}} раз",
     },
     and: "и",
   },
@@ -1757,7 +1757,7 @@ export const ru: TranslationResources = {
       browserData: {
         title: "Данные браузера",
         siteData: "Файлы cookie и данные сайтов",
-        description: "Вкладки браузера используют общие данные входа и данные сайтов в Paseo.",
+        description: "Вкладки браузера используют общие данные входа и данные сайтов в Vincu.",
         clear: "Очистить данные браузера",
         clearing: "Очистка...",
         confirmTitle: "Очистить данные браузера?",
@@ -1782,7 +1782,7 @@ export const ru: TranslationResources = {
         description: "Где открыть URL- адреса запущенных скриптов",
         options: {
           ask: "Просить",
-          inApp: "В Paseo",
+          inApp: "В Vincu",
           external: "Внешний браузер",
         },
       },
@@ -1868,7 +1868,7 @@ export const ru: TranslationResources = {
         label: "Обновления приложений",
         readyToInstall: "Готово к установке:{{version}}",
         installTitle: "Установить обновление рабочего стола",
-        installMessage: "Это обновит Paseo на этом компьютере.",
+        installMessage: "Это обновит Vincu на этом компьютере.",
         installConfirm: "Установить обновление",
         update: "Обновлять",
         updateTo: "Обновление до{{version}}",
@@ -2007,10 +2007,10 @@ export const ru: TranslationResources = {
         title: "Навыки оркестровки",
         description: "Научите своих агентов организовывать работу через CLI",
         updateAvailable: "Доступно обновление",
-        updateTitle: "Обновить навыки Paseo?",
+        updateTitle: "Обновить навыки Vincu?",
         updateFallback: "Синхронизируйте связанные навыки с вашим компьютером.",
-        uninstallTitle: "Удалить навыки Paseo?",
-        uninstallMessage: "Удаляет все навыки оркестровки Paseo из ~/.agents, ~/.claude, ~/.codex.",
+        uninstallTitle: "Удалить навыки Vincu?",
+        uninstallMessage: "Удаляет все навыки оркестровки Vincu из ~/.agents, ~/.claude, ~/.codex.",
         choose: "Выбрать навыки",
         chooseAll: "Все навыки",
         chooseAllHint: "Держите установленными все входящие навыки, включая добавленные позже.",
@@ -2113,9 +2113,9 @@ export const ru: TranslationResources = {
         title: "оркестровка",
         unavailable: "Подключитесь к этому хосту, чтобы управлять оркестрацией.",
         enableTools: {
-          title: "Включить инструменты Paseo",
+          title: "Включить инструменты Vincu",
           hint: "Агенты смогут управлять рабочими деревьями, агентами и расписаниями.",
-          accessibilityLabel: "Инструменты внедрения Paseo",
+          accessibilityLabel: "Инструменты внедрения Vincu",
         },
         systemPrompt: {
           title: "Системная подсказка",
@@ -2182,15 +2182,15 @@ export const ru: TranslationResources = {
             "Этот хост не подключен. Подождите, пока он подключится к сети, прежде чем перезапустить.",
           offlineTitle: "Host оффлайн",
           offlineMessage:
-            "Этот хост не в сети.Paseo автоматически повторно подключается — подождите, пока он снова подключится к сети, прежде чем перезапускаться.",
+            "Этот хост не в сети.Vincu автоматически повторно подключается — подождите, пока он снова подключится к сети, прежде чем перезапускаться.",
           requestFailedTitle: "Ошибка",
           requestFailedMessage:
-            "Не удалось отправить запрос на перезапуск.Paseo автоматически повторно подключается. Повторите попытку, как только хост окажется в сети.",
+            "Не удалось отправить запрос на перезапуск.Vincu автоматически повторно подключается. Повторите попытку, как только хост окажется в сети.",
           dialogFailedMessage: "Невозможно открыть диалоговое окно подтверждения перезапуска.",
         },
         update: {
           desktopManagedHint:
-            "Этот демон управляется Paseo Desktop. Обновите Paseo Desktop на хосте.",
+            "Этот демон управляется Vincu Desktop. Обновите Vincu Desktop на хосте.",
           title: "Update daemon",
           hint: "Update the daemon to the latest version and restart it",
           confirm: "Update",
@@ -2309,13 +2309,13 @@ export const ru: TranslationResources = {
         savedToast: "Проект обновлён",
       },
       readFailures: {
-        invalidTitle: "paseo.json не удалось разобрать",
+        invalidTitle: "vincu.json не удалось разобрать",
         invalidDescription: "Исправьте файл на диске, затем перезагрузите.",
         missingTitle: "У этого хоста нет этого проекта",
         missingSingleHost: "У выбранного хоста нет записей об этом проекте.",
-        transportTitle: "Не удалось загрузить paseo.json.",
+        transportTitle: "Не удалось загрузить vincu.json.",
         transportFallback: "Хозяин не ответил.",
-        failedTitle: "Не удалось загрузить paseo.json.",
+        failedTitle: "Не удалось загрузить vincu.json.",
         failedDescription: "Перезагрузите, чтобы попробовать еще раз.",
       },
       worktree: {
@@ -2348,7 +2348,7 @@ export const ru: TranslationResources = {
         newScript: "Новый сценарий",
         editScript: "Изменить{{name}}",
         runAsService: "Запуск как служба",
-        serviceHint: "Paseo контролирует процесс и назначает порт через $PASEO_PORT.",
+        serviceHint: "Vincu контролирует процесс и назначает порт через $VINCU_PORT.",
         actions: {
           add: "Добавить скрипт",
           edit: "Редактировать",
@@ -2357,7 +2357,7 @@ export const ru: TranslationResources = {
       },
       metadata: {
         title: "Генерация метаданных",
-        info: "Инструкции для конкретного проекта, внедренные в подсказки ИИ, которые Paseo использует для генерации метаданных. Используйте их для обеспечения соблюдения соглашений вашей команды, таких как наименование ветвей, стиль фиксации или формат PR.",
+        info: "Инструкции для конкретного проекта, внедренные в подсказки ИИ, которые Vincu использует для генерации метаданных. Используйте их для обеспечения соблюдения соглашений вашей команды, таких как наименование ветвей, стиль фиксации или формат PR.",
         branchName: "Названия ветвей",
         branchNamePlaceholder: "Префиксные ветки с feat/ или fix/, mb/ для личных веток",
         commitMessage: "Фиксировать сообщения",
@@ -2369,8 +2369,8 @@ export const ru: TranslationResources = {
       writeFailures: {
         staleTitle: "Конфигурация изменена на диске",
         staleDescription:
-          "Перед сохранением перезагрузите компьютер, чтобы получить последнюю версию файла paseo.json.",
-        failedTitle: "Не удалось сохранить paseo.json.",
+          "Перед сохранением перезагрузите компьютер, чтобы получить последнюю версию файла vincu.json.",
+        failedTitle: "Не удалось сохранить vincu.json.",
         failedDescription: "Попробуйте еще раз или перезагрузите последнюю версию с диска.",
       },
       actions: {

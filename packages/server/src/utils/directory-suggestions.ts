@@ -99,7 +99,7 @@ export const WORKSPACE_SEARCH_HIDDEN_DIRECTORIES = [
   ".codex",
   ".github",
   ".opencode",
-  ".paseo",
+  ".vincu",
   ".vscode",
 ] as const;
 const IGNORED_DIRECTORY_NAMES = new Set([

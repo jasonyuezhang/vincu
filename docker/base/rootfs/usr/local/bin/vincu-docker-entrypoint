@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+IMAGE_HOME="/home/vincu"
+
+: "${HOME:=$IMAGE_HOME}"
+: "${VINCU_HOME:=${HOME}/.vincu}"
+: "${VINCU_LISTEN:=0.0.0.0:6767}"
+: "${VINCU_WEB_UI_ENABLED:=true}"
+: "${VINCU_LOG_LEVEL:=info}"
+: "${VINCU_LOG_FORMAT:=json}"
+: "${CLAUDE_CONFIG_DIR:=${HOME}/.claude}"
+: "${CODEX_HOME:=${HOME}/.codex}"
+: "${XDG_CONFIG_HOME:=${HOME}/.config}"
+: "${XDG_DATA_HOME:=${HOME}/.local/share}"
+: "${XDG_STATE_HOME:=${HOME}/.local/state}"
+: "${XDG_CACHE_HOME:=${HOME}/.cache}"
+
+export HOME
+export VINCU_HOME
+export VINCU_LISTEN
+export VINCU_WEB_UI_ENABLED
+export VINCU_LOG_LEVEL
+export VINCU_LOG_FORMAT
+export CLAUDE_CONFIG_DIR
+export CODEX_HOME
+export XDG_CONFIG_HOME
+export XDG_DATA_HOME
+export XDG_STATE_HOME
+export XDG_CACHE_HOME
+
+ensure_dir() {
+  local dir="$1"
+  mkdir -p "$dir"
+  if [[ "$(id -u)" == "0" ]]; then
+    local owner
+    owner="$(stat -c "%u" "$dir")"
+    if [[ "$owner" == "0" ]]; then
+      chown vincu:vincu "$dir"
+    fi
+  fi
+}
+
+ensure_dir "$HOME"
+ensure_dir "$VINCU_HOME"
+ensure_dir "$CLAUDE_CONFIG_DIR"
+ensure_dir "$CODEX_HOME"
+ensure_dir "$XDG_CONFIG_HOME"
+ensure_dir "$XDG_DATA_HOME"
+ensure_dir "$XDG_STATE_HOME"
+ensure_dir "$XDG_CACHE_HOME"
+
+if [[ "$#" -gt 0 ]]; then
+  if [[ "$(id -u)" == "0" ]]; then
+    exec gosu vincu "$@"
+  fi
+  exec "$@"
+fi
+
+if [[ -z "${VINCU_PASSWORD:-}" ]]; then
+  {
+    echo "[vincu] WARNING: VINCU_PASSWORD is not set."
+    echo "[vincu] The daemon accepts unauthenticated control connections from any client that can reach it."
+    echo "[vincu] Set VINCU_PASSWORD for any published port or network-reachable deployment."
+  } >&2
+fi
+
+if [[ ! -f /etc/vincu-server-entry ]]; then
+  echo "[vincu] FATAL: /etc/vincu-server-entry is missing." >&2
+  exit 1
+fi
+
+entry="$(cat /etc/vincu-server-entry)"
+echo "[vincu] starting daemon on ${VINCU_LISTEN} with web UI ${VINCU_WEB_UI_ENABLED}"
+if [[ "$(id -u)" == "0" ]]; then
+  exec gosu vincu node "$entry"
+fi
+exec node "$entry"

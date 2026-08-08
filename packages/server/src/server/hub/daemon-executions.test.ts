@@ -27,7 +27,7 @@ test("sequential replay after reconstruction keeps one durable owned agent", asy
   expect(reconstructed.durableAgentCount).toBe(1);
 });
 
-test("Hub MCP configuration reaches the provider alongside Paseo MCP without entering snapshots", async () => {
+test("Hub MCP configuration reaches the provider alongside Vincu MCP without entering snapshots", async () => {
   const hub = await HubRelationshipHarness.startWithAgentMcp();
   await hub.beginConnect().result;
   hub.connectLatestSocket();
@@ -46,7 +46,7 @@ test("Hub MCP configuration reaches the provider alongside Paseo MCP without ent
   const response = await hub.ownedCreateResult("mcp-create");
 
   expect(hub.latestProviderCreateConfig()?.mcpServers).toMatchObject({
-    paseo: { type: "http" },
+    vincu: { type: "http" },
     hub: {
       type: "http",
       url: "https://hub.test/mcp/executions/mcp-execution",
@@ -82,11 +82,11 @@ test("Hub MCP configuration reaches the provider alongside Paseo MCP without ent
   expect(JSON.stringify(update.payload.agent)).not.toContain(bearer);
 });
 
-test("new Hub executions cannot override the daemon-owned Paseo MCP server", async () => {
+test("new Hub executions cannot override the daemon-owned Vincu MCP server", async () => {
   const hub = await launchRelationship();
   hub.beginOwnedCreate("reserved-mcp-create", "reserved-mcp-execution", {
     mcpServers: {
-      paseo: { type: "http", url: "https://hub.test/replace-paseo" },
+      vincu: { type: "http", url: "https://hub.test/replace-vincu" },
     },
   });
 
@@ -106,7 +106,7 @@ test("new Hub executions cannot override the daemon-owned Paseo MCP server", asy
   expect(await hub.durableOwnedAgentIds()).toEqual([]);
 });
 
-test("reserved Paseo MCP input does not invalidate replay of an owned execution", async () => {
+test("reserved Vincu MCP input does not invalidate replay of an owned execution", async () => {
   const hub = await launchRelationship();
   hub.beginOwnedCreate("original-create", "replayed-execution");
   const original = await hub.ownedCreateResult("original-create");
@@ -118,7 +118,7 @@ test("reserved Paseo MCP input does not invalidate replay of an owned execution"
 
   hub.beginOwnedCreate("replay-create", "replayed-execution", {
     mcpServers: {
-      paseo: { type: "http", url: "https://hub.test/replace-paseo" },
+      vincu: { type: "http", url: "https://hub.test/replace-vincu" },
     },
   });
   const replay = await hub.ownedCreateResult("replay-create");

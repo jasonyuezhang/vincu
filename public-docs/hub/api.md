@@ -9,15 +9,15 @@ category: Hub
 # Hub public API
 
 The Hub public API lets automation operate on projects and daemons in one
-organization. Set the Hub origin in `PASEO_HUB_URL` below, for example
+organization. Set the Hub origin in `VINCU_HUB_URL` below, for example
 `https://hub.example.com`.
 
 ## API reference
 
-- [Interactive API reference](https://hub.paseo.sh/api/reference)
-- [OpenAPI 3.1 document](https://hub.paseo.sh/api/openapi.json)
+- [Interactive API reference](https://hub.vincu.sh/api/reference)
+- [OpenAPI 3.1 document](https://hub.vincu.sh/api/openapi.json)
 
-These are the canonical reference endpoints for the hosted Paseo Hub. A self-hosted Hub exposes the same `/api/reference` and `/api/openapi.json` paths on its own origin.
+These are the canonical reference endpoints for the hosted Vincu Hub. A self-hosted Hub exposes the same `/api/reference` and `/api/openapi.json` paths on its own origin.
 
 ## Authentication
 
@@ -25,7 +25,7 @@ Create an organization API key from the Hub dashboard under **API keys**. Send
 it as a bearer token on every API request:
 
 ```http
-Authorization: Bearer paseo_pk_...
+Authorization: Bearer vincu_pk_...
 Content-Type: application/json
 ```
 
@@ -83,7 +83,7 @@ Request body:
 }
 ```
 
-The YAML must describe a valid Hub configuration and its string value is limited to 1,000,000 characters. `projectSlug` is deployment metadata and determines the target project; the API key determines its organization. `partials` is optional for inline-only configurations. When the YAML uses prompt `include` blocks, send exactly one entry for each referenced file, with a path relative to `.paseo/partials/` and the file's UTF-8 content. The bundle accepts at most 100 files, each with a canonical path no longer than 512 characters and content no larger than 1,000,000 bytes; combined partial content may not exceed 5,000,000 bytes. Hub rejects missing, extra, duplicate, unsafe, or oversized entries. Replace the example daemon, working directory, and trigger values with resources in your organization.
+The YAML must describe a valid Hub configuration and its string value is limited to 1,000,000 characters. `projectSlug` is deployment metadata and determines the target project; the API key determines its organization. `partials` is optional for inline-only configurations. When the YAML uses prompt `include` blocks, send exactly one entry for each referenced file, with a path relative to `.vincu/partials/` and the file's UTF-8 content. The bundle accepts at most 100 files, each with a canonical path no longer than 512 characters and content no larger than 1,000,000 bytes; combined partial content may not exceed 5,000,000 bytes. Hub rejects missing, extra, duplicate, unsafe, or oversized entries. Replace the example daemon, working directory, and trigger values with resources in your organization.
 
 On success, Hub returns `201`:
 
@@ -101,13 +101,13 @@ Common responses are `400` for a missing or malformed body, `404` for an inactiv
 Example:
 
 ```bash
-curl --fail-with-body -sS -X POST "$PASEO_HUB_URL/api/v1/configurations/install" \
-  -H "Authorization: Bearer $PASEO_HUB_API_KEY" \
+curl --fail-with-body -sS -X POST "$VINCU_HUB_URL/api/v1/configurations/install" \
+  -H "Authorization: Bearer $VINCU_HUB_API_KEY" \
   -H "Content-Type: application/json" \
   --data @configuration-install.json
 ```
 
-For a local YAML file, `paseo hub deploy [file]` calls this endpoint and preserves the file contents. See [Deploy from the CLI](/docs/hub/configuration#deploy-from-the-cli) for project precedence, flags, environment variables, and the current authentication limits.
+For a local YAML file, `vincu hub deploy [file]` calls this endpoint and preserves the file contents. See [Deploy from the CLI](/docs/hub/configuration#deploy-from-the-cli) for project precedence, flags, environment variables, and the current authentication limits.
 
 ## Manual run dispatch
 
@@ -135,7 +135,7 @@ Request body:
 `expectedVersionId` is optional. When supplied, Hub rejects the dispatch if
 that configuration revision is no longer active. `input` is the same string
 used by a provider message: consecutive leading `key=value` tokens are parsed
-as the trigger's declared inputs, and the remainder becomes `${{ paseo.prompt }}`.
+as the trigger's declared inputs, and the remainder becomes `${{ vincu.prompt }}`.
 Use a unique, stable `deliveryKey` for each dispatch. Reusing it makes the
 request resolve to the existing trigger instead of starting a duplicate run.
 
@@ -162,7 +162,7 @@ Example:
 
 ```bash
 curl --fail-with-body -sS -X POST "$HUB_URL/api/manual-runs" \
-  -H "Authorization: Bearer $PASEO_API_KEY" \
+  -H "Authorization: Bearer $VINCU_API_KEY" \
   -H "Content-Type: application/json" \
   --data '{
     "projectSlug": "my-project",
@@ -196,17 +196,17 @@ Send an empty JSON object as the request body. On success, Hub returns `201`:
 ```
 
 The token expires after 10 minutes and is consumed when the daemon enrolls.
-Pass it to the Paseo CLI, which exchanges it for the daemon's connection
+Pass it to the Vincu CLI, which exchanges it for the daemon's connection
 credential:
 
 ```bash
 ENROLLMENT_TOKEN="$(curl --fail-with-body -sS -X POST \
   "$HUB_URL/api/daemons/enrollment-tokens" \
-  -H "Authorization: Bearer $PASEO_API_KEY" \
+  -H "Authorization: Bearer $VINCU_API_KEY" \
   -H "Content-Type: application/json" \
   --data '{}' | jq -r .token)"
 
-paseo hub connect "$HUB_URL" --token "$ENROLLMENT_TOKEN"
+vincu hub connect "$HUB_URL" --token "$ENROLLMENT_TOKEN"
 ```
 
 An enrollment token cannot be reused. Revoking the API key immediately rejects

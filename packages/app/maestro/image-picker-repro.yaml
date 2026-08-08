@@ -1,4 +1,4 @@
-appId: sh.paseo
+appId: sh.vincu
 ---
 - runFlow: flows/land-in-chat.yaml
 

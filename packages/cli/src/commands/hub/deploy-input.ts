@@ -3,8 +3,8 @@ import path from "node:path";
 import YAML from "yaml";
 import { HubDeployError } from "./error.js";
 
-const DEFAULT_CONFIGURATION_PATH = ".paseo/hub.yml";
-const PROMPT_PARTIAL_ROOT = ".paseo/partials";
+const DEFAULT_CONFIGURATION_PATH = ".vincu/hub.yml";
+const PROMPT_PARTIAL_ROOT = ".vincu/partials";
 const PROMPT_PARTIAL_ROOT_PREFIX = `${PROMPT_PARTIAL_ROOT}/`;
 const PROJECT_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 const MAX_CONFIGURATION_LENGTH = 1_000_000;
@@ -378,7 +378,7 @@ function invalidConfigurationPath(): HubDeployError {
 function invalidPromptPartialPath(value: string): HubDeployError {
   return new HubDeployError(
     "HUB_PARTIAL_PATH_INVALID",
-    `Hub partial path must be a safe relative path under .paseo/partials/: ${value}`,
+    `Hub partial path must be a safe relative path under .vincu/partials/: ${value}`,
   );
 }
 

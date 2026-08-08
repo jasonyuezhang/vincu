@@ -152,7 +152,7 @@ export function normalizeClaudeAskUserQuestionRequestInput(
   }
 
   // Claude Code's AskUserQuestion schema says "Other" is host-provided, not a
-  // model-supplied option. Paseo's shared question UI uses allowOther for that
+  // model-supplied option. Vincu's shared question UI uses allowOther for that
   // freeform answer path.
   return {
     ...input,
@@ -192,7 +192,7 @@ export function normalizeClaudeAskUserQuestionUpdatedInput(
 ): AgentMetadata {
   const fallback = isMetadata(fallbackInput) ? fallbackInput : {};
   const base = isMetadata(updatedInput) ? updatedInput : {};
-  // Paseo's shared question UI serializes answers by question header, but Claude's
+  // Vincu's shared question UI serializes answers by question header, but Claude's
   // AskUserQuestion tool expects answer keys to match the full question text. Merge
   // the original request payload back in so provider callbacks that only return
   // `{ answers }` still satisfy Claude's full tool input schema.
@@ -4474,7 +4474,7 @@ class ClaudeAgentSession implements AgentSession {
    * Effort is reachable only through hooks.
    *
    * It appears nowhere on the message stream — verified by scanning every message type at depth
-   * — and the level Paseo requests is not necessarily the level that runs, because a model that
+   * — and the level Vincu requests is not necessarily the level that runs, because a model that
    * does not support it is silently downgraded. A hook firing inside a subagent reports the
    * active post-downgrade level alongside the subagent's `agent_id`.
    *
@@ -4763,7 +4763,7 @@ class ClaudeAgentSession implements AgentSession {
     }
 
     const items: AgentTimelineItem[] = [];
-    // User SDK entries can arrive as multiple text blocks, but Paseo treats them as one message.
+    // User SDK entries can arrive as multiple text blocks, but Vincu treats them as one message.
     const userTextParts: string[] = [];
     for (const block of content) {
       if (!isClaudeContentChunk(block)) {

@@ -1,6 +1,6 @@
 ---
 title: How Hub works
-description: How a provider event reaches a workflow and a Paseo daemon, for hosted and self-hosted Hub.
+description: How a provider event reaches a workflow and a Vincu daemon, for hosted and self-hosted Hub.
 nav: How it works
 order: 62
 category: Hub
@@ -19,21 +19,21 @@ GitHub / Slack / Discord / manual request
                 workflow
           runs ordered agent steps
                     ↓
-             Paseo daemon
+             Vincu daemon
              starts the agent
 ```
 
 ## The pieces
 
 - A **connection** lets Hub receive events from GitHub, Slack, or Discord.
-- A **daemon** is a registered machine running the Paseo daemon.
+- A **daemon** is a registered machine running the Vincu daemon.
 - A **project** groups one configuration with the connections and daemons it uses.
 - An **environment** names where a workflow step runs: a daemon, its working directory, and an optional worktree.
 - A **trigger** says which provider event can start a workflow and which events are allowed through.
 - A **workflow** is the ordered set of steps that runs after a trigger matches.
 - A **step** starts one agent execution, with its own prompt, agent selection, reply capabilities, and limits.
 
-The configuration lives in `.paseo/hub.yml` when the project uses a GitHub source. A project has one active configuration revision at a time.
+The configuration lives in `.vincu/hub.yml` when the project uses a GitHub source. A project has one active configuration revision at a time.
 
 ## From event to agent
 
@@ -49,7 +49,7 @@ The [Workflows guide](/docs/hub/workflows) starts with a one-step Slack example 
 
 ## Activation
 
-When Hub syncs `.paseo/hub.yml`, it validates the configuration and resolves its references:
+When Hub syncs `.vincu/hub.yml`, it validates the configuration and resolves its references:
 
 - `filters.repo`, `filters.workspace`, and `filters.guild` must name resources available through the organization's connections.
 - `environment.daemon` must match a registered daemon's friendly slug.

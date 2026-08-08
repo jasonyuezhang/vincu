@@ -1,9 +1,9 @@
-# Paseo Client SDK Examples
+# Vincu Client SDK Examples
 
 These examples use only the public SDK root:
 
 ```ts
-import { createPaseoClient, type PaseoClient } from "@getpaseo/client";
+import { createVincuClient, type VincuClient } from "@getvincu/client";
 ```
 
 Pass the daemon WebSocket URL into the exported functions. In worktree dev, read it

@@ -7,22 +7,22 @@ describe("parseSkillsSnapshot", () => {
       parseSkillsSnapshot({
         state: "drift",
         ops: [
-          { kind: "add", name: "paseo-loop" },
-          { kind: "delete", name: "paseo-chat" },
+          { kind: "add", name: "vincu-loop" },
+          { kind: "delete", name: "vincu-chat" },
         ],
-        available: ["paseo", "paseo-loop"],
-        installed: ["paseo"],
-        selection: { mode: "custom", skills: ["paseo", "paseo-loop"] },
+        available: ["vincu", "vincu-loop"],
+        installed: ["vincu"],
+        selection: { mode: "custom", skills: ["vincu", "vincu-loop"] },
       }),
     ).toEqual({
       state: "drift",
       ops: [
-        { kind: "add", name: "paseo-loop" },
-        { kind: "delete", name: "paseo-chat" },
+        { kind: "add", name: "vincu-loop" },
+        { kind: "delete", name: "vincu-chat" },
       ],
-      available: ["paseo", "paseo-loop"],
-      installed: ["paseo"],
-      selection: { mode: "custom", skills: ["paseo", "paseo-loop"] },
+      available: ["vincu", "vincu-loop"],
+      installed: ["vincu"],
+      selection: { mode: "custom", skills: ["vincu", "vincu-loop"] },
     });
   });
 
@@ -30,12 +30,12 @@ describe("parseSkillsSnapshot", () => {
     expect(
       parseSkillsSnapshot({
         state: "drift",
-        ops: [{ kind: "add", name: "paseo-loop" }],
-        available: ["paseo", "paseo-loop"],
-        installed: ["paseo-loop", 7],
+        ops: [{ kind: "add", name: "vincu-loop" }],
+        available: ["vincu", "vincu-loop"],
+        installed: ["vincu-loop", 7],
         selection: { mode: "all" },
       }).installed,
-    ).toEqual(["paseo-loop"]);
+    ).toEqual(["vincu-loop"]);
   });
 
   it("assumes the saved selection is installed when the host does not report it", () => {
@@ -45,10 +45,10 @@ describe("parseSkillsSnapshot", () => {
       parseSkillsSnapshot({
         state: "up-to-date",
         ops: [],
-        available: ["paseo", "paseo-advisor", "paseo-loop"],
-        selection: { mode: "custom", skills: ["paseo", "paseo-loop"] },
+        available: ["vincu", "vincu-advisor", "vincu-loop"],
+        selection: { mode: "custom", skills: ["vincu", "vincu-loop"] },
       }).installed,
-    ).toEqual(["paseo", "paseo-loop"]);
+    ).toEqual(["vincu", "vincu-loop"]);
   });
 
   it("assumes every bundled skill is installed for an all selection from an older host", () => {
@@ -56,17 +56,17 @@ describe("parseSkillsSnapshot", () => {
       parseSkillsSnapshot({
         state: "up-to-date",
         ops: [],
-        available: ["paseo", "paseo-loop"],
+        available: ["vincu", "vincu-loop"],
       }).installed,
-    ).toEqual(["paseo", "paseo-loop"]);
+    ).toEqual(["vincu", "vincu-loop"]);
   });
 
   it("reads a snapshot with no saved selection as all skills", () => {
-    expect(parseSkillsSnapshot({ state: "up-to-date", ops: [], available: ["paseo"] })).toEqual({
+    expect(parseSkillsSnapshot({ state: "up-to-date", ops: [], available: ["vincu"] })).toEqual({
       state: "up-to-date",
       ops: [],
-      available: ["paseo"],
-      installed: ["paseo"],
+      available: ["vincu"],
+      installed: ["vincu"],
       selection: { mode: "all" },
     });
   });
@@ -76,15 +76,15 @@ describe("parseSkillsSnapshot", () => {
       parseSkillsSnapshot({
         state: "up-to-date",
         ops: [],
-        available: ["paseo", 7, null, "paseo-loop"],
-        selection: { mode: "custom", skills: ["paseo", 7] },
+        available: ["vincu", 7, null, "vincu-loop"],
+        selection: { mode: "custom", skills: ["vincu", 7] },
       }),
     ).toEqual({
       state: "up-to-date",
       ops: [],
-      available: ["paseo", "paseo-loop"],
-      installed: ["paseo"],
-      selection: { mode: "custom", skills: ["paseo"] },
+      available: ["vincu", "vincu-loop"],
+      installed: ["vincu"],
+      selection: { mode: "custom", skills: ["vincu"] },
     });
   });
 
@@ -93,12 +93,12 @@ describe("parseSkillsSnapshot", () => {
       parseSkillsSaveResult({
         state: "up-to-date",
         ops: [],
-        available: ["paseo", "paseo-loop"],
-        installed: ["paseo", "paseo-loop"],
+        available: ["vincu", "vincu-loop"],
+        installed: ["vincu", "vincu-loop"],
         selection: { mode: "all" },
-        confirmationRequired: { removals: ["paseo-loop", 7] },
+        confirmationRequired: { removals: ["vincu-loop", 7] },
       }).confirmationRequired,
-    ).toEqual({ removals: ["paseo-loop"] });
+    ).toEqual({ removals: ["vincu-loop"] });
   });
 
   it("treats a save with no confirmation request as applied", () => {
@@ -106,8 +106,8 @@ describe("parseSkillsSnapshot", () => {
       parseSkillsSaveResult({
         state: "up-to-date",
         ops: [],
-        available: ["paseo"],
-        installed: ["paseo"],
+        available: ["vincu"],
+        installed: ["vincu"],
         selection: { mode: "all" },
       }).confirmationRequired,
     ).toBeNull();
@@ -125,7 +125,7 @@ describe("parseSkillsSnapshot", () => {
 
   it("rejects an unknown pending operation kind", () => {
     expect(() =>
-      parseSkillsSnapshot({ state: "drift", ops: [{ kind: "relocate", name: "paseo" }] }),
+      parseSkillsSnapshot({ state: "drift", ops: [{ kind: "relocate", name: "vincu" }] }),
     ).toThrow("Unexpected skill op kind: relocate");
   });
 });

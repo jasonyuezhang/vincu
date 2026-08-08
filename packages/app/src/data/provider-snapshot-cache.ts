@@ -1,13 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import type { ProviderSnapshotEntry } from "@getpaseo/protocol/agent-types";
+import type { ProviderSnapshotEntry } from "@getvincu/protocol/agent-types";
 import {
   expandProviderSnapshot,
   type CompactProviderSnapshot,
-} from "@getpaseo/protocol/provider-snapshot-codec";
-import { CompactProviderSnapshotSchema } from "@getpaseo/protocol/messages";
+} from "@getvincu/protocol/provider-snapshot-codec";
+import { CompactProviderSnapshotSchema } from "@getvincu/protocol/messages";
 
 const CACHE_VERSION = 1;
-const CACHE_KEY_PREFIX = "@paseo/provider-snapshot/v1";
+const CACHE_KEY_PREFIX = "@vincu/provider-snapshot/v1";
 
 interface ProviderSnapshotStorage {
   getItem(key: string): Promise<string | null>;

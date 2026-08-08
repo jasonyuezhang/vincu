@@ -165,7 +165,7 @@ function makeCheckoutSession(options?: {
     checkoutDiffManager:
       options?.diff ?? createFakeDiffSubscriber({ cwd: "", files: [], error: null }).subscriber,
     gitMetadataGenerator,
-    paseoHome: "/tmp/paseo-home",
+    vincuHome: "/tmp/vincu-home",
     worktreesRoot: undefined,
     logger: pino({ level: "silent" }),
   });
@@ -185,7 +185,7 @@ function createGitSnapshot(
       mainRepoRoot: cwd,
       currentBranch,
       remoteUrl: null,
-      isPaseoOwnedWorktree: false,
+      isVincuOwnedWorktree: false,
       isDirty: overrides?.isDirty ?? false,
       baseRef: null,
       aheadBehind: null,
@@ -1288,12 +1288,12 @@ describe("CheckoutSession", () => {
   });
 
   describe("stash list", () => {
-    it("returns stash entries scoped to paseo stashes by default", async () => {
-      const listStashesCalls: Array<{ cwd: string; paseoOnly: boolean | undefined }> = [];
+    it("returns stash entries scoped to vincu stashes by default", async () => {
+      const listStashesCalls: Array<{ cwd: string; vincuOnly: boolean | undefined }> = [];
       const { checkout, emitted } = makeCheckoutSession({
         git: {
           listStashes: async (cwd, opts) => {
-            listStashesCalls.push({ cwd, paseoOnly: opts?.paseoOnly });
+            listStashesCalls.push({ cwd, vincuOnly: opts?.vincuOnly });
             return [];
           },
         },
@@ -1305,7 +1305,7 @@ describe("CheckoutSession", () => {
         requestId: "sl1",
       });
 
-      expect(listStashesCalls).toEqual([{ cwd: "/repo", paseoOnly: true }]);
+      expect(listStashesCalls).toEqual([{ cwd: "/repo", vincuOnly: true }]);
       expect(emitted).toEqual([
         {
           type: "stash_list_response",

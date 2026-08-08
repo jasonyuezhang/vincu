@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import type { DaemonClient, FetchAgentsEntry } from "@getpaseo/client/internal/daemon-client";
-import type { AgentSnapshotPayload } from "@getpaseo/protocol/messages";
-import { PARENT_AGENT_ID_LABEL } from "@getpaseo/protocol/agent-labels";
-import type { AgentPermissionRequest } from "@getpaseo/protocol/agent-types";
+import type { DaemonClient, FetchAgentsEntry } from "@getvincu/client/internal/daemon-client";
+import type { AgentSnapshotPayload } from "@getvincu/protocol/messages";
+import { PARENT_AGENT_ID_LABEL } from "@getvincu/protocol/agent-labels";
+import type { AgentPermissionRequest } from "@getvincu/protocol/agent-types";
 import { useSessionStore } from "@/stores/session-store";
 import { normalizeAgentSnapshot } from "@/utils/agent-snapshots";
 import { isAgentArchiving, setAgentArchiving } from "@/hooks/use-archive-agent";
@@ -54,7 +54,7 @@ function createEntry(agent: AgentSnapshotPayload): FetchAgentsEntry {
         currentBranch: null,
         remoteUrl: null,
         worktreeRoot: null,
-        isPaseoOwnedWorktree: false,
+        isVincuOwnedWorktree: false,
         mainRepoRoot: null,
       },
     },

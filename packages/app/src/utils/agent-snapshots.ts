@@ -1,6 +1,6 @@
-import type { AgentSnapshotPayload } from "@getpaseo/protocol/messages";
-import type { AgentPermissionRequest } from "@getpaseo/protocol/agent-types";
-import { getParentAgentIdFromLabels } from "@getpaseo/protocol/agent-labels";
+import type { AgentSnapshotPayload } from "@getvincu/protocol/messages";
+import type { AgentPermissionRequest } from "@getvincu/protocol/agent-types";
+import { getParentAgentIdFromLabels } from "@getvincu/protocol/agent-labels";
 import type { ActiveTurnIdentity } from "@/timeline/turn-liveness";
 
 function normalizeActiveTurn(

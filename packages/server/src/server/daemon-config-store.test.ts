@@ -64,9 +64,9 @@ describe("DaemonConfigStore", () => {
   });
 
   test("patch persists relay state and emits its field change", () => {
-    const paseoHome = mkdtempSync(path.join(tmpdir(), "paseo-daemon-config-store-"));
-    tempDirs.push(paseoHome);
-    const store = new DaemonConfigStore(paseoHome, {
+    const vincuHome = mkdtempSync(path.join(tmpdir(), "vincu-daemon-config-store-"));
+    tempDirs.push(vincuHome);
+    const store = new DaemonConfigStore(vincuHome, {
       relay: { enabled: false },
       mcp: { injectIntoAgents: false },
       browserTools: { enabled: false },
@@ -82,13 +82,13 @@ describe("DaemonConfigStore", () => {
     store.patch({ relay: { enabled: true } });
 
     expect(changes).toEqual([true]);
-    expect(loadPersistedConfig(paseoHome).daemon?.relay?.enabled).toBe(true);
+    expect(loadPersistedConfig(vincuHome).daemon?.relay?.enabled).toBe(true);
   });
 
   test("rolls back config when a field transition fails", () => {
-    const paseoHome = mkdtempSync(path.join(tmpdir(), "paseo-daemon-config-store-"));
-    tempDirs.push(paseoHome);
-    const store = new DaemonConfigStore(paseoHome, {
+    const vincuHome = mkdtempSync(path.join(tmpdir(), "vincu-daemon-config-store-"));
+    tempDirs.push(vincuHome);
+    const store = new DaemonConfigStore(vincuHome, {
       relay: { enabled: false },
       mcp: { injectIntoAgents: false },
       browserTools: { enabled: false },
@@ -108,14 +108,14 @@ describe("DaemonConfigStore", () => {
       "Relay transport failed to start",
     );
     expect(store.get().relay?.enabled).toBe(false);
-    expect(loadPersistedConfig(paseoHome).daemon?.relay?.enabled).toBe(false);
+    expect(loadPersistedConfig(vincuHome).daemon?.relay?.enabled).toBe(false);
   });
 
   test("rejects relay patches when a launch override owns the setting", () => {
-    const paseoHome = mkdtempSync(path.join(tmpdir(), "paseo-daemon-config-store-"));
-    tempDirs.push(paseoHome);
+    const vincuHome = mkdtempSync(path.join(tmpdir(), "vincu-daemon-config-store-"));
+    tempDirs.push(vincuHome);
     const store = new DaemonConfigStore(
-      paseoHome,
+      vincuHome,
       {
         relay: { enabled: false },
         mcp: { injectIntoAgents: false },
@@ -136,18 +136,18 @@ describe("DaemonConfigStore", () => {
   });
 
   test("unrelated patches do not persist a one-launch relay override", () => {
-    const paseoHome = mkdtempSync(path.join(tmpdir(), "paseo-daemon-config-store-"));
-    tempDirs.push(paseoHome);
-    const persisted = loadPersistedConfig(paseoHome);
+    const vincuHome = mkdtempSync(path.join(tmpdir(), "vincu-daemon-config-store-"));
+    tempDirs.push(vincuHome);
+    const persisted = loadPersistedConfig(vincuHome);
     writeFileSync(
-      path.join(paseoHome, "config.json"),
+      path.join(vincuHome, "config.json"),
       `${JSON.stringify({
         ...persisted,
         daemon: { ...persisted.daemon, relay: { enabled: false } },
       })}\n`,
     );
     const store = new DaemonConfigStore(
-      paseoHome,
+      vincuHome,
       {
         relay: { enabled: true },
         mcp: { injectIntoAgents: false },
@@ -164,15 +164,15 @@ describe("DaemonConfigStore", () => {
 
     store.patch({ browserTools: { enabled: true } });
 
-    expect(loadPersistedConfig(paseoHome).daemon?.relay?.enabled).toBe(false);
+    expect(loadPersistedConfig(vincuHome).daemon?.relay?.enabled).toBe(false);
   });
 
   test("patch persists provider enabled flags into config.json", () => {
-    const paseoHome = mkdtempSync(path.join(tmpdir(), "paseo-daemon-config-store-"));
-    tempDirs.push(paseoHome);
+    const vincuHome = mkdtempSync(path.join(tmpdir(), "vincu-daemon-config-store-"));
+    tempDirs.push(vincuHome);
 
-    const initial = loadPersistedConfig(paseoHome);
-    const configPath = path.join(paseoHome, "config.json");
+    const initial = loadPersistedConfig(vincuHome);
+    const configPath = path.join(vincuHome, "config.json");
     // Reuse the validated serializer through the store path by seeding the file directly.
     // This keeps the test focused on the merge behavior.
     const seeded =
@@ -195,7 +195,7 @@ describe("DaemonConfigStore", () => {
     writeFileSync(configPath, seeded);
 
     const store = new DaemonConfigStore(
-      paseoHome,
+      vincuHome,
       {
         mcp: { injectIntoAgents: false },
         browserTools: { enabled: false },
@@ -214,7 +214,7 @@ describe("DaemonConfigStore", () => {
       },
     });
 
-    const persisted = loadPersistedConfig(paseoHome);
+    const persisted = loadPersistedConfig(vincuHome);
     expect(persisted.agents?.providers?.gemini).toEqual({
       extends: "acp",
       label: "Gemini",
@@ -224,10 +224,10 @@ describe("DaemonConfigStore", () => {
   });
 
   test("patch removes provider entries from config.json", () => {
-    const paseoHome = mkdtempSync(path.join(tmpdir(), "paseo-daemon-config-store-"));
-    tempDirs.push(paseoHome);
+    const vincuHome = mkdtempSync(path.join(tmpdir(), "vincu-daemon-config-store-"));
+    tempDirs.push(vincuHome);
 
-    const configPath = path.join(paseoHome, "config.json");
+    const configPath = path.join(vincuHome, "config.json");
     writeFileSync(
       configPath,
       `${JSON.stringify(
@@ -252,7 +252,7 @@ describe("DaemonConfigStore", () => {
     );
 
     const store = new DaemonConfigStore(
-      paseoHome,
+      vincuHome,
       {
         mcp: { injectIntoAgents: false },
         browserTools: { enabled: false },
@@ -272,16 +272,16 @@ describe("DaemonConfigStore", () => {
 
     expect(next.providers.gemini).toBeUndefined();
     expect(next.providers.claude).toEqual({ enabled: false });
-    const persisted = loadPersistedConfig(paseoHome);
+    const persisted = loadPersistedConfig(vincuHome);
     expect(persisted.agents?.providers?.gemini).toBeUndefined();
     expect(persisted.agents?.providers?.claude).toEqual({ enabled: false });
   });
 
   test("patch removes the providers object when the last provider is deleted", () => {
-    const paseoHome = mkdtempSync(path.join(tmpdir(), "paseo-daemon-config-store-"));
-    tempDirs.push(paseoHome);
+    const vincuHome = mkdtempSync(path.join(tmpdir(), "vincu-daemon-config-store-"));
+    tempDirs.push(vincuHome);
 
-    const configPath = path.join(paseoHome, "config.json");
+    const configPath = path.join(vincuHome, "config.json");
     writeFileSync(
       configPath,
       `${JSON.stringify(
@@ -303,7 +303,7 @@ describe("DaemonConfigStore", () => {
     );
 
     const store = new DaemonConfigStore(
-      paseoHome,
+      vincuHome,
       {
         mcp: { injectIntoAgents: false },
         browserTools: { enabled: false },
@@ -318,15 +318,15 @@ describe("DaemonConfigStore", () => {
 
     store.patch({ removeProviders: ["gemini"] });
 
-    const persisted = loadPersistedConfig(paseoHome);
+    const persisted = loadPersistedConfig(vincuHome);
     expect(persisted.agents?.providers).toBeUndefined();
   });
 
   test("patch removes deleted providers from metadata generation", () => {
-    const paseoHome = mkdtempSync(path.join(tmpdir(), "paseo-daemon-config-store-"));
-    tempDirs.push(paseoHome);
+    const vincuHome = mkdtempSync(path.join(tmpdir(), "vincu-daemon-config-store-"));
+    tempDirs.push(vincuHome);
 
-    const configPath = path.join(paseoHome, "config.json");
+    const configPath = path.join(vincuHome, "config.json");
     writeFileSync(
       configPath,
       `${JSON.stringify(
@@ -357,7 +357,7 @@ describe("DaemonConfigStore", () => {
     );
 
     const store = new DaemonConfigStore(
-      paseoHome,
+      vincuHome,
       {
         mcp: { injectIntoAgents: false },
         browserTools: { enabled: false },
@@ -381,17 +381,17 @@ describe("DaemonConfigStore", () => {
     const next = store.patch({ removeProviders: ["gemini"] });
 
     expect(next.metadataGeneration.providers).toEqual([{ provider: "claude", model: "haiku" }]);
-    const persisted = loadPersistedConfig(paseoHome);
+    const persisted = loadPersistedConfig(vincuHome);
     expect(persisted.agents?.metadataGeneration).toEqual({
       providers: [{ provider: "claude", model: "haiku" }],
     });
   });
 
   test("patch persists provider removal when in-memory config is already clean", () => {
-    const paseoHome = mkdtempSync(path.join(tmpdir(), "paseo-daemon-config-store-"));
-    tempDirs.push(paseoHome);
+    const vincuHome = mkdtempSync(path.join(tmpdir(), "vincu-daemon-config-store-"));
+    tempDirs.push(vincuHome);
 
-    const configPath = path.join(paseoHome, "config.json");
+    const configPath = path.join(vincuHome, "config.json");
     writeFileSync(
       configPath,
       `${JSON.stringify(
@@ -416,7 +416,7 @@ describe("DaemonConfigStore", () => {
     );
 
     const store = new DaemonConfigStore(
-      paseoHome,
+      vincuHome,
       {
         mcp: { injectIntoAgents: false },
         browserTools: { enabled: false },
@@ -432,17 +432,17 @@ describe("DaemonConfigStore", () => {
     const next = store.patch({ removeProviders: ["gemini"] });
 
     expect(next.providers.gemini).toBeUndefined();
-    const persisted = loadPersistedConfig(paseoHome);
+    const persisted = loadPersistedConfig(vincuHome);
     expect(persisted.agents?.providers).toBeUndefined();
     expect(persisted.agents?.metadataGeneration).toEqual({ providers: [] });
   });
 
   test("patch persists append system prompt into config.json", () => {
-    const paseoHome = mkdtempSync(path.join(tmpdir(), "paseo-daemon-config-store-"));
-    tempDirs.push(paseoHome);
+    const vincuHome = mkdtempSync(path.join(tmpdir(), "vincu-daemon-config-store-"));
+    tempDirs.push(vincuHome);
 
     const store = new DaemonConfigStore(
-      paseoHome,
+      vincuHome,
       {
         mcp: { injectIntoAgents: false },
         browserTools: { enabled: false },
@@ -459,16 +459,16 @@ describe("DaemonConfigStore", () => {
       appendSystemPrompt: "Prefer terse replies.",
     });
 
-    const persisted = loadPersistedConfig(paseoHome);
+    const persisted = loadPersistedConfig(vincuHome);
     expect(persisted.daemon?.appendSystemPrompt).toBe("Prefer terse replies.");
   });
 
   test("patch persists browser tools opt-in into config.json", () => {
-    const paseoHome = mkdtempSync(path.join(tmpdir(), "paseo-daemon-config-store-"));
-    tempDirs.push(paseoHome);
+    const vincuHome = mkdtempSync(path.join(tmpdir(), "vincu-daemon-config-store-"));
+    tempDirs.push(vincuHome);
 
     const store = new DaemonConfigStore(
-      paseoHome,
+      vincuHome,
       {
         mcp: { injectIntoAgents: false },
         browserTools: { enabled: false },
@@ -482,16 +482,16 @@ describe("DaemonConfigStore", () => {
 
     store.patch({ browserTools: { enabled: true } });
 
-    const persisted = loadPersistedConfig(paseoHome);
+    const persisted = loadPersistedConfig(vincuHome);
     expect(persisted.daemon?.browserTools).toEqual({ enabled: true });
   });
 
   test("patch persists provider additional models into config.json", () => {
-    const paseoHome = mkdtempSync(path.join(tmpdir(), "paseo-daemon-config-store-"));
-    tempDirs.push(paseoHome);
+    const vincuHome = mkdtempSync(path.join(tmpdir(), "vincu-daemon-config-store-"));
+    tempDirs.push(vincuHome);
 
     const store = new DaemonConfigStore(
-      paseoHome,
+      vincuHome,
       {
         mcp: { injectIntoAgents: false },
         browserTools: { enabled: false },
@@ -517,7 +517,7 @@ describe("DaemonConfigStore", () => {
       },
     });
 
-    const persisted = loadPersistedConfig(paseoHome);
+    const persisted = loadPersistedConfig(vincuHome);
     expect(persisted.agents?.providers?.claude).toEqual({
       additionalModels: [
         {
@@ -529,11 +529,11 @@ describe("DaemonConfigStore", () => {
   });
 
   test("patch persists daemon append system prompt into config.json", () => {
-    const paseoHome = mkdtempSync(path.join(tmpdir(), "paseo-daemon-config-store-"));
-    tempDirs.push(paseoHome);
+    const vincuHome = mkdtempSync(path.join(tmpdir(), "vincu-daemon-config-store-"));
+    tempDirs.push(vincuHome);
 
     const store = new DaemonConfigStore(
-      paseoHome,
+      vincuHome,
       {
         mcp: { injectIntoAgents: false },
         browserTools: { enabled: false },
@@ -550,16 +550,16 @@ describe("DaemonConfigStore", () => {
       appendSystemPrompt: "Prefer terse replies.",
     });
 
-    const persisted = loadPersistedConfig(paseoHome);
+    const persisted = loadPersistedConfig(vincuHome);
     expect(persisted.daemon?.appendSystemPrompt).toBe("Prefer terse replies.");
   });
 
   test("patch persists enable terminal agent hooks into config.json", () => {
-    const paseoHome = mkdtempSync(path.join(tmpdir(), "paseo-daemon-config-store-"));
-    tempDirs.push(paseoHome);
+    const vincuHome = mkdtempSync(path.join(tmpdir(), "vincu-daemon-config-store-"));
+    tempDirs.push(vincuHome);
 
     const store = new DaemonConfigStore(
-      paseoHome,
+      vincuHome,
       {
         mcp: { injectIntoAgents: false },
         providers: {},
@@ -573,16 +573,16 @@ describe("DaemonConfigStore", () => {
 
     store.patch({ enableTerminalAgentHooks: true });
 
-    const persisted = loadPersistedConfig(paseoHome);
+    const persisted = loadPersistedConfig(vincuHome);
     expect(persisted.daemon?.enableTerminalAgentHooks).toBe(true);
   });
 
   test("patch persists metadata generation providers into config.json", () => {
-    const paseoHome = mkdtempSync(path.join(tmpdir(), "paseo-daemon-config-store-"));
-    tempDirs.push(paseoHome);
+    const vincuHome = mkdtempSync(path.join(tmpdir(), "vincu-daemon-config-store-"));
+    tempDirs.push(vincuHome);
 
     const store = new DaemonConfigStore(
-      paseoHome,
+      vincuHome,
       {
         mcp: { injectIntoAgents: false },
         browserTools: { enabled: false },
@@ -604,7 +604,7 @@ describe("DaemonConfigStore", () => {
       },
     });
 
-    const persisted = loadPersistedConfig(paseoHome);
+    const persisted = loadPersistedConfig(vincuHome);
     expect(persisted.agents?.metadataGeneration).toEqual({
       providers: [
         { provider: "claude", model: "haiku" },
@@ -614,10 +614,10 @@ describe("DaemonConfigStore", () => {
   });
 
   test("patch persists clearing metadata generation providers into config.json", () => {
-    const paseoHome = mkdtempSync(path.join(tmpdir(), "paseo-daemon-config-store-"));
-    tempDirs.push(paseoHome);
+    const vincuHome = mkdtempSync(path.join(tmpdir(), "vincu-daemon-config-store-"));
+    tempDirs.push(vincuHome);
 
-    const configPath = path.join(paseoHome, "config.json");
+    const configPath = path.join(vincuHome, "config.json");
     writeFileSync(
       configPath,
       `${JSON.stringify(
@@ -635,7 +635,7 @@ describe("DaemonConfigStore", () => {
     );
 
     const store = new DaemonConfigStore(
-      paseoHome,
+      vincuHome,
       {
         mcp: { injectIntoAgents: false },
         browserTools: { enabled: false },
@@ -650,16 +650,16 @@ describe("DaemonConfigStore", () => {
 
     store.patch({ metadataGeneration: { providers: [] } });
 
-    const persisted = loadPersistedConfig(paseoHome);
+    const persisted = loadPersistedConfig(vincuHome);
     expect(persisted.agents?.metadataGeneration).toEqual({ providers: [] });
   });
 
   test("patch persists custom ACP provider overrides into config.json", () => {
-    const paseoHome = mkdtempSync(path.join(tmpdir(), "paseo-daemon-config-store-"));
-    tempDirs.push(paseoHome);
+    const vincuHome = mkdtempSync(path.join(tmpdir(), "vincu-daemon-config-store-"));
+    tempDirs.push(vincuHome);
 
     const store = new DaemonConfigStore(
-      paseoHome,
+      vincuHome,
       {
         mcp: { injectIntoAgents: false },
         browserTools: { enabled: false },
@@ -674,9 +674,9 @@ describe("DaemonConfigStore", () => {
 
     store.patch({
       providers: {
-        "paseo-e2e-acp": {
+        "vincu-e2e-acp": {
           extends: "acp",
-          label: "Paseo E2E ACP",
+          label: "Vincu E2E ACP",
           description: "E2E ACP provider fixture",
           command: ["npx", "-y", "--version"],
           env: {},
@@ -684,10 +684,10 @@ describe("DaemonConfigStore", () => {
       },
     });
 
-    const persisted = loadPersistedConfig(paseoHome);
-    expect(persisted.agents?.providers?.["paseo-e2e-acp"]).toEqual({
+    const persisted = loadPersistedConfig(vincuHome);
+    expect(persisted.agents?.providers?.["vincu-e2e-acp"]).toEqual({
       extends: "acp",
-      label: "Paseo E2E ACP",
+      label: "Vincu E2E ACP",
       description: "E2E ACP provider fixture",
       command: ["npx", "-y", "--version"],
       env: {},

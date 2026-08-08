@@ -1,11 +1,11 @@
 import {
   normalizeHostPort,
   normalizeLoopbackToLocalhost,
-} from "@getpaseo/protocol/daemon-endpoints";
+} from "@getvincu/protocol/daemon-endpoints";
 import {
   DirectTcpHostConnectionSchema,
   type DirectTcpHostConnection,
-} from "@getpaseo/protocol/host-connection-schema";
+} from "@getvincu/protocol/host-connection-schema";
 import {
   type HostAppearance,
   defaultHostAppearance,

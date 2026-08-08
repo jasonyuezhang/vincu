@@ -5,7 +5,7 @@ import {
 } from "./desktop-daemon-transport";
 import { createFakeLocalDaemonTransportRpc } from "./test-local-daemon-transport-rpc";
 
-const LOCAL_URL = "paseo+local://socket?path=%2Ftmp%2Fpaseo.sock";
+const LOCAL_URL = "vincu+local://socket?path=%2Ftmp%2Fvincu.sock";
 
 describe("desktop-daemon-transport", () => {
   it("emits open after the session resolves even if the rust open event raced earlier", async () => {
@@ -55,7 +55,7 @@ describe("desktop-daemon-transport", () => {
     transportFactory!({
       url: "wss://daemon.example/ws",
       headers: { "X-Tenant": "acme", Authorization: "Bearer secret" },
-      protocols: ["paseo.bearer.secret"],
+      protocols: ["vincu.bearer.secret"],
     });
 
     expect(rpc.openCalls).toEqual([
@@ -63,7 +63,7 @@ describe("desktop-daemon-transport", () => {
         transportType: "websocket",
         url: "wss://daemon.example/ws",
         headers: { "X-Tenant": "acme", Authorization: "Bearer secret" },
-        protocols: ["paseo.bearer.secret"],
+        protocols: ["vincu.bearer.secret"],
       },
     ]);
   });

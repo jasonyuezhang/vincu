@@ -65,11 +65,11 @@ test.describe("Choosing installed skills", () => {
     await openSkillsIntegrations(page);
 
     await openSkillSelection(page);
-    await chooseCustomSkills(page, ["paseo", "paseo-loop"]);
+    await chooseCustomSkills(page, ["vincu", "vincu-loop"]);
     await saveSkillSelection(page);
 
-    await expectSkillsInstalled(skills, ["paseo", "paseo-loop"]);
-    await expectSelectedSkills(page, ["paseo", "paseo-loop"]);
+    await expectSkillsInstalled(skills, ["vincu", "vincu-loop"]);
+    await expectSelectedSkills(page, ["vincu", "vincu-loop"]);
   });
 
   test("all skills includes every available skill", async ({ page, startSkills }) => {
@@ -77,7 +77,7 @@ test.describe("Choosing installed skills", () => {
     await gotoAppShell(page);
     await openSkillsIntegrations(page);
     await openSkillSelection(page);
-    await chooseCustomSkills(page, ["paseo"]);
+    await chooseCustomSkills(page, ["vincu"]);
     await saveSkillSelection(page);
 
     await openSkillSelection(page);
@@ -93,15 +93,15 @@ test.describe("Choosing installed skills", () => {
     await gotoAppShell(page);
     await openSkillsIntegrations(page);
     await openSkillSelection(page);
-    await chooseCustomSkills(page, ["paseo"]);
+    await chooseCustomSkills(page, ["vincu"]);
     await saveSkillSelection(page);
 
     await openSkillSelection(page);
-    await toggleSkill(page, "paseo-loop");
+    await toggleSkill(page, "vincu-loop");
     await cancelSkillSelection(page);
 
-    await expectSkillsInstalled(skills, ["paseo"]);
-    await expectSelectedSkills(page, ["paseo"]);
+    await expectSkillsInstalled(skills, ["vincu"]);
+    await expectSelectedSkills(page, ["vincu"]);
   });
 
   test("a failed save keeps the sheet open with an error", async ({ page, startSkills }) => {
@@ -110,7 +110,7 @@ test.describe("Choosing installed skills", () => {
     await openSkillsIntegrations(page);
 
     await openSkillSelection(page);
-    await chooseCustomSkills(page, ["paseo"]);
+    await chooseCustomSkills(page, ["vincu"]);
     await saveSkillSelection(page);
 
     await expectSaveErrorKeepsSheetOpen(page);
@@ -162,7 +162,7 @@ test.describe("Choosing installed skills", () => {
     await gotoAppShell(page);
     await openSkillsIntegrations(page);
     await openSkillSelection(page);
-    await chooseCustomSkills(page, ["paseo"]);
+    await chooseCustomSkills(page, ["vincu"]);
 
     await saveSkillSelection(page);
     await skills.waitForHeldSave();
@@ -180,11 +180,11 @@ test.describe("Removing an installed skill", () => {
     startSkills,
   }) => {
     await startSkills({
-      installed: { mode: "custom", skills: ["paseo"] },
+      installed: { mode: "custom", skills: ["vincu"] },
       placeOnDisk: {
-        skill: "paseo-loop",
+        skill: "vincu-loop",
         target: "claude",
-        files: { "SKILL.md": "# paseo-loop\n", "notes/mine.md": "my notes" },
+        files: { "SKILL.md": "# vincu-loop\n", "notes/mine.md": "my notes" },
       },
     });
     await gotoAppShell(page);
@@ -201,10 +201,10 @@ test.describe("Removing an installed skill", () => {
     await openSkillsIntegrations(page);
 
     await openSkillSelection(page);
-    await chooseCustomSkills(page, ["paseo", "paseo-advisor"]);
+    await chooseCustomSkills(page, ["vincu", "vincu-advisor"]);
     await saveSkillSelection(page);
 
-    await expectRemovalWarning(page, ["paseo-loop"]);
+    await expectRemovalWarning(page, ["vincu-loop"]);
     await expectSkillSelectionOpen(page);
     await expectSkillsInstalled(skills, skills.bundledSkills);
     await expectSavedSkillSelection(skills, { mode: "all" });
@@ -216,30 +216,30 @@ test.describe("Removing an installed skill", () => {
     await openSkillsIntegrations(page);
 
     await openSkillSelection(page);
-    await chooseCustomSkills(page, ["paseo", "paseo-advisor"]);
+    await chooseCustomSkills(page, ["vincu", "vincu-advisor"]);
     await saveSkillSelection(page);
 
-    await expectRemovalWarning(page, ["paseo-loop"]);
-    await expectSkillsInstalled(skills, ["paseo", "paseo-advisor"]);
-    await expectSelectedSkills(page, ["paseo", "paseo-advisor"]);
+    await expectRemovalWarning(page, ["vincu-loop"]);
+    await expectSkillsInstalled(skills, ["vincu", "vincu-advisor"]);
+    await expectSelectedSkills(page, ["vincu", "vincu-advisor"]);
   });
 
   test("warns for a skill installed in only one agent directory", async ({ page, startSkills }) => {
     const skills = await startSkills({
       installed: { mode: "all" },
-      keepOnlyIn: { skill: "paseo-loop", target: "claude" },
+      keepOnlyIn: { skill: "vincu-loop", target: "claude" },
       confirmRemoval: false,
     });
     await gotoAppShell(page);
     await openSkillsIntegrations(page);
 
     await openSkillSelection(page);
-    await chooseCustomSkills(page, ["paseo", "paseo-advisor"]);
+    await chooseCustomSkills(page, ["vincu", "vincu-advisor"]);
     await saveSkillSelection(page);
 
-    await expectRemovalWarning(page, ["paseo-loop"]);
+    await expectRemovalWarning(page, ["vincu-loop"]);
     await expectSkillSelectionOpen(page);
-    await expectSkillPresentIn(skills, "claude", "paseo-loop");
+    await expectSkillPresentIn(skills, "claude", "vincu-loop");
     await expectSavedSkillSelection(skills, { mode: "all" });
   });
 
@@ -247,14 +247,14 @@ test.describe("Removing an installed skill", () => {
     page,
     startSkills,
   }) => {
-    // The committed preference excludes paseo-loop, but the directory is back —
+    // The committed preference excludes vincu-loop, but the directory is back —
     // a manual reinstall or an external sync. Saving any edit deletes it.
     const skills = await startSkills({
-      installed: { mode: "custom", skills: ["paseo"] },
+      installed: { mode: "custom", skills: ["vincu"] },
       placeOnDisk: {
-        skill: "paseo-loop",
+        skill: "vincu-loop",
         target: "claude",
-        files: { "SKILL.md": "# paseo-loop\n", "notes/mine.md": "my notes" },
+        files: { "SKILL.md": "# vincu-loop\n", "notes/mine.md": "my notes" },
       },
       confirmRemoval: false,
     });
@@ -262,13 +262,13 @@ test.describe("Removing an installed skill", () => {
     await openSkillsIntegrations(page);
 
     await openSkillSelection(page);
-    await toggleSkill(page, "paseo-advisor");
+    await toggleSkill(page, "vincu-advisor");
     await saveSkillSelection(page);
 
-    await expectRemovalWarning(page, ["paseo-loop"]);
+    await expectRemovalWarning(page, ["vincu-loop"]);
     await expectSkillSelectionOpen(page);
-    await expectSkillFilePresent(skills, "claude", "paseo-loop", "notes/mine.md");
-    await expectSavedSkillSelection(skills, { mode: "custom", skills: ["paseo"] });
+    await expectSkillFilePresent(skills, "claude", "vincu-loop", "notes/mine.md");
+    await expectSavedSkillSelection(skills, { mode: "custom", skills: ["vincu"] });
   });
 
   test("warns about a directory that appears after the sheet was opened", async ({
@@ -276,7 +276,7 @@ test.describe("Removing an installed skill", () => {
     startSkills,
   }) => {
     const skills = await startSkills({
-      installed: { mode: "custom", skills: ["paseo"] },
+      installed: { mode: "custom", skills: ["vincu"] },
       confirmRemoval: false,
     });
     await gotoAppShell(page);
@@ -284,14 +284,14 @@ test.describe("Removing an installed skill", () => {
     await openSkillSelection(page);
 
     // Nothing to delete when the sheet opened; the host looks again at save time.
-    await skills.placeSkillOnDisk("paseo-loop", "claude");
-    await toggleSkill(page, "paseo-advisor");
+    await skills.placeSkillOnDisk("vincu-loop", "claude");
+    await toggleSkill(page, "vincu-advisor");
     await saveSkillSelection(page);
 
-    await expectRemovalWarning(page, ["paseo-loop"]);
+    await expectRemovalWarning(page, ["vincu-loop"]);
     await expectSkillSelectionOpen(page);
-    await expectSkillPresentIn(skills, "claude", "paseo-loop");
-    await expectSavedSkillSelection(skills, { mode: "custom", skills: ["paseo"] });
+    await expectSkillPresentIn(skills, "claude", "vincu-loop");
+    await expectSavedSkillSelection(skills, { mode: "custom", skills: ["vincu"] });
   });
 
   test("keeps draft choices when fresher status arrives while the sheet is open", async ({
@@ -302,32 +302,32 @@ test.describe("Removing an installed skill", () => {
     await gotoAppShell(page);
     await openSkillsIntegrations(page);
     await openSkillSelection(page);
-    await chooseCustomSkills(page, ["paseo", "paseo-advisor"]);
+    await chooseCustomSkills(page, ["vincu", "vincu-advisor"]);
 
     // Another window commits a different selection. Saving picks that up, so the
     // sheet is handed a selection it did not start from while an edit is open.
-    await skills.commitSelectionExternally({ mode: "custom", skills: ["paseo", "paseo-loop"] }, [
-      "paseo-advisor",
+    await skills.commitSelectionExternally({ mode: "custom", skills: ["vincu", "vincu-loop"] }, [
+      "vincu-advisor",
     ]);
     await saveSkillSelection(page);
-    await expectRemovalWarning(page, ["paseo-loop"]);
+    await expectRemovalWarning(page, ["vincu-loop"]);
 
-    await expectSkillChoices(page, ["paseo", "paseo-advisor"]);
+    await expectSkillChoices(page, ["vincu", "vincu-advisor"]);
   });
 
   test("adding a skill saves without a warning", async ({ page, startSkills }) => {
     const skills = await startSkills({
-      installed: { mode: "custom", skills: ["paseo"] },
+      installed: { mode: "custom", skills: ["vincu"] },
       confirmRemoval: false,
     });
     await gotoAppShell(page);
     await openSkillsIntegrations(page);
 
     await openSkillSelection(page);
-    await toggleSkill(page, "paseo-loop");
+    await toggleSkill(page, "vincu-loop");
     await saveSkillSelection(page);
 
-    await expectSkillsInstalled(skills, ["paseo", "paseo-loop"]);
+    await expectSkillsInstalled(skills, ["vincu", "vincu-loop"]);
     await expectNoRemovalWarning(page);
   });
 });

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import type { WorkspaceDescriptorPayload } from "@getpaseo/protocol/messages";
+import type { WorkspaceDescriptorPayload } from "@getvincu/protocol/messages";
 import { normalizeAgentSnapshot } from "@/utils/agent-snapshots";
 import {
   normalizeProjectDescriptor,
@@ -28,12 +28,12 @@ class MemoryStorage implements ReplicaCacheStorage {
 function workspace(
   id = "workspace-1",
   projectId = "project-1",
-  workspaceDirectory = "/repo/paseo",
+  workspaceDirectory = "/repo/vincu",
 ): WorkspaceDescriptorPayload {
   return {
     id,
     projectId,
-    projectDisplayName: "Paseo",
+    projectDisplayName: "Vincu",
     projectRootPath: workspaceDirectory,
     workspaceDirectory,
     projectKind: "git",
@@ -48,7 +48,7 @@ function workspace(
   };
 }
 
-function agent(id: string, workspaceId = "workspace-1", cwd = "/repo/paseo") {
+function agent(id: string, workspaceId = "workspace-1", cwd = "/repo/vincu") {
   return normalizeAgentSnapshot(
     {
       id,
@@ -109,9 +109,9 @@ function seedSession(): void {
   store.setProjects(SERVER_ID, [
     normalizeProjectDescriptor({
       projectId: "project-1",
-      projectKey: "remote:github.com/getpaseo/paseo",
-      projectDisplayName: "Paseo",
-      projectRootPath: "/repo/paseo",
+      projectKey: "remote:github.com/getvincu/vincu",
+      projectDisplayName: "Vincu",
+      projectRootPath: "/repo/vincu",
       projectKind: "git",
     }),
     normalizeProjectDescriptor({
@@ -239,7 +239,7 @@ describe("ReplicaCache", () => {
     expect(Array.from(timelines?.keys() ?? [])).toEqual(["agent-2"]);
     expect(timelines?.get("agent-2")).toEqual(secondTimeline.slice(-50));
 
-    const persisted = JSON.parse(storage.values.get("@paseo:replica-cache") ?? "null") as {
+    const persisted = JSON.parse(storage.values.get("@vincu:replica-cache") ?? "null") as {
       version: number;
       hosts: Array<{ timeline: Record<string, unknown> | null }>;
     };
@@ -305,7 +305,7 @@ describe("ReplicaCache", () => {
   it("rejects version 1 cache data and overwrites it on flush", async () => {
     const storage = new MemoryStorage();
     storage.values.set(
-      "@paseo:replica-cache",
+      "@vincu:replica-cache",
       JSON.stringify({
         version: 1,
         hosts: [
@@ -331,7 +331,7 @@ describe("ReplicaCache", () => {
     await cache.flush();
 
     expect(useSessionStore.getState().sessions[SERVER_ID]).toBeUndefined();
-    expect(JSON.parse(storage.values.get("@paseo:replica-cache") ?? "null")).toEqual({
+    expect(JSON.parse(storage.values.get("@vincu:replica-cache") ?? "null")).toEqual({
       version: 3,
       hosts: [],
     });

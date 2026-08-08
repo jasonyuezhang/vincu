@@ -61,7 +61,7 @@ export async function installHubConfiguration(
   } catch {
     throw new HubDeployError(
       "HUB_NETWORK_ERROR",
-      `Could not reach Paseo Hub at ${input.origin}. Check the Hub URL and network connection.`,
+      `Could not reach Vincu Hub at ${input.origin}. Check the Hub URL and network connection.`,
     );
   }
 

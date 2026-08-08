@@ -38,12 +38,12 @@ There are two supported ways to ship from `main`:
 1. **Direct stable release**: you are ready to ship the current `main` commit to everyone immediately.
 2. **Beta flow**: release candidates on the `beta` channel. Betas carry an in-place changelog entry (beta users check it), publish npm only on the explicit `beta` dist-tag, and never become the website's default download — they sit behind the Stable/Beta switch on `/download`.
 
-Paseo has one linear release track even though npm dist-tags are independent
+Vincu has one linear release track even though npm dist-tags are independent
 pointers. The npm invariant is:
 
 - A beta release moves only `beta`; `latest` remains on the newest stable.
 - A stable release moves both `latest` and `beta` to that stable version. This
-  keeps users who install `@getpaseo/cli@beta` on the newest Paseo release after
+  keeps users who install `@getvincu/cli@beta` on the newest Vincu release after
   a beta is promoted or superseded by a direct stable release.
 
 ## Release version decision
@@ -63,7 +63,7 @@ diff. The highest-impact change determines the version:
 The release agent selects patch or minor during preparation and presents the
 target version with the changelog for approval. Agents never select a major
 version autonomously. A major release requires an explicit user instruction and
-approval; Paseo remains on major version zero until that deliberate decision.
+approval; Vincu remains on major version zero until that deliberate decision.
 
 Version bumps are never used to retry a failed build. Retry the existing version
 as described in **Fixing a failed release build**.
@@ -89,18 +89,18 @@ version for every published package. This changes dist-tags only; do not
 republish the packages:
 
 ```bash
-PASEO_VERSION=$(node -p "require('./package.json').version")
+VINCU_VERSION=$(node -p "require('./package.json').version")
 for package in highlight relay protocol client server cli; do
-  npm dist-tag add "@getpaseo/$package@$PASEO_VERSION" beta
+  npm dist-tag add "@getvincu/$package@$VINCU_VERSION" beta
 done
 ```
 
-Verify both npm tags now resolve to `PASEO_VERSION` before considering the
+Verify both npm tags now resolve to `VINCU_VERSION` before considering the
 stable release complete.
 
-The Docker workflow builds images from the checked-out source tree on pull requests and on `main` as non-publishing checks. Stable `vX.Y.Z` tag pushes publish `ghcr.io/getpaseo/paseo:X.Y.Z` and `ghcr.io/getpaseo/paseo:latest`; beta `vX.Y.Z-beta.N` tag pushes publish only `ghcr.io/getpaseo/paseo:X.Y.Z-beta.N` and never move `latest`.
+The Docker workflow builds images from the checked-out source tree on pull requests and on `main` as non-publishing checks. Stable `vX.Y.Z` tag pushes publish `ghcr.io/getvincu/vincu:X.Y.Z` and `ghcr.io/getvincu/vincu:latest`; beta `vX.Y.Z-beta.N` tag pushes publish only `ghcr.io/getvincu/vincu:X.Y.Z-beta.N` and never move `latest`.
 
-The production relay is the Elixir service in [getpaseo/paseo-relay](https://github.com/getpaseo/paseo-relay), with its own deployment process. Paseo releases and pushes to this repository do not deploy it. The Cloudflare relay code and workflow in this repository are legacy and are not used in production.
+The production relay is the Elixir service in [getvincu/vincu-relay](https://github.com/getvincu/vincu-relay), with its own deployment process. Vincu releases and pushes to this repository do not deploy it. The Cloudflare relay code and workflow in this repository are legacy and are not used in production.
 
 **Stable means stable.** If the user says "stable" or "ship stable", do not ask whether they want a beta first. They picked stable; treat it as a direct stable release. Only run the beta flow when the user explicitly says "beta".
 
@@ -128,8 +128,8 @@ npm run release:promote          # Promote X.Y.Z-beta.N to stable X.Y.Z
 ```
 
 - Beta tags are published GitHub prereleases like `v0.1.41-beta.1`
-- Betas publish npm packages with `--tag beta`, so `npm install @getpaseo/cli@beta` opts in while plain `npm install @getpaseo/cli` stays on `latest`
-- Betas publish desktop assets and APKs for testing. They also build iOS, upload it to TestFlight, add it to the `Paseo Beta` external group, and submit it for Beta App Review. They do not submit mobile builds to the production stores.
+- Betas publish npm packages with `--tag beta`, so `npm install @getvincu/cli@beta` opts in while plain `npm install @getvincu/cli` stays on `latest`
+- Betas publish desktop assets and APKs for testing. They also build iOS, upload it to TestFlight, add it to the `Vincu Beta` external group, and submit it for Beta App Review. They do not submit mobile builds to the production stores.
 - `release:promote` creates a fresh stable tag like `v0.1.41`; the final release never reuses the beta tag
 - Desktop assets now come from the Electron package at `packages/desktop`
 - Beta releases use Electron's `beta` update channel. Users on the stable channel only receive stable releases; users on the beta channel receive beta releases and the final stable release when it is published.
@@ -240,7 +240,7 @@ iOS and Android store builds are not in `.github/workflows`. They are triggered 
 
 EAS uses the local app version source. `packages/app/app.config.js` derives the native version from the package version. Android `versionCode` is `major * 1_000_000 + minor * 1_000 + patch`. iOS reserves 1,000 build slots per app version: beta `N` uses slot `N`, and stable uses slot `999`. For example, `0.2.6-beta.2` appears in App Store Connect as version `0.2.6` build `2006002`; stable uses build `2006999`. Rebuilding the same tag produces the same native build number; if a store has already accepted a binary and you need a different binary, cut the next beta or patch instead of relying on EAS remote auto-increment.
 
-Beta tags run `Release iOS Beta`. The workflow uploads the build to TestFlight, distributes it to the persistent `Paseo Beta` external group, and submits it for Beta App Review. Testers and the group are managed once in App Store Connect; releases require no dashboard action.
+Beta tags run `Release iOS Beta`. The workflow uploads the build to TestFlight, distributes it to the persistent `Vincu Beta` external group, and submits it for Beta App Review. Testers and the group are managed once in App Store Connect; releases require no dashboard action.
 
 There is no mobile-release workflow under `.github/workflows`. The EAS GitHub app reads the workflows under `packages/app/.eas/workflows` and handles tag triggering directly.
 
@@ -300,7 +300,7 @@ The user rarely opens the Expo dashboard. A failed EAS build or submit/review jo
 Pattern:
 
 ```jsonc
-// mcp__paseo__create_heartbeat arguments
+// mcp__vincu__create_heartbeat arguments
 {
   "name": "vX.Y.Z release babysit heartbeat",
   "cron": "*/15 * * * *",
@@ -319,7 +319,7 @@ The GitHub Release body is populated automatically by the `Release Notes Sync` w
 
 - The website download page defaults to GitHub's latest published **stable** release.
 - A published beta prerelease is offered behind the Stable/Beta switch on `/download` (`?channel=beta`), never as the default. The switch only appears while the newest prerelease leads stable on its core version, so promoting `X.Y.Z-beta.N` to `X.Y.Z` retires the beta channel from the page until the next beta line opens.
-- Homebrew, the Play Store, the App Store, and `app.paseo.sh` have no beta. The Beta view drops those rows, and the whole Web section, rather than showing an inert "stable only" placeholder. When a surface gains a beta path — say a public TestFlight link — add its row back in `packages/website/src/routes/download.tsx`.
+- Homebrew, the Play Store, the App Store, and `app.vincu.sh` have no beta. The Beta view drops those rows, and the whole Web section, rather than showing an inert "stable only" placeholder. When a surface gains a beta path — say a public TestFlight link — add its row back in `packages/website/src/routes/download.tsx`.
 - The default download target only moves when you publish the final stable release tag like `v0.1.41`.
 - The public `/changelog` page renders `CHANGELOG.md` as-is, so the in-flight `-beta.N` entry shows there once it lands on `main` — that's intended, it's where beta users check what's coming. Only the **default download target** stays pinned to the latest stable; the download links read GitHub's releases API, not the changelog, so a `-beta.N` heading on top never affects them.
 - The download page's "What's new" link deep-links the **minor group** anchor (`/changelog#release-0.3`), not the exact entry: promotion rewrites the `-beta.N` entry in place, so that anchor dies while the group survives. A version with no entry in the bundled changelog — a tag whose changelog commit hasn't redeployed the site yet — links the plain `/changelog` instead of a dead anchor.
@@ -338,13 +338,13 @@ and EAS mobile release builds. Use the Docker workflow dispatch instead:
 ```bash
 gh workflow run docker.yml \
   --ref main \
-  -f paseo_version=X.Y.Z-beta.N \
+  -f vincu_version=X.Y.Z-beta.N \
   -f publish=true
 ```
 
-This replaces `ghcr.io/getpaseo/paseo:X.Y.Z-beta.N` in place without touching
+This replaces `ghcr.io/getvincu/vincu:X.Y.Z-beta.N` in place without touching
 desktop, APK, or EAS release builders. The Docker exception is safe because the
-dispatch runs from `--ref main` and uses the explicit `paseo_version`; it does
+dispatch runs from `--ref main` and uses the explicit `vincu_version`; it does
 not check out or move the `v*` release tag.
 
 To retry a failed non-Docker release workflow, push a retry tag on the commit
@@ -383,7 +383,7 @@ This ensures the checkout ref matches the actual code on `main` with the fix inc
 
 ## Notes
 
-- `version:all:*` bumps root + syncs workspace versions and `@getpaseo/*` dependency versions
+- `version:all:*` bumps root + syncs workspace versions and `@getvincu/*` dependency versions
 - `release:prepare` refreshes workspace `node_modules` links to prevent stale types
 - `npm run dev:desktop` and `npm run build:desktop` target the Electron desktop package in `packages/desktop`
 - If `release:publish` partially fails, re-run it — npm skips already-published versions
@@ -417,7 +417,7 @@ No prefix (`v`), no extra text. `Release Notes Sync` matches the `## X.Y.Z` (or 
 
 ## Changelog voice
 
-The changelog is shown on the Paseo homepage. Write it for **end users**, not developers.
+The changelog is shown on the Vincu homepage. Write it for **end users**, not developers.
 
 - **Frame everything from the user's perspective.** Describe what changed in the app, not what changed in the code. Users care that "workspaces load instantly" — not that a component no longer remounts.
 - **Never mention component names, internal modules, or implementation details.** No `WorkingIndicator`, no `accumulatedUsage`, no `reconcileAndEmitWorkspaceUpdates`. Also no "virtualized lists", no "remount", no "memoization", no "debounced", no "fuzzy ranking", no "controlled input", no "uncontrolled input" — these are implementation words masquerading as user-facing copy.
@@ -457,15 +457,15 @@ Every bullet must be scannable at a glance. The changelog is not release documen
 
 Every changelog bullet must credit contributors and link to the PR(s) that delivered the change. This is not one-PR-per-line — a single bullet describes a user-facing change and may reference multiple PRs.
 
-Format: append `([#123](https://github.com/getpaseo/paseo/pull/123) by [@user](https://github.com/user))` at the end of each bullet. For changes spanning multiple PRs or contributors:
+Format: append `([#123](https://github.com/getvincu/vincu/pull/123) by [@user](https://github.com/user))` at the end of each bullet. For changes spanning multiple PRs or contributors:
 
 ```markdown
-- Voice mode now works on tablets with proper microphone permissions. ([#210](https://github.com/getpaseo/paseo/pull/210), [#215](https://github.com/getpaseo/paseo/pull/215) by [@alice](https://github.com/alice), [@bob](https://github.com/bob))
+- Voice mode now works on tablets with proper microphone permissions. ([#210](https://github.com/getvincu/vincu/pull/210), [#215](https://github.com/getvincu/vincu/pull/215) by [@alice](https://github.com/alice), [@bob](https://github.com/bob))
 ```
 
 Rules:
 
-- **Always link the PR number** as `[#N](https://github.com/getpaseo/paseo/pull/N)`.
+- **Always link the PR number** as `[#N](https://github.com/getvincu/vincu/pull/N)`.
 - **Always link the contributor's GitHub profile** as `[@user](https://github.com/user)`.
 - **One bullet = one user-facing change**, regardless of how many PRs went into it. Group related PRs on the same bullet.
 - **De-duplicate contributors.** If the same person authored multiple PRs in one bullet, list them once.

@@ -2,9 +2,9 @@ import { cancel, confirm, intro, isCancel, log, note, outro, spinner } from "@cl
 import { Command, Option } from "commander";
 import { writeFileSync } from "node:fs";
 import path from "node:path";
-import { loadPersistedConfig, type PersistedConfig } from "@getpaseo/server";
+import { loadPersistedConfig, type PersistedConfig } from "@getvincu/server";
 import {
-  resolveLocalPaseoHome,
+  resolveLocalVincuHome,
   resolveLocalDaemonState,
   resolveTcpHostFromListen,
   startLocalDaemonDetached,
@@ -69,8 +69,8 @@ function parseTimeoutMs(raw: string | undefined): number {
   return Math.ceil(seconds * 1000);
 }
 
-function savePersistedConfig(paseoHome: string, config: OnboardPersistedConfig): void {
-  const configPath = path.join(paseoHome, "config.json");
+function savePersistedConfig(vincuHome: string, config: OnboardPersistedConfig): void {
+  const configPath = path.join(vincuHome, "config.json");
   writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`);
 }
 
@@ -263,22 +263,22 @@ async function waitForDaemonReady(args: {
   return poll({ lastStatus: "", lastPrintedAt: 0 });
 }
 
-function printNextSteps(pairingUrl: string | null, paseoHome: string, richUi: boolean): void {
-  const daemonLogPath = path.join(paseoHome, "daemon.log");
+function printNextSteps(pairingUrl: string | null, vincuHome: string, richUi: boolean): void {
+  const daemonLogPath = path.join(vincuHome, "daemon.log");
   const nextStepsLines = [
     pairingUrl
-      ? "1. Open Paseo and scan the QR code above, or paste the pairing link."
-      : "1. Open Paseo and connect to your daemon.",
-    "2. Web app: https://app.paseo.sh",
-    "3. Desktop app: https://github.com/getpaseo/paseo/releases/latest",
-    "4. Docs: https://paseo.sh/docs",
-    '5. Example: paseo run --output-schema schema.json "extract fields"',
+      ? "1. Open Vincu and scan the QR code above, or paste the pairing link."
+      : "1. Open Vincu and connect to your daemon.",
+    "2. Web app: https://app.vincu.sh",
+    "3. Desktop app: https://github.com/getvincu/vincu/releases/latest",
+    "4. Docs: https://vincu.sh/docs",
+    '5. Example: vincu run --output-schema schema.json "extract fields"',
   ];
   const quickReferenceLines = [
-    "1. paseo --help",
-    "2. paseo ls",
-    '3. paseo run "your prompt"',
-    "4. paseo status",
+    "1. vincu --help",
+    "2. vincu ls",
+    '3. vincu run "your prompt"',
+    "4. vincu status",
     `5. Daemon logs: ${daemonLogPath}`,
   ];
 
@@ -305,7 +305,7 @@ export function onboardCommand(): Command {
     .description("Run first-time setup, start daemon, and print pairing instructions")
     .option("--listen <listen>", "Listen target (host:port, port, or unix socket path)")
     .option("--port <port>", "Port to listen on (default: 6767)")
-    .option("--home <path>", "Paseo home directory (default: ~/.paseo)")
+    .option("--home <path>", "Vincu home directory (default: ~/.vincu)")
     .option("--relay", "Enable relay connection without prompting")
     .option("--no-relay", "Disable relay connection")
     .option("--no-mcp", "Disable the Agent MCP HTTP endpoint")
@@ -325,10 +325,10 @@ export function onboardCommand(): Command {
 }
 
 async function resolveAndPersistVoice(
-  paseoHome: string,
+  vincuHome: string,
   options: OnboardOptions,
 ): Promise<boolean> {
-  let persisted = loadPersistedConfig(paseoHome) as OnboardPersistedConfig;
+  let persisted = loadPersistedConfig(vincuHome) as OnboardPersistedConfig;
   const persistedVoiceSelection = resolvePersistedVoiceSelection(persisted);
   const shouldPrompt = options.voice === "ask" || options.voice === undefined;
   let voiceEnabled: boolean;
@@ -350,7 +350,7 @@ async function resolveAndPersistVoice(
   }
 
   persisted = applyVoiceSelection(persisted, voiceEnabled);
-  savePersistedConfig(paseoHome, persisted);
+  savePersistedConfig(vincuHome, persisted);
   return voiceEnabled;
 }
 
@@ -423,7 +423,7 @@ async function waitForDaemonReadyWithUi(args: {
 export async function runOnboard(options: OnboardOptions): Promise<void> {
   const richUi = process.stdin.isTTY && process.stdout.isTTY;
   if (richUi) {
-    intro("Welcome to Paseo");
+    intro("Welcome to Vincu");
   }
 
   if (options.listen && options.port) {
@@ -440,12 +440,12 @@ export async function runOnboard(options: OnboardOptions): Promise<void> {
     process.exit(1);
   }
 
-  const paseoHome = resolveLocalPaseoHome(options.home);
+  const vincuHome = resolveLocalVincuHome(options.home);
   if (richUi) {
-    renderNote(paseoHome, "Paseo home");
+    renderNote(vincuHome, "Vincu home");
   }
 
-  const voiceEnabled = await resolveAndPersistVoice(paseoHome, options);
+  const voiceEnabled = await resolveAndPersistVoice(vincuHome, options);
   log.message(
     voiceEnabled
       ? "Voice features enabled. Local speech models will be downloaded automatically if missing."
@@ -454,20 +454,20 @@ export async function runOnboard(options: OnboardOptions): Promise<void> {
 
   await ensureDaemonStarted(options, richUi);
   await waitForDaemonReadyWithUi({
-    home: options.home ?? paseoHome,
+    home: options.home ?? vincuHome,
     timeoutMs,
     richUi,
   });
 
   if (options.relay === false) {
     log.message("Relay pairing skipped because --no-relay was provided.");
-    printNextSteps(null, paseoHome, richUi);
-    if (richUi) outro("Paseo daemon is running.");
+    printNextSteps(null, vincuHome, richUi);
+    if (richUi) outro("Vincu daemon is running.");
     return;
   }
 
   let pairing = await resolveLocalPairingOffer({
-    paseoHome,
+    vincuHome,
     enableRelay: options.relay === true,
   });
 
@@ -475,19 +475,19 @@ export async function runOnboard(options: OnboardOptions): Promise<void> {
     const shouldEnable = richUi ? await confirmRelayPairing() : false;
     if (!shouldEnable) {
       printDirectConnectionGuidance();
-      printNextSteps(null, paseoHome, richUi);
-      if (richUi) outro("Paseo daemon is running.");
+      printNextSteps(null, vincuHome, richUi);
+      if (richUi) outro("Vincu daemon is running.");
       return;
     }
-    pairing = await resolveLocalPairingOffer({ paseoHome, enableRelay: true });
+    pairing = await resolveLocalPairingOffer({ vincuHome, enableRelay: true });
     log.success("Relay enabled");
   }
 
   if (!pairing.url) {
     log.warn("Relay pairing URL is unavailable for this daemon configuration.");
-    printNextSteps(null, paseoHome, richUi);
+    printNextSteps(null, vincuHome, richUi);
     if (richUi) {
-      outro("Paseo daemon is running.");
+      outro("Vincu daemon is running.");
     }
     return;
   }
@@ -499,8 +499,8 @@ export async function runOnboard(options: OnboardOptions): Promise<void> {
       columns: process.stdout.columns,
     }),
   );
-  printNextSteps(pairing.url, paseoHome, richUi);
+  printNextSteps(pairing.url, vincuHome, richUi);
   if (richUi) {
-    outro("Paseo is ready!");
+    outro("Vincu is ready!");
   }
 }

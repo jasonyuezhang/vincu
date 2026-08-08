@@ -25,18 +25,18 @@ import {
   type TimelineDeliveryMode,
   type ViewedTimelineSync,
 } from "@/timeline/viewed-timeline-sync";
-import type { AgentAttachment, SessionOutboundMessage } from "@getpaseo/protocol/messages";
-import { parseServerInfoStatusPayload } from "@getpaseo/protocol/messages";
+import type { AgentAttachment, SessionOutboundMessage } from "@getvincu/protocol/messages";
+import { parseServerInfoStatusPayload } from "@getvincu/protocol/messages";
 import {
   buildAgentAttentionNotificationPayload,
   type AgentAttentionReason,
   type AgentAttentionNotificationPayload,
   type NotificationPermissionRequest,
-} from "@getpaseo/protocol/agent-attention-notification";
-import type { DaemonClient } from "@getpaseo/client/internal/daemon-client";
-import type { AgentSessionConfig } from "@getpaseo/protocol/agent-types";
-import type { GitSetupOptions } from "@getpaseo/protocol/messages";
-import type { AgentPermissionResponse } from "@getpaseo/protocol/agent-types";
+} from "@getvincu/protocol/agent-attention-notification";
+import type { DaemonClient } from "@getvincu/client/internal/daemon-client";
+import type { AgentSessionConfig } from "@getvincu/protocol/agent-types";
+import type { GitSetupOptions } from "@getvincu/protocol/messages";
+import type { AgentPermissionResponse } from "@getvincu/protocol/agent-types";
 import { getHostRuntimeStore, useHostRuntimeIsConnected } from "@/runtime/host-runtime";
 import { useVoiceAudioEngineOptional, useVoiceRuntimeOptional } from "@/contexts/voice-context";
 import type { AudioPlaybackSource } from "@/voice/audio-engine-types";

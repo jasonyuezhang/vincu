@@ -16,7 +16,7 @@ triggers:
     on: github.issue_comment
     filters:
       repo: acme/api
-      contains: "@paseo"
+      contains: "@vincu"
       from_users: [alice]
     max_runtime: 2h
     steps:
@@ -26,7 +26,7 @@ triggers:
         idle_timeout: 10m
         agent: { provider: codex, mode: full-access }
         prompt:
-          - text: ${{ paseo.prompt }}
+          - text: ${{ vincu.prompt }}
 ```
 
 Field-by-field detail is in the [`hub.yml` reference](/docs/hub/configuration/hub-yml). This page covers matching.

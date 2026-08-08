@@ -3,7 +3,7 @@ import type {
   HubExecutionAgentCreateRequest,
   HubExecutionControlRequest,
   SessionOutboundMessage,
-} from "@getpaseo/protocol/messages";
+} from "@getvincu/protocol/messages";
 
 import type { HubExecutionAgents, OwnedAgentEvent } from "./daemon-executions.js";
 

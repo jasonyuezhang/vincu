@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import { darkHighlightColors, lightHighlightColors } from "@getpaseo/highlight";
+import { darkHighlightColors, lightHighlightColors } from "@getvincu/highlight";
 
 export const baseColors = {
   // Base colors
@@ -385,8 +385,8 @@ function buildDarkSemanticColors(tint: DarkThemeConfig) {
 // Dark tint definitions
 // ---------------------------------------------------------------------------
 
-// Paseo — subtle teal-green tint (default)
-const paseoDarkColors = buildDarkSemanticColors({
+// Vincu — subtle teal-green tint (default)
+const vincuDarkColors = buildDarkSemanticColors({
   surface0: "#181B1A",
   surface1: "#1E2120",
   surface2: "#272A29",
@@ -633,7 +633,7 @@ function buildDarkTheme(semanticColors: ReturnType<typeof buildDarkSemanticColor
   } as const;
 }
 
-export const darkTheme = buildDarkTheme(paseoDarkColors);
+export const darkTheme = buildDarkTheme(vincuDarkColors);
 export const darkZincTheme = buildDarkTheme(zincDarkColors);
 export const darkMidnightTheme = buildDarkTheme(midnightDarkColors);
 export const darkClaudeTheme = buildDarkTheme(claudeDarkColors);

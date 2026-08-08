@@ -1,4 +1,4 @@
-import type { ForgeSearchItem } from "@getpaseo/protocol/messages";
+import type { ForgeSearchItem } from "@getvincu/protocol/messages";
 import type {
   AttachmentMetadata,
   ComposerAttachment,

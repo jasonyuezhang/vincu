@@ -1,7 +1,7 @@
 import type {
   DaemonTransport,
   DaemonTransportFactory,
-} from "@getpaseo/client/internal/daemon-client";
+} from "@getvincu/client/internal/daemon-client";
 import type { DesktopDaemonTransportTarget, LocalTransportTarget } from "./desktop-daemon";
 import {
   defaultLocalDaemonTransportRpc,
@@ -10,7 +10,7 @@ import {
 } from "./local-daemon-transport-rpc";
 import { isElectronRuntime } from "@/desktop/host";
 
-const LOCAL_TRANSPORT_SCHEME = "paseo+local:";
+const LOCAL_TRANSPORT_SCHEME = "vincu+local:";
 
 function encodeBinaryToBase64(data: Uint8Array | ArrayBuffer): string {
   const bytes = data instanceof ArrayBuffer ? new Uint8Array(data) : data;

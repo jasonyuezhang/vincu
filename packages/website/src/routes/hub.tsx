@@ -16,8 +16,8 @@ import { pageMeta } from "~/meta";
 export const Route = createFileRoute("/hub")({
   head: () =>
     pageMeta(
-      "Paseo Hub - GitHub, Slack, and Discord triggers",
-      "An optional service above your Paseo daemons. Mention a bot in a GitHub issue and an agent runs on your own machine and opens a PR. Self-hosted first, private beta.",
+      "Vincu Hub - GitHub, Slack, and Discord triggers",
+      "An optional service above your Vincu daemons. Mention a bot in a GitHub issue and an agent runs on your own machine and opens a PR. Self-hosted first, private beta.",
       "/hub",
     ),
   component: Hub,
@@ -30,7 +30,7 @@ const LINK_CLASS = "underline hover:text-white/80";
 function Hub() {
   return (
     <SiteShell width="default">
-      <h1 className="text-3xl font-medium tracking-tight mb-4">Paseo Hub</h1>
+      <h1 className="text-3xl font-medium tracking-tight mb-4">Vincu Hub</h1>
       <p className="text-lg text-white/70 leading-relaxed max-w-2xl">
         An optional service that sits above your daemons and gives them extra capabilities.
       </p>
@@ -100,7 +100,7 @@ function DiscordDemo() {
             </p>
           </DemoMessage>
 
-          <DemoMessage author="paseo-bot" time="09:41" bot>
+          <DemoMessage author="vincu-bot" time="09:41" bot>
             <p>Three P0 issues are open:</p>
             <ul className="space-y-1">
               {DEMO_ISSUES.map((issue) => (
@@ -118,11 +118,11 @@ function DiscordDemo() {
             </p>
           </DemoMessage>
 
-          <DemoMessage author="paseo-bot" time="09:48" bot>
+          <DemoMessage author="vincu-bot" time="09:48" bot>
             <p>
               Ran on <span className="font-mono text-white/50">macbook-pro</span>. Opened{" "}
               <span className="text-white/80 underline decoration-white/20">
-                getpaseo/paseo#1234
+                getvincu/vincu#1234
               </span>{" "}
               with a fix for the terminal writes.
             </p>
@@ -145,7 +145,7 @@ function DiscordDemo() {
 }
 
 function Mention() {
-  return <span className="rounded bg-indigo-400/15 px-1 py-0.5 text-indigo-200">@paseo-bot</span>;
+  return <span className="rounded bg-indigo-400/15 px-1 py-0.5 text-indigo-200">@vincu-bot</span>;
 }
 
 function DemoMessage({
@@ -294,7 +294,7 @@ function Shape() {
 
           <Connector label="direct connection or relay" />
 
-          <DiagramRow label="Paseo apps">
+          <DiagramRow label="Vincu apps">
             {DIAGRAM_CLIENTS.map((client) => (
               <DiagramCard key={client} name={client} />
             ))}
@@ -359,7 +359,7 @@ function Access() {
     <section className="space-y-6">
       <h2 className="text-xl font-medium">Getting access</h2>
       <p className="text-white/70 leading-relaxed max-w-2xl">
-        Join the Paseo Discord and DM me. I&apos;m looking for design partners who are comfortable
+        Join the Vincu Discord and DM me. I&apos;m looking for design partners who are comfortable
         self-hosting.
       </p>
       <div className="flex items-center gap-4 pt-2">
@@ -382,14 +382,14 @@ function FaqSection() {
       <h2 className="text-3xl font-medium">FAQ</h2>
       <div className="space-y-6">
         <FAQItem question="What is the Hub?">
-          A separate service that sits above your Paseo daemons. You connect one or more daemons to
+          A separate service that sits above your Vincu daemons. You connect one or more daemons to
           it and it gives them GitHub, Slack, and Discord triggers, with collaboration features
-          planned. Paseo works fully without it.
+          planned. Vincu works fully without it.
         </FAQItem>
         <FAQItem question="Why is it a separate service instead of part of the daemon?">
           <p>
             The daemon stays one lean executable on one machine. The Hub talks to daemons over the
-            same RPCs the app and the CLI use, so anyone can build their own hub on top of Paseo.
+            same RPCs the app and the CLI use, so anyone can build their own hub on top of Vincu.
           </p>
           <p>
             It also has a different job. The Hub is meant to be exposed to the internet, shared with
@@ -400,7 +400,7 @@ function FaqSection() {
           The Hub can trigger executions on the daemons connected to it, so it has to be trusted. I
           am not comfortable having people connect their daemons to my infrastructure until the
           daemon has stronger authorization primitives and sandboxing. That work is on the roadmap,
-          and it applies to every Paseo user.
+          and it applies to every Vincu user.
         </FAQItem>
         <FAQItem question="What do I need to run it?">
           A single Node.js application and a Postgres database. You also bring your own GitHub App,
@@ -421,7 +421,7 @@ function FaqSection() {
         </FAQItem>
         <FAQItem question="Do I have to move my team to a new tool?">
           No. The Hub works in the Slack or Discord your team already uses, and on the daemons you
-          already run. When the work gets serious you switch to the Paseo app on those same daemons.
+          already run. When the work gets serious you switch to the Vincu app on those same daemons.
         </FAQItem>
         <FAQItem question="Which agents does it run?">
           Whichever ones your daemons have configured, with your own subscriptions and skills. The
@@ -439,7 +439,7 @@ function FaqSection() {
             rel="noopener noreferrer"
             className={LINK_CLASS}
           >
-            Paseo Discord
+            Vincu Discord
           </a>{" "}
           and DM @moboudra for an invite to the private Hub channel.
         </FAQItem>

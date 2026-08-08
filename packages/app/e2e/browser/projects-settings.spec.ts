@@ -3,13 +3,13 @@ import path from "node:path";
 import { expect, test as base, type Page } from "../support/fixtures";
 import { connectSeedClient, seedWorkspace } from "../support/helpers/seed-client";
 import {
-  blockPaseoConfigWrites,
-  bumpPaseoConfigOnDisk,
+  blockVincuConfigWrites,
+  bumpVincuConfigOnDisk,
   chooseProjectIconImage,
   clickReloadProjectSettings,
   clickRetryProjectSettingsSave,
   clickSaveProjectSettings,
-  corruptPaseoConfig,
+  corruptVincuConfig,
   editWorktreeSetup,
   expectEmptyScriptList,
   expectProjectHostContextHidden,
@@ -36,10 +36,10 @@ import {
   openProjectSettings,
   openProjects,
   removeProjectScript,
-  restorePaseoConfig,
+  restoreVincuConfig,
   returnToProjectsList,
   saveProjectEdits,
-  unblockPaseoConfigWrites,
+  unblockVincuConfigWrites,
 } from "../support/helpers/project-settings";
 import { gotoAppShell } from "../support/helpers/app";
 import {
@@ -67,7 +67,7 @@ interface ProjectsSettingsFixtures {
   gitlabRemoteProject: ProjectsSettingsProject;
 }
 
-const initialPaseoConfig = {
+const initialVincuConfig = {
   worktree: {
     setup: ["echo initial setup"],
     teardown: "echo cleanup",
@@ -88,7 +88,7 @@ const test = base.extend<ProjectsSettingsFixtures>({
   editableProject: async ({ page: _page }, provide) => {
     const workspace = await seedWorkspace({
       repoPrefix: "projects-settings-",
-      repo: { paseoConfig: initialPaseoConfig },
+      repo: { vincuConfig: initialVincuConfig },
     });
 
     await provide({
@@ -105,7 +105,7 @@ const test = base.extend<ProjectsSettingsFixtures>({
     const workspace = await seedWorkspace({
       repoPrefix: "projects-settings-gitlab-",
       repo: {
-        paseoConfig: initialPaseoConfig,
+        vincuConfig: initialVincuConfig,
         originUrl: "https://gitlab.com/acme/app.git",
       },
     });
@@ -133,18 +133,18 @@ async function expectProjectConfigSaved(project: ProjectsSettingsProject): Promi
     .toMatchObject({
       worktree: {
         setup: updatedSetup,
-        teardown: initialPaseoConfig.worktree.teardown,
-        customWorktreeField: initialPaseoConfig.worktree.customWorktreeField,
+        teardown: initialVincuConfig.worktree.teardown,
+        customWorktreeField: initialVincuConfig.worktree.customWorktreeField,
       },
       scripts: {
         dev: {
-          command: initialPaseoConfig.scripts.dev.command,
-          type: initialPaseoConfig.scripts.dev.type,
-          port: initialPaseoConfig.scripts.dev.port,
-          customScriptField: initialPaseoConfig.scripts.dev.customScriptField,
+          command: initialVincuConfig.scripts.dev.command,
+          type: initialVincuConfig.scripts.dev.type,
+          port: initialVincuConfig.scripts.dev.port,
+          customScriptField: initialVincuConfig.scripts.dev.customScriptField,
         },
       },
-      customTopLevelField: initialPaseoConfig.customTopLevelField,
+      customTopLevelField: initialVincuConfig.customTopLevelField,
     });
 
   const savedConfig = await readProjectConfigFile(project);
@@ -152,7 +152,7 @@ async function expectProjectConfigSaved(project: ProjectsSettingsProject): Promi
 }
 
 async function readProjectConfigFile(project: ProjectsSettingsProject): Promise<string> {
-  return readFile(path.join(project.path, "paseo.json"), "utf8");
+  return readFile(path.join(project.path, "vincu.json"), "utf8");
 }
 
 async function addProjectFromSidebar(page: Page, projectPath: string): Promise<string> {
@@ -320,7 +320,7 @@ test.describe("Projects settings — error UX", () => {
     await openProjectSettings(page, editableProject.name);
 
     // Bump the file on disk so the daemon detects a revision mismatch on save.
-    await bumpPaseoConfigOnDisk(editableProject.path);
+    await bumpVincuConfigOnDisk(editableProject.path);
 
     await clickSaveProjectSettings(page);
 
@@ -333,11 +333,11 @@ test.describe("Projects settings — error UX", () => {
     await expectProjectSettingsFormVisible(page);
   });
 
-  test("invalid paseo.json shows read-error callout, reload after fix shows form", async ({
+  test("invalid vincu.json shows read-error callout, reload after fix shows form", async ({
     page,
     editableProject,
   }) => {
-    await corruptPaseoConfig(editableProject.path);
+    await corruptVincuConfig(editableProject.path);
 
     await openProjects(page);
     await navigateToProjectSettings(page, editableProject.name);
@@ -346,7 +346,7 @@ test.describe("Projects settings — error UX", () => {
     await expectProjectSettingsFormHidden(page);
 
     // Restore a valid config so the reload succeeds.
-    await restorePaseoConfig(editableProject.path, initialPaseoConfig);
+    await restoreVincuConfig(editableProject.path, initialVincuConfig);
 
     await clickReloadProjectSettings(page);
 
@@ -361,7 +361,7 @@ test.describe("Projects settings — error UX", () => {
     await openProjects(page);
     await openProjectSettings(page, editableProject.name);
 
-    await blockPaseoConfigWrites(editableProject.path);
+    await blockVincuConfigWrites(editableProject.path);
 
     await clickSaveProjectSettings(page);
 
@@ -371,7 +371,7 @@ test.describe("Projects settings — error UX", () => {
     await clickRetryProjectSettingsSave(page);
     await expectProjectSettingsError(page, "write_failed");
 
-    await unblockPaseoConfigWrites(editableProject.path);
+    await unblockVincuConfigWrites(editableProject.path);
     await clickReloadProjectSettings(page);
     await expectNoProjectSettingsError(page, "write_failed");
     await expectProjectSettingsFormVisible(page);

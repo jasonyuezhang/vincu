@@ -1,45 +1,45 @@
 import type { z } from "zod";
 
-export interface PaseoToolExecutionContext {
+export interface VincuToolExecutionContext {
   signal?: AbortSignal;
-  sendUpdate?: (update: PaseoToolResult) => void;
+  sendUpdate?: (update: VincuToolResult) => void;
 }
 
-export interface PaseoToolResult {
+export interface VincuToolResult {
   content: Array<{ type: string; text?: string; [key: string]: unknown }>;
   structuredContent?: unknown;
   isError?: boolean;
 }
 
-export interface PaseoToolConfig {
+export interface VincuToolConfig {
   title?: string;
   description?: string;
   inputSchema?: z.ZodRawShape | z.ZodType;
   outputSchema?: z.ZodRawShape;
 }
 
-export interface PaseoToolDefinition extends PaseoToolConfig {
+export interface VincuToolDefinition extends VincuToolConfig {
   name: string;
   description: string;
-  handler: (input: unknown, context: PaseoToolExecutionContext) => Promise<PaseoToolResult>;
+  handler: (input: unknown, context: VincuToolExecutionContext) => Promise<VincuToolResult>;
 }
 
-export interface PaseoToolCatalog {
-  tools: ReadonlyMap<string, PaseoToolDefinition>;
-  getTool(name: string): PaseoToolDefinition | undefined;
+export interface VincuToolCatalog {
+  tools: ReadonlyMap<string, VincuToolDefinition>;
+  getTool(name: string): VincuToolDefinition | undefined;
   executeTool(
     name: string,
     input: unknown,
-    context?: PaseoToolExecutionContext,
-  ): Promise<PaseoToolResult>;
+    context?: VincuToolExecutionContext,
+  ): Promise<VincuToolResult>;
 }
 
-export interface PaseoToolRuntimeContext {
+export interface VincuToolRuntimeContext {
   callerAgentId?: string;
   enableVoiceTools?: boolean;
   voiceOnly?: boolean;
 }
 
-export type PaseoToolCatalogFactory = (
-  context: PaseoToolRuntimeContext,
-) => PaseoToolCatalog | Promise<PaseoToolCatalog>;
+export type VincuToolCatalogFactory = (
+  context: VincuToolRuntimeContext,
+) => VincuToolCatalog | Promise<VincuToolCatalog>;

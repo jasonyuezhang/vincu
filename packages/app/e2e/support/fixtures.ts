@@ -11,7 +11,7 @@ import {
 import { connectSeedClient, type SeedDaemonClient } from "./helpers/seed-client";
 import { createWithWorkspace, type WithWorkspace } from "./helpers/with-workspace";
 
-const EXTRA_HOSTS_KEY = "@paseo:e2e-extra-hosts";
+const EXTRA_HOSTS_KEY = "@vincu:e2e-extra-hosts";
 
 interface TrackedProjectPickerFixture extends ProjectPickerFixture {
   rememberProjectId: (projectId: string) => void;
@@ -34,7 +34,7 @@ const metroTest = base.extend({
 
 const test = metroTest.extend<
   {
-    paseoE2ESetup: void;
+    vincuE2ESetup: void;
     projectOwnership: void;
     outdatedDaemon: OutdatedDaemon;
     desktopManagedOutdatedDaemon: OutdatedDaemon;
@@ -94,7 +94,7 @@ const test = metroTest.extend<
     },
     { auto: true },
   ],
-  paseoE2ESetup: [
+  vincuE2ESetup: [
     async ({ page }, provide, testInfo) => {
       const daemonPort = getE2EDaemonPort();
       const metroPort = process.env.E2E_METRO_PORT;
@@ -139,7 +139,7 @@ const test = metroTest.extend<
           // `addInitScript` runs on every navigation (including reloads). Some tests intentionally
           // override storage and reload; they can opt out of seeding for the *next* navigation by
           // setting this flag before the reload.
-          const disableOnceKey = "@paseo:e2e-disable-default-seed-once";
+          const disableOnceKey = "@vincu:e2e-disable-default-seed-once";
           const disableValue = localStorage.getItem(disableOnceKey);
           if (disableValue) {
             localStorage.removeItem(disableOnceKey);
@@ -148,16 +148,16 @@ const test = metroTest.extend<
             }
           }
 
-          localStorage.setItem("@paseo:e2e", "1");
-          localStorage.setItem("@paseo:e2e-seed-nonce", nonce);
+          localStorage.setItem("@vincu:e2e", "1");
+          localStorage.setItem("@vincu:e2e-seed-nonce", nonce);
 
           const rawExtraHosts = localStorage.getItem(extraHostsKey);
           const extraHosts = rawExtraHosts ? JSON.parse(rawExtraHosts) : [];
 
           // Hard-reset anything that could point to a developer's real daemon.
-          localStorage.setItem("@paseo:daemon-registry", JSON.stringify([daemon, ...extraHosts]));
-          localStorage.removeItem("@paseo:settings");
-          localStorage.setItem("@paseo:create-agent-preferences", JSON.stringify(preferences));
+          localStorage.setItem("@vincu:daemon-registry", JSON.stringify([daemon, ...extraHosts]));
+          localStorage.removeItem("@vincu:settings");
+          localStorage.setItem("@vincu:create-agent-preferences", JSON.stringify(preferences));
         },
         {
           daemon: testDaemon,

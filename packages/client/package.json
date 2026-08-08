@@ -1,7 +1,7 @@
 {
-  "name": "@getpaseo/client",
+  "name": "@getvincu/client",
   "version": "0.3.0-beta.4",
-  "description": "Paseo client SDK package",
+  "description": "Vincu client SDK package",
   "files": [
     "dist",
     "!dist/**/*.map",
@@ -31,7 +31,7 @@
   },
   "scripts": {
     "clean": "node ../../scripts/clean-package-dist.mjs",
-    "build": "npm run build --workspace=@getpaseo/protocol && tsc -p tsconfig.json --incremental false",
+    "build": "npm run build --workspace=@getvincu/protocol && tsc -p tsconfig.json --incremental false",
     "build:clean": "npm run clean && npm run build",
     "prepack": "npm run build:clean",
     "typecheck": "tsgo --noEmit",
@@ -39,8 +39,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@getpaseo/protocol": "0.3.0-beta.4",
-    "@getpaseo/relay": "0.3.0-beta.4",
+    "@getvincu/protocol": "0.3.0-beta.4",
+    "@getvincu/relay": "0.3.0-beta.4",
     "zod": "^4.4.3"
   },
   "devDependencies": {

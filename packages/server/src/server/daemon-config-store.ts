@@ -7,12 +7,12 @@ import { ProviderOverrideSchema } from "./agent/provider-launch-config.js";
 import {
   MutableDaemonConfigSchema,
   MutableDaemonConfigPatchSchema,
-} from "@getpaseo/protocol/messages";
+} from "@getvincu/protocol/messages";
 
-export type { MutableDaemonConfig, MutableDaemonConfigPatch } from "@getpaseo/protocol/messages";
+export type { MutableDaemonConfig, MutableDaemonConfigPatch } from "@getvincu/protocol/messages";
 
-type MutableDaemonConfig = import("@getpaseo/protocol/messages").MutableDaemonConfig;
-type MutableDaemonConfigPatch = import("@getpaseo/protocol/messages").MutableDaemonConfigPatch;
+type MutableDaemonConfig = import("@getvincu/protocol/messages").MutableDaemonConfig;
+type MutableDaemonConfigPatch = import("@getvincu/protocol/messages").MutableDaemonConfigPatch;
 type ProviderOverride = import("./agent/provider-launch-config.js").ProviderOverride;
 
 interface LoggerLike {
@@ -163,19 +163,19 @@ export function applyMutableProviderConfigToOverrides(
 
 export class DaemonConfigStore {
   private current: MutableDaemonConfig;
-  private readonly paseoHome: string;
+  private readonly vincuHome: string;
   private readonly logger: LoggerLike | undefined;
   private readonly changeListeners = new Set<ConfigListener>();
   private readonly fieldChangeHandlers = new Map<string, Set<FieldChangeHandler>>();
   private readonly relayEnabledMutable: boolean;
 
   constructor(
-    paseoHome: string,
+    vincuHome: string,
     initial: MutableDaemonConfig,
     logger?: LoggerLike,
     options: { relayEnabledMutable?: boolean } = {},
   ) {
-    this.paseoHome = paseoHome;
+    this.vincuHome = vincuHome;
     this.logger = getLogger(logger);
     this.current = MutableDaemonConfigSchema.parse({
       ...initial,
@@ -192,7 +192,7 @@ export class DaemonConfigStore {
     const parsedPatch = MutableDaemonConfigPatchSchema.parse(partial);
     if (parsedPatch.relay?.enabled !== undefined && !this.relayEnabledMutable) {
       throw new Error(
-        "Relay is controlled by a daemon launch override. Remove PASEO_RELAY_ENABLED or the relay CLI flag before changing it here.",
+        "Relay is controlled by a daemon launch override. Remove VINCU_RELAY_ENABLED or the relay CLI flag before changing it here.",
       );
     }
     const { removeProviders = [], ...configPatch } = parsedPatch;
@@ -238,7 +238,7 @@ export class DaemonConfigStore {
       for (const change of appliedFieldChanges.toReversed()) {
         change.handler(change.previousValue);
       }
-      savePersistedConfig(this.paseoHome, persistedBeforePatch, this.logger);
+      savePersistedConfig(this.vincuHome, persistedBeforePatch, this.logger);
       throw error;
     }
 
@@ -278,14 +278,14 @@ export class DaemonConfigStore {
     config: MutableDaemonConfig,
     removeProviders: readonly string[],
   ): PersistedConfig {
-    const persisted = loadPersistedConfig(this.paseoHome, this.logger);
+    const persisted = loadPersistedConfig(this.vincuHome, this.logger);
     const nextPersisted = mergeMutableConfigIntoPersistedConfig({
       persisted,
       mutable: config,
       removeProviders,
       persistRelayEnabled: this.relayEnabledMutable,
     });
-    savePersistedConfig(this.paseoHome, nextPersisted, this.logger);
+    savePersistedConfig(this.vincuHome, nextPersisted, this.logger);
     return persisted;
   }
 }

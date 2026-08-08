@@ -21,7 +21,7 @@ vi.mock("electron-log/main", () => ({
   default: { warn: vi.fn() },
 }));
 
-vi.mock("@getpaseo/server", () => ({
+vi.mock("@getvincu/server", () => ({
   spawnProcess: vi.fn(),
 }));
 
@@ -54,8 +54,8 @@ describe("runtime-paths", () => {
     mocks.existsSync.mockReturnValue(true);
     setProcessRuntime({
       platform: "darwin",
-      execPath: "/Applications/Paseo.app/Contents/MacOS/Paseo",
-      resourcesPath: "/Applications/Paseo.app/Contents/Resources",
+      execPath: "/Applications/Vincu.app/Contents/MacOS/Vincu",
+      resourcesPath: "/Applications/Vincu.app/Contents/Resources",
     });
   });
 
@@ -70,7 +70,7 @@ describe("runtime-paths", () => {
 
   it("uses the macOS Helper executable for packaged daemon node launches", () => {
     expect(resolveNodeExecPath()).toBe(
-      "/Applications/Paseo.app/Contents/Frameworks/Paseo Helper.app/Contents/MacOS/Paseo Helper",
+      "/Applications/Vincu.app/Contents/Frameworks/Vincu Helper.app/Contents/MacOS/Vincu Helper",
     );
   });
 });

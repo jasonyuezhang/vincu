@@ -12,14 +12,14 @@ Hub receives Slack mentions over the Events API. Socket Mode is not used, so you
 
 ## Create the app
 
-Go to [api.slack.com/apps](https://api.slack.com/apps) → **Create New App → From a manifest**, and paste this after replacing `hub.example.com` with your `PASEO_HUB_APP_URL`:
+Go to [api.slack.com/apps](https://api.slack.com/apps) → **Create New App → From a manifest**, and paste this after replacing `hub.example.com` with your `VINCU_HUB_APP_URL`:
 
 ```yaml
 display_information:
-  name: Paseo
+  name: Vincu
 features:
   bot_user:
-    display_name: Paseo
+    display_name: Vincu
     always_online: false
 oauth_config:
   redirect_urls:
@@ -63,7 +63,7 @@ Use Hub's button, not Slack's **Install to Workspace**. The install has to start
 Then invite the bot to each channel it should watch:
 
 ```text
-/invite @Paseo
+/invite @Vincu
 ```
 
 Now write a trigger: [Slack triggers](/docs/hub/triggers/slack).

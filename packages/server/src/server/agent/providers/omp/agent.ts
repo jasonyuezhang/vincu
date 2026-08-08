@@ -35,7 +35,7 @@ import {
   type ProviderCatalog,
   type ToolCallDetail,
 } from "../../agent-sdk-types.js";
-import type { PaseoToolCatalog } from "../../tools/types.js";
+import type { VincuToolCatalog } from "../../tools/types.js";
 import { importSessionFromPersistence } from "../../provider-session-import.js";
 import { runProviderTurn } from "../provider-runner.js";
 import {
@@ -184,7 +184,7 @@ interface OmpAgentSessionOptions {
   providerIdleScheduler?: OmpProviderIdleScheduler;
   noTurnScheduler?: OmpNoTurnScheduler;
   usagePollScheduler?: OmpUsagePollScheduler;
-  paseoTools?: PaseoToolCatalog;
+  vincuTools?: VincuToolCatalog;
   /**
    * When false (resumed sessions), replayed session events are dropped until
    * the first prompt or agent_start so history is not re-emitted as live
@@ -462,7 +462,7 @@ function withOmpCapabilities(): AgentCapabilityFlags {
   return {
     ...OMP_CORE_CAPABILITIES,
     supportsMcpServers: false,
-    supportsNativePaseoTools: true,
+    supportsNativeVincuTools: true,
   };
 }
 
@@ -880,7 +880,7 @@ export class OmpAgentSession implements AgentSession {
     this.state = options.initialState;
     this.currentModeId = options.currentModeId ?? null;
     this.logger = options.logger;
-    this.paseoTools = options.paseoTools;
+    this.vincuTools = options.vincuTools;
     this.live = options.live ?? true;
     this.providerIdleScheduler = options.providerIdleScheduler ?? createOmpProviderIdleScheduler();
     this.noTurnScheduler = options.noTurnScheduler ?? createOmpNoTurnScheduler();
@@ -928,7 +928,7 @@ export class OmpAgentSession implements AgentSession {
   private readonly runtimeSession: OmpRuntimeSession;
   private readonly config: AgentSessionConfig;
   private readonly logger: Logger;
-  private readonly paseoTools?: PaseoToolCatalog;
+  private readonly vincuTools?: VincuToolCatalog;
 
   get id(): string | null {
     return this.state.sessionId;
@@ -1624,7 +1624,7 @@ export class OmpAgentSession implements AgentSession {
     if (
       handleOmpHostToolRuntimeEvent(event, {
         runtimeSession: this.runtimeSession,
-        paseoTools: this.paseoTools,
+        vincuTools: this.vincuTools,
         logger: this.logger,
       })
     ) {
@@ -1885,7 +1885,7 @@ export class OmpAgentSession implements AgentSession {
           return;
         }
         // A state request is processed after OMP's RPC loop becomes promptable,
-        // so do not advertise Paseo idle until it reports that transition.
+        // so do not advertise Vincu idle until it reports that transition.
         void this.completeTurnAfterProviderIdle(turnId, terminalMessages);
         return;
       }
@@ -2215,9 +2215,9 @@ export class OmpAgentClient implements AgentClient {
     this.runtime = options.runtime ?? createRuntime(options.logger, runtimeSettings);
   }
 
-  private async configureNativePaseoTools(
+  private async configureNativeVincuTools(
     runtimeSession: OmpRuntimeSession,
-    catalog: PaseoToolCatalog | undefined,
+    catalog: VincuToolCatalog | undefined,
   ): Promise<void> {
     if (!catalog) {
       return;
@@ -2242,7 +2242,7 @@ export class OmpAgentClient implements AgentClient {
       env: launchContext?.env,
     });
     try {
-      await this.configureNativePaseoTools(runtimeSession, launchContext?.paseoTools);
+      await this.configureNativeVincuTools(runtimeSession, launchContext?.vincuTools);
       return new OmpAgentSession({
         runtimeSession,
         config,
@@ -2253,7 +2253,7 @@ export class OmpAgentClient implements AgentClient {
         providerIdleScheduler: this.providerIdleScheduler,
         noTurnScheduler: this.noTurnScheduler,
         usagePollScheduler: this.usagePollScheduler,
-        paseoTools: launchContext?.paseoTools,
+        vincuTools: launchContext?.vincuTools,
       });
     } catch (error) {
       await runtimeSession.close().catch(() => undefined);
@@ -2284,7 +2284,7 @@ export class OmpAgentClient implements AgentClient {
       }),
     );
     try {
-      await this.configureNativePaseoTools(runtimeSession, launchContext?.paseoTools);
+      await this.configureNativeVincuTools(runtimeSession, launchContext?.vincuTools);
       return new OmpAgentSession({
         runtimeSession,
         config: resumeConfig.config,
@@ -2295,7 +2295,7 @@ export class OmpAgentClient implements AgentClient {
         providerIdleScheduler: this.providerIdleScheduler,
         noTurnScheduler: this.noTurnScheduler,
         usagePollScheduler: this.usagePollScheduler,
-        paseoTools: launchContext?.paseoTools,
+        vincuTools: launchContext?.vincuTools,
         live: false,
       });
     } catch (error) {

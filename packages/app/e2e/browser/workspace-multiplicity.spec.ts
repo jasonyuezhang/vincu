@@ -168,7 +168,7 @@ test.describe("Workspace multiplicity creation flow", () => {
       expect(descriptor?.workspaceKind).toBe("worktree");
 
       await client
-        .archivePaseoWorktree({ worktreePath: worktree.workspaceDirectory })
+        .archiveVincuWorktree({ worktreePath: worktree.workspaceDirectory })
         .catch(() => undefined);
     } finally {
       await seeded.cleanup();

@@ -27,10 +27,10 @@ console.log("=== Local Daemon Utility Helpers ===\n");
 
 {
   console.log("Test 3: rejects unix socket listen values");
-  assert.strictEqual(resolveTcpHostFromListen("/tmp/paseo.sock"), null);
-  assert.strictEqual(resolveTcpHostFromListen("unix:///tmp/paseo.sock"), null);
-  assert.strictEqual(resolveTcpHostFromListen("pipe://\\\\.\\pipe\\paseo-managed-test"), null);
-  assert.strictEqual(resolveTcpHostFromListen("\\\\.\\pipe\\paseo-managed-test"), null);
+  assert.strictEqual(resolveTcpHostFromListen("/tmp/vincu.sock"), null);
+  assert.strictEqual(resolveTcpHostFromListen("unix:///tmp/vincu.sock"), null);
+  assert.strictEqual(resolveTcpHostFromListen("pipe://\\\\.\\pipe\\vincu-managed-test"), null);
+  assert.strictEqual(resolveTcpHostFromListen("\\\\.\\pipe\\vincu-managed-test"), null);
   console.log("✓ rejects unix socket listen values\n");
 }
 
@@ -44,9 +44,9 @@ console.log("=== Local Daemon Utility Helpers ===\n");
 
 {
   console.log("Test 5: rejects Windows absolute paths (not TCP endpoints)");
-  assert.strictEqual(resolveTcpHostFromListen("C:\\Users\\foo\\.paseo\\paseo.sock"), null);
+  assert.strictEqual(resolveTcpHostFromListen("C:\\Users\\foo\\.vincu\\vincu.sock"), null);
   assert.strictEqual(resolveTcpHostFromListen("D:\\project\\socket"), null);
-  assert.strictEqual(resolveTcpHostFromListen("C:\\paseo.sock"), null);
+  assert.strictEqual(resolveTcpHostFromListen("C:\\vincu.sock"), null);
   console.log("✓ rejects Windows absolute paths\n");
 }
 

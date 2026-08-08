@@ -8,7 +8,7 @@ import {
   encodeFileTransferFrame,
   FileTransferOpcode,
   type FileTransferFrame,
-} from "@getpaseo/protocol/binary-frames/index";
+} from "@getvincu/protocol/binary-frames/index";
 import {
   WorkspaceFilesSession,
   type WorkspaceFilesSessionHost,
@@ -47,18 +47,18 @@ function makeSubsystem(
     },
     hasBinaryChannel: () => hasBinary,
   };
-  const paseoHome = makeDir("workspace-files-home-");
+  const vincuHome = makeDir("workspace-files-home-");
   const subsystem = new WorkspaceFilesSession({
     host,
     downloadTokenStore: new DownloadTokenStore({ ttlMs: 60_000 }),
-    paseoHome,
+    vincuHome,
     logger: pino({ level: "silent" }),
   });
   return {
     subsystem,
     emitted,
     binary,
-    paseoHome,
+    vincuHome,
     setHasBinary: (value: boolean) => {
       hasBinary = value;
     },
@@ -301,7 +301,7 @@ describe("WorkspaceFilesSession", () => {
   });
 
   test("round-trips an upload through transfer frames", async () => {
-    const { subsystem, emitted, paseoHome } = makeSubsystem();
+    const { subsystem, emitted, vincuHome } = makeSubsystem();
 
     subsystem.handleFileUploadRequest({
       type: "file.upload.request",
@@ -341,7 +341,7 @@ describe("WorkspaceFilesSession", () => {
     }
     expect(message.payload.error).toBeNull();
     expect(message.payload.file?.fileName).toBe("notes.txt");
-    expect(readFileSync(join(paseoHome, "uploads", "upload_req-upload", "notes.txt"), "utf8")).toBe(
+    expect(readFileSync(join(vincuHome, "uploads", "upload_req-upload", "notes.txt"), "utf8")).toBe(
       "hello world",
     );
   });

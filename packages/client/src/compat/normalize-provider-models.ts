@@ -1,11 +1,11 @@
-import type { AgentModelDefinition, ProviderSnapshotEntry } from "@getpaseo/protocol/agent-types";
-import { normalizeAgentModelDefinition } from "@getpaseo/protocol/agent-types";
-import { expandProviderSnapshot } from "@getpaseo/protocol/provider-snapshot-codec";
+import type { AgentModelDefinition, ProviderSnapshotEntry } from "@getvincu/protocol/agent-types";
+import { normalizeAgentModelDefinition } from "@getvincu/protocol/agent-types";
+import { expandProviderSnapshot } from "@getvincu/protocol/provider-snapshot-codec";
 import type {
   GetProvidersSnapshotResponseMessage,
   ListProviderModelsResponseMessage,
   SessionOutboundMessage,
-} from "@getpaseo/protocol/messages";
+} from "@getvincu/protocol/messages";
 
 type ListProviderModelsPayload = ListProviderModelsResponseMessage["payload"];
 type GetProvidersSnapshotPayload = GetProvidersSnapshotResponseMessage["payload"];

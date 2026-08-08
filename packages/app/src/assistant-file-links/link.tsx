@@ -107,7 +107,7 @@ export function AssistantMarkdownLink({
 
   const anchor = (
     <a
-      {...(unwrapForMarkdownCopy ? { "data-paseo-markdown-unwrap": "true" } : {})}
+      {...(unwrapForMarkdownCopy ? { "data-vincu-markdown-unwrap": "true" } : {})}
       href={source.href}
       title={source.title}
       onClickCapture={handleAnchorClickCapture}

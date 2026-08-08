@@ -28,7 +28,7 @@ const SKILL_COMMANDS = [
 
 declare global {
   interface Window {
-    __paseoSkillsInvoke?: (
+    __vincuSkillsInvoke?: (
       command: string,
       args: Record<string, unknown> | null,
     ) => Promise<unknown>;
@@ -98,8 +98,8 @@ export async function createSkillsSandbox(
   const saveRelease = new Promise<void>((resolve) => {
     releaseHeldSave = resolve;
   });
-  const bundledSkills = options.bundledSkills ?? ["paseo", "paseo-advisor", "paseo-loop"];
-  const root = await mkdtemp(path.join(os.tmpdir(), "paseo-e2e-skills-"));
+  const bundledSkills = options.bundledSkills ?? ["vincu", "vincu-advisor", "vincu-loop"];
+  const root = await mkdtemp(path.join(os.tmpdir(), "vincu-e2e-skills-"));
   const targets: SkillTargets = {
     sourceDir: path.join(root, "bundle"),
     agentsDir: path.join(root, "home", ".agents", "skills"),
@@ -199,7 +199,7 @@ export async function serveRealSkillsCommands(page: Page, sandbox: SkillsSandbox
   });
 
   await page.exposeFunction(
-    "__paseoSkillsInvoke",
+    "__vincuSkillsInvoke",
     async (command: string, args: Record<string, unknown> | null) => {
       const handler = handlers[command];
       if (!handler) throw new Error(`Unknown skills command: ${command}`);
@@ -212,7 +212,7 @@ export async function serveRealSkillsCommands(page: Page, sandbox: SkillsSandbox
   );
 
   await page.addInitScript((commands: readonly string[]) => {
-    const bridge = (window as unknown as { paseoDesktop?: { invoke: unknown } }).paseoDesktop;
+    const bridge = (window as unknown as { vincuDesktop?: { invoke: unknown } }).vincuDesktop;
     if (!bridge) throw new Error("Desktop bridge must be injected before the skills bridge.");
     const skillCommands = new Set(commands);
     const inner = bridge.invoke as (
@@ -221,7 +221,7 @@ export async function serveRealSkillsCommands(page: Page, sandbox: SkillsSandbox
     ) => Promise<unknown>;
     bridge.invoke = (command: string, args?: Record<string, unknown>) =>
       skillCommands.has(command)
-        ? window.__paseoSkillsInvoke!(command, args ?? null)
+        ? window.__vincuSkillsInvoke!(command, args ?? null)
         : inner(command, args);
   }, SKILL_COMMANDS);
 }

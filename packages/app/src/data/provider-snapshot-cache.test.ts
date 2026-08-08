@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { ProviderSnapshotEntry } from "@getpaseo/protocol/agent-types";
-import { compactProviderSnapshot } from "@getpaseo/protocol/provider-snapshot-codec";
+import type { ProviderSnapshotEntry } from "@getvincu/protocol/agent-types";
+import { compactProviderSnapshot } from "@getvincu/protocol/provider-snapshot-codec";
 import { createProviderSnapshotCache } from "./provider-snapshot-cache";
 
 function createStorage() {
@@ -57,7 +57,7 @@ describe("provider snapshot cache", () => {
   it("discards an invalid cache record", async () => {
     const storage = createStorage();
     const cache = createProviderSnapshotCache(storage);
-    storage.values.set('@paseo/provider-snapshot/v1:["server-1","/repo"]', "not json");
+    storage.values.set('@vincu/provider-snapshot/v1:["server-1","/repo"]', "not json");
 
     await expect(cache.read("server-1", "/repo")).resolves.toBeNull();
     expect(storage.values.size).toBe(0);

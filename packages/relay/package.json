@@ -1,7 +1,7 @@
 {
-  "name": "@getpaseo/relay",
+  "name": "@getvincu/relay",
   "version": "0.3.0-beta.4",
-  "description": "Paseo relay for bridging daemon and client connections",
+  "description": "Vincu relay for bridging daemon and client connections",
   "files": [
     "dist",
     "!dist/**/*.map"

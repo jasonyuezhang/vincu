@@ -154,7 +154,7 @@ test("Hub archives only the owned agent in a shared local checkout", async () =>
   expect(hub.repoExists()).toBe(true);
 });
 
-test("Hub archives a running execution's Paseo-created worktree", async () => {
+test("Hub archives a running execution's Vincu-created worktree", async () => {
   const hub = await launchRelationship();
   hub.beginOwnedCreate("worktree-create", "execution-worktree", {
     worktree: { mode: "branch-off", newBranch: "hub-created-worktree", base: "main" },

@@ -1,11 +1,11 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { resolvePaseoNodeEnv } from "./paseo-env.js";
+import { resolveVincuNodeEnv } from "./vincu-env.js";
 import { z } from "zod";
 import { expandTilde } from "../utils/path.js";
 
-import type { PaseoDaemonConfig } from "./bootstrap.js";
+import type { VincuDaemonConfig } from "./bootstrap.js";
 import {
   loadPersistedConfig,
   LogFormatSchema,
@@ -18,15 +18,15 @@ import type {
   ProviderOverride,
 } from "./agent/provider-launch-config.js";
 import { ProviderOverrideSchema } from "./agent/provider-launch-config.js";
-import { AgentProviderSchema } from "@getpaseo/protocol/provider-manifest";
+import { AgentProviderSchema } from "@getvincu/protocol/provider-manifest";
 import { hashDaemonPassword } from "./auth.js";
 import { resolveSpeechConfig } from "./speech/speech-config-resolver.js";
 import { mergeHostnames, parseHostnamesEnv, type HostnamesConfig } from "./hostnames.js";
 import { resolveGitProcessPolicy } from "../utils/git-process-scheduler.js";
 
 const DEFAULT_PORT = 6767;
-const DEFAULT_RELAY_ENDPOINT = "relay.paseo.sh:443";
-const DEFAULT_APP_BASE_URL = "https://app.paseo.sh";
+const DEFAULT_RELAY_ENDPOINT = "relay.vincu.sh:443";
+const DEFAULT_APP_BASE_URL = "https://app.vincu.sh";
 const DEFAULT_TRUSTED_PROXIES = ["loopback"];
 
 interface ResolveBundledWebUiDistDirInput {
@@ -91,7 +91,7 @@ function normalizeLogEnv(value: string | undefined): string | undefined {
 function resolveGitProcessConfig(
   env: NodeJS.ProcessEnv,
   persisted: ReturnType<typeof loadPersistedConfig>,
-): NonNullable<PaseoDaemonConfig["git"]> {
+): NonNullable<VincuDaemonConfig["git"]> {
   return resolveGitProcessPolicy({
     env,
     persisted: persisted.daemon?.git,
@@ -114,8 +114,8 @@ function resolveLogConfigFromEnv(
   env: NodeJS.ProcessEnv,
   persisted: ReturnType<typeof loadPersistedConfig>,
 ): PersistedConfig["log"] {
-  const envLogLevel = LogLevelSchema.safeParse(normalizeLogEnv(env.PASEO_LOG_LEVEL));
-  const envLogFormat = LogFormatSchema.safeParse(normalizeLogEnv(env.PASEO_LOG_FORMAT));
+  const envLogLevel = LogLevelSchema.safeParse(normalizeLogEnv(env.VINCU_LOG_LEVEL));
+  const envLogFormat = LogFormatSchema.safeParse(normalizeLogEnv(env.VINCU_LOG_FORMAT));
 
   if (!envLogLevel.success && !envLogFormat.success) {
     return persisted.log;
@@ -222,28 +222,28 @@ function resolveTlsFromEnv(
 }
 
 function resolveRelayConfig(input: ResolveRelayInput): ResolvedRelay {
-  const environmentEnabled = parseBooleanEnv(input.env.PASEO_RELAY_ENABLED);
+  const environmentEnabled = parseBooleanEnv(input.env.VINCU_RELAY_ENABLED);
   // COMPAT(relayOptInDefault): configs created before v0.2.6 may omit this field.
   // Preserve their relay-on behavior until 2027-01-31; new homes materialize false.
   const enabled =
     input.cliRelayEnabled ?? environmentEnabled ?? input.persisted.daemon?.relay?.enabled ?? true;
   const endpoint =
-    input.env.PASEO_RELAY_ENDPOINT ??
+    input.env.VINCU_RELAY_ENDPOINT ??
     input.persisted.daemon?.relay?.endpoint ??
     DEFAULT_RELAY_ENDPOINT;
   const publicEndpoint =
-    input.env.PASEO_RELAY_PUBLIC_ENDPOINT ??
+    input.env.VINCU_RELAY_PUBLIC_ENDPOINT ??
     input.persisted.daemon?.relay?.publicEndpoint ??
     endpoint;
   const useTls =
     input.cliRelayUseTls ??
     resolveTlsFromEnv(
-      input.env.PASEO_RELAY_USE_TLS,
+      input.env.VINCU_RELAY_USE_TLS,
       input.persisted.daemon?.relay?.useTls,
       endpoint === DEFAULT_RELAY_ENDPOINT,
     );
   const publicUseTls = resolveTlsFromEnv(
-    input.env.PASEO_RELAY_PUBLIC_USE_TLS,
+    input.env.VINCU_RELAY_PUBLIC_USE_TLS,
     input.persisted.daemon?.relay?.publicUseTls,
     useTls,
   );
@@ -270,7 +270,7 @@ function resolveServiceProxyPublicBaseUrl(value: string | null): string | null {
   try {
     return new URL(value).toString().replace(/\/$/, "");
   } catch {
-    throw new Error(`Invalid PASEO_SERVICE_PROXY_PUBLIC_BASE_URL: ${value}`);
+    throw new Error(`Invalid VINCU_SERVICE_PROXY_PUBLIC_BASE_URL: ${value}`);
   }
 }
 
@@ -279,20 +279,20 @@ function resolveServiceProxyConfig(
   persisted: ReturnType<typeof loadPersistedConfig>,
 ): ResolvedServiceProxy {
   const enabledShim =
-    parseBooleanEnv(env.PASEO_SERVICE_PROXY_ENABLED) ?? persisted.daemon?.serviceProxy?.enabled;
+    parseBooleanEnv(env.VINCU_SERVICE_PROXY_ENABLED) ?? persisted.daemon?.serviceProxy?.enabled;
   // COMPAT(serviceProxyEnabled): added 2026-06-02, remove after 2026-12-02.
   // `enabled=false` used to disable the separate service proxy listener. Localhost
   // service proxying is now always enabled; this only suppresses optional layers.
   const optionalLayersEnabled = enabledShim !== false;
   const publicBaseUrl = optionalLayersEnabled
     ? resolveServiceProxyPublicBaseUrl(
-        env.PASEO_SERVICE_PROXY_PUBLIC_BASE_URL ??
+        env.VINCU_SERVICE_PROXY_PUBLIC_BASE_URL ??
           persisted.daemon?.serviceProxy?.publicBaseUrl ??
           null,
       )
     : null;
   const standaloneListen = optionalLayersEnabled
-    ? (env.PASEO_SERVICE_PROXY_LISTEN ?? persisted.daemon?.serviceProxy?.listen ?? null)
+    ? (env.VINCU_SERVICE_PROXY_LISTEN ?? persisted.daemon?.serviceProxy?.listen ?? null)
     : null;
 
   return { publicBaseUrl, standaloneListen };
@@ -304,20 +304,20 @@ interface ResolvedWebUi {
 }
 
 function resolveWebUiConfig(
-  paseoHome: string,
+  vincuHome: string,
   env: NodeJS.ProcessEnv,
   cli: CliConfigOverrides | undefined,
   persisted: ReturnType<typeof loadPersistedConfig>,
 ): ResolvedWebUi {
   const enabled =
     cli?.webUiEnabled ??
-    parseBooleanEnv(env.PASEO_WEB_UI_ENABLED) ??
+    parseBooleanEnv(env.VINCU_WEB_UI_ENABLED) ??
     persisted.features?.webUi?.enabled ??
     false;
-  const rawDistDir = env.PASEO_WEB_UI_DIST_DIR ?? persisted.features?.webUi?.distDir;
+  const rawDistDir = env.VINCU_WEB_UI_DIST_DIR ?? persisted.features?.webUi?.distDir;
   const trimmedDistDir = rawDistDir?.trim();
   const distDir = trimmedDistDir
-    ? path.resolve(path.isAbsolute(trimmedDistDir) ? trimmedDistDir : paseoHome, trimmedDistDir)
+    ? path.resolve(path.isAbsolute(trimmedDistDir) ? trimmedDistDir : vincuHome, trimmedDistDir)
     : BUNDLED_WEB_UI_DIST_DIR;
   return {
     enabled,
@@ -329,7 +329,7 @@ function resolveVoiceLlmConfig(
   env: NodeJS.ProcessEnv,
   persisted: ReturnType<typeof loadPersistedConfig>,
 ): ResolvedVoiceLlm {
-  const envVoiceLlmProvider = parseOptionalVoiceLlmProvider(env.PASEO_VOICE_LLM_PROVIDER);
+  const envVoiceLlmProvider = parseOptionalVoiceLlmProvider(env.VINCU_VOICE_LLM_PROVIDER);
   const persistedVoiceLlmProvider = parseOptionalVoiceLlmProvider(
     persisted.features?.voiceMode?.llm?.provider,
   );
@@ -344,8 +344,8 @@ function resolveCorsAllowedOrigins(
   env: NodeJS.ProcessEnv,
   persisted: ReturnType<typeof loadPersistedConfig>,
 ): string[] {
-  const envCorsOrigins = env.PASEO_CORS_ORIGINS
-    ? env.PASEO_CORS_ORIGINS.split(",").map((s) => s.trim())
+  const envCorsOrigins = env.VINCU_CORS_ORIGINS
+    ? env.VINCU_CORS_ORIGINS.split(",").map((s) => s.trim())
     : [];
   const persistedCorsOrigins = persisted.daemon?.cors?.allowedOrigins ?? [];
   return Array.from(
@@ -378,13 +378,13 @@ function resolveTrustedProxiesConfig(
   persisted: ReturnType<typeof loadPersistedConfig>,
 ): TrustedProxiesConfig {
   return (
-    parseTrustedProxiesEnv(env.PASEO_TRUSTED_PROXIES) ??
+    parseTrustedProxiesEnv(env.VINCU_TRUSTED_PROXIES) ??
     persisted.daemon?.trustedProxies ??
     DEFAULT_TRUSTED_PROXIES
   );
 }
 
-// PASEO_LISTEN can be:
+// VINCU_LISTEN can be:
 // - host:port (TCP)
 // - /path/to/socket (Unix socket)
 // - unix:///path/to/socket (Unix socket)
@@ -396,7 +396,7 @@ function resolveListenAddress(
 ): string {
   return (
     cli?.listen ??
-    env.PASEO_LISTEN ??
+    env.VINCU_LISTEN ??
     persisted.daemon?.listen ??
     `127.0.0.1:${env.PORT ?? DEFAULT_PORT}`
   );
@@ -405,8 +405,8 @@ function resolveListenAddress(
 function resolveAuthConfig(
   env: NodeJS.ProcessEnv,
   persisted: ReturnType<typeof loadPersistedConfig>,
-): PaseoDaemonConfig["auth"] {
-  const envPassword = env.PASEO_PASSWORD?.trim();
+): VincuDaemonConfig["auth"] {
+  const envPassword = env.VINCU_PASSWORD?.trim();
   if (envPassword) {
     return { password: hashDaemonPassword(envPassword) };
   }
@@ -416,7 +416,7 @@ function resolveAuthConfig(
 }
 
 function resolveWorktreesRoot(
-  paseoHome: string,
+  vincuHome: string,
   persisted: ReturnType<typeof loadPersistedConfig>,
 ): string | undefined {
   const configuredRoot = persisted.worktrees?.root?.trim();
@@ -427,7 +427,7 @@ function resolveWorktreesRoot(
   const expandedRoot = expandTilde(configuredRoot);
   return path.isAbsolute(expandedRoot)
     ? path.resolve(expandedRoot)
-    : path.resolve(paseoHome, expandedRoot);
+    : path.resolve(vincuHome, expandedRoot);
 }
 
 function resolveAppendSystemPrompt(persisted: ReturnType<typeof loadPersistedConfig>): string {
@@ -453,23 +453,23 @@ function resolveStaticLoadConfigSettings(
     terminalProfiles: persisted.daemon?.terminalProfiles,
     hostnames: mergeHostnames([
       persisted.daemon?.hostnames,
-      parseHostnamesEnv(env.PASEO_HOSTNAMES ?? env.PASEO_ALLOWED_HOSTS),
+      parseHostnamesEnv(env.VINCU_HOSTNAMES ?? env.VINCU_ALLOWED_HOSTS),
       cli?.hostnames,
     ]),
     trustedProxies: resolveTrustedProxiesConfig(env, persisted),
-    appBaseUrl: env.PASEO_APP_BASE_URL ?? persisted.app?.baseUrl ?? DEFAULT_APP_BASE_URL,
+    appBaseUrl: env.VINCU_APP_BASE_URL ?? persisted.app?.baseUrl ?? DEFAULT_APP_BASE_URL,
   };
 }
 
 export function loadConfig(
-  paseoHome: string,
+  vincuHome: string,
   options?: {
     env?: NodeJS.ProcessEnv;
     cli?: CliConfigOverrides;
   },
-): PaseoDaemonConfig {
+): VincuDaemonConfig {
   const env = options?.env ?? process.env;
-  const persisted = loadPersistedConfig(paseoHome);
+  const persisted = loadPersistedConfig(vincuHome);
 
   const listen = resolveListenAddress(env, options?.cli, persisted);
   const {
@@ -491,10 +491,10 @@ export function loadConfig(
     cliRelayUseTls: options?.cli?.relayUseTls,
   });
   const serviceProxy = resolveServiceProxyConfig(env, persisted);
-  const webUi = resolveWebUiConfig(paseoHome, env, options?.cli, persisted);
+  const webUi = resolveWebUiConfig(vincuHome, env, options?.cli, persisted);
 
   const { openai, speech } = resolveSpeechConfig({
-    paseoHome,
+    vincuHome,
     env,
     persisted,
   });
@@ -506,9 +506,9 @@ export function loadConfig(
 
   return {
     listen,
-    paseoHome,
-    desktopManaged: env.PASEO_DESKTOP_MANAGED === "1",
-    worktreesRoot: resolveWorktreesRoot(paseoHome, persisted),
+    vincuHome,
+    desktopManaged: env.VINCU_DESKTOP_MANAGED === "1",
+    worktreesRoot: resolveWorktreesRoot(vincuHome, persisted),
     corsAllowedOrigins: resolveCorsAllowedOrigins(env, persisted),
     hostnames,
     trustedProxies,
@@ -521,8 +521,8 @@ export function loadConfig(
     appendSystemPrompt,
     terminalProfiles,
     mcpDebug: env.MCP_DEBUG === "1",
-    isDev: resolvePaseoNodeEnv(env) === "development",
-    agentStoragePath: path.join(paseoHome, "agents"),
+    isDev: resolveVincuNodeEnv(env) === "development",
+    agentStoragePath: path.join(vincuHome, "agents"),
     staticDir: "public",
     agentClients: {},
     relayEnabled: relay.enabled,

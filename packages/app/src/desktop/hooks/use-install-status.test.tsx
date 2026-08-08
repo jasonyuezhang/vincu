@@ -89,7 +89,7 @@ describe("useCliInstall", () => {
       expect(result.current.error).toBe(error);
     });
 
-    expect(toast.error).toHaveBeenCalledWith("Unable to install the Paseo CLI.");
+    expect(toast.error).toHaveBeenCalledWith("Unable to install the Vincu CLI.");
     expect(console.error).toHaveBeenCalledWith("[Integrations] Failed to install CLI", error);
   });
 
@@ -112,7 +112,7 @@ describe("useCliInstall", () => {
       expect(result.current.error).toBe(error);
     });
 
-    expect(toast.error).toHaveBeenCalledWith("无法安装 Paseo CLI。");
+    expect(toast.error).toHaveBeenCalledWith("无法安装 Vincu CLI。");
   });
 });
 
@@ -145,7 +145,7 @@ describe("useSkillsStatus", () => {
   it("install transitions a not-installed status to up-to-date and reflects the response directly", async () => {
     desktopDaemon.getSkillsSnapshot.mockResolvedValue({
       state: "not-installed",
-      ops: [{ kind: "add", name: "paseo" }],
+      ops: [{ kind: "add", name: "vincu" }],
     });
     desktopDaemon.installSkills.mockResolvedValue({ state: "up-to-date", ops: [] });
 
@@ -168,7 +168,7 @@ describe("useSkillsStatus", () => {
   it("update transitions drift to up-to-date", async () => {
     desktopDaemon.getSkillsSnapshot.mockResolvedValue({
       state: "drift",
-      ops: [{ kind: "update", name: "paseo" }],
+      ops: [{ kind: "update", name: "vincu" }],
     });
     desktopDaemon.updateSkills.mockResolvedValue({ state: "up-to-date", ops: [] });
 
@@ -192,7 +192,7 @@ describe("useSkillsStatus", () => {
     desktopDaemon.getSkillsSnapshot.mockResolvedValue({ state: "up-to-date", ops: [] });
     desktopDaemon.uninstallSkills.mockResolvedValue({
       state: "not-installed",
-      ops: [{ kind: "add", name: "paseo" }],
+      ops: [{ kind: "add", name: "vincu" }],
     });
 
     const { result } = renderDesktopHook(() => useSkillsStatus());
@@ -209,7 +209,7 @@ describe("useSkillsStatus", () => {
     await waitFor(() => {
       expect(result.current.status).toEqual({
         state: "not-installed",
-        ops: [{ kind: "add", name: "paseo" }],
+        ops: [{ kind: "add", name: "vincu" }],
       });
     });
   });
@@ -217,7 +217,7 @@ describe("useSkillsStatus", () => {
   it("isWorking flips while a mutation is in flight", async () => {
     desktopDaemon.getSkillsSnapshot.mockResolvedValue({
       state: "not-installed",
-      ops: [{ kind: "add", name: "paseo" }],
+      ops: [{ kind: "add", name: "vincu" }],
     });
 
     let resolveInstall: ((value: unknown) => void) | null = null;
@@ -259,7 +259,7 @@ describe("useSkillsStatus", () => {
     const error = new Error("Missing IPC handler");
     desktopDaemon.getSkillsSnapshot.mockResolvedValue({
       state: "not-installed",
-      ops: [{ kind: "add", name: "paseo" }],
+      ops: [{ kind: "add", name: "vincu" }],
     });
     desktopDaemon.installSkills.mockRejectedValue(error);
 

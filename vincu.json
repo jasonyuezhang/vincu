@@ -1,0 +1,32 @@
+{
+  "worktree": {
+    "setup": [
+      "npm ci",
+      "node ./scripts/seed-ios-native-cache.mjs",
+      "node ./scripts/seed-worktree-dev-state.mjs",
+      "npm run build:server",
+      "npm run build --workspace=@getvincu/expo-two-way-audio"
+    ]
+  },
+  "scripts": {
+    "daemon": {
+      "type": "service",
+      "command": "VINCU_DEV_MANAGED_HOME=1 VINCU_DEV_ROOT=\"${VINCU_WORKTREE_PATH:-$PWD}\" VINCU_HOME=\"${VINCU_WORKTREE_PATH:-$PWD}/.dev/vincu-home\" VINCU_SKIP_DEV_SERVER_BUILD=1 VINCU_LISTEN=0.0.0.0:${VINCU_PORT:-6768} ./scripts/dev-daemon.sh"
+    },
+    "app": {
+      "type": "service",
+      "command": "VINCU_DEV_MANAGED_HOME=1 VINCU_DEV_ROOT=\"${VINCU_WORKTREE_PATH:-$PWD}\" VINCU_HOME=\"${VINCU_WORKTREE_PATH:-$PWD}/.dev/vincu-home\" VINCU_LISTEN=0.0.0.0:${VINCU_SERVICE_DAEMON_PORT:-6768} VINCU_DEV_DAEMON_ENDPOINT=localhost:${VINCU_SERVICE_DAEMON_PORT:-6768} EXPO_PORT=${VINCU_PORT:-} ./scripts/dev-app.sh"
+    },
+    "desktop": {
+      "type": "service",
+      "command": "VINCU_DEV_MANAGED_HOME=1 VINCU_DEV_ROOT=\"${VINCU_WORKTREE_PATH:-$PWD}\" VINCU_HOME=\"${VINCU_WORKTREE_PATH:-$PWD}/.dev/vincu-home\" VINCU_LISTEN=0.0.0.0:${VINCU_SERVICE_DAEMON_PORT:-6768} VINCU_DEV_DAEMON_ENDPOINT=localhost:${VINCU_SERVICE_DAEMON_PORT:-6768} EXPO_PORT=${VINCU_PORT:-} npm run dev --workspace=@getvincu/desktop"
+    },
+    "ios-simulator": {
+      "type": "service",
+      "command": "VINCU_DEV_MANAGED_HOME=1 VINCU_DEV_ROOT=\"$PWD\" VINCU_HOME=\"$PWD/.dev/vincu-home\" VINCU_LISTEN=0.0.0.0:${VINCU_SERVICE_DAEMON_PORT} VINCU_DEV_DAEMON_ENDPOINT=localhost:${VINCU_SERVICE_DAEMON_PORT} ./scripts/vincu-ios-simulator-service.sh"
+    },
+    "typecheck": {
+      "command": "npm run typecheck"
+    }
+  }
+}

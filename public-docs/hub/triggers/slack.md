@@ -35,10 +35,10 @@ filters:
 Put leading inputs directly after the mention:
 
 ```text
-@Paseo repo=project agent=claude investigate the failed sync
+@Vincu repo=project agent=claude investigate the failed sync
 ```
 
-Hub consumes only declared consecutive headers and passes `investigate the failed sync` as `${{ paseo.prompt }}`. See [Hub workflows](/docs/hub/workflows) for input types, defaults, choices, and rejection behavior.
+Hub consumes only declared consecutive headers and passes `investigate the failed sync` as `${{ vincu.prompt }}`. See [Hub workflows](/docs/hub/workflows) for input types, defaults, choices, and rejection behavior.
 
 ## Replies and workflow shape
 

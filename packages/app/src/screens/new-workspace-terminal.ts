@@ -1,11 +1,11 @@
 import type { normalizeWorkspaceDescriptor } from "@/stores/session-store";
-import type { AgentAttachment } from "@getpaseo/protocol/messages";
+import type { AgentAttachment } from "@getvincu/protocol/messages";
 import type { WorkspaceTabTarget } from "@/workspace-tabs/model";
 import {
   profileTakesPrompt,
   substitutePrompt,
   type SubstitutableCommand,
-} from "@getpaseo/protocol/terminal-profiles";
+} from "@getvincu/protocol/terminal-profiles";
 
 export interface CreatedTerminal {
   terminalId: string;

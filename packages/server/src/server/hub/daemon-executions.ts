@@ -3,13 +3,13 @@ import type {
   AgentStreamEventPayload,
   CreateAgentWorktreeTarget,
   HubExecutionControlAction,
-} from "@getpaseo/protocol/messages";
+} from "@getvincu/protocol/messages";
 
 import type { AgentManager, AgentManagerEvent, ManagedAgent } from "../agent/agent-manager.js";
 import type { McpServerConfig } from "../agent/agent-sdk-types.js";
 import type { AgentStorage, StoredAgentRecord } from "../agent/agent-storage.js";
 import type { BoundCreateAgentCommand } from "../agent/create-agent/create.js";
-import type { CreatePaseoWorktreeWorkflowResult } from "../worktree-session.js";
+import type { CreateVincuWorktreeWorkflowResult } from "../worktree-session.js";
 import type { ActiveWorkspaceRef } from "../workspace-archive-service.js";
 import { buildStoredAgentPayload } from "../agent/agent-projections.js";
 import { serializeAgentSnapshot, serializeAgentStreamEvent } from "../messages.js";
@@ -60,7 +60,7 @@ interface DaemonExecutionsOptions {
   listActiveWorkspaces: () => Promise<ActiveWorkspaceRef[]>;
   archiveWorkspace: (workspaceId: string, requestId: string) => Promise<unknown>;
   cleanupFailedCreate?: (input: {
-    createdWorktree: CreatePaseoWorktreeWorkflowResult | null;
+    createdWorktree: CreateVincuWorktreeWorkflowResult | null;
     createdAgentId: string | null;
   }) => Promise<void>;
 }
@@ -179,7 +179,7 @@ export class DaemonExecutions implements HubExecutionAgents {
     this.requireAuthority(authorityGeneration);
     requireHubMcpNamespace(input.mcpServers);
 
-    let createdWorktree: CreatePaseoWorktreeWorkflowResult | null = null;
+    let createdWorktree: CreateVincuWorktreeWorkflowResult | null = null;
     let createdAgentId: string | null = null;
     let result: Awaited<ReturnType<BoundCreateAgentCommand>>;
     try {
@@ -271,7 +271,7 @@ export class DaemonExecutions implements HubExecutionAgents {
       this.requireAuthority(authorityGeneration, "execution control");
       await this.options.archiveAgent(record.id);
     }
-    if (workspace?.isPaseoOwnedWorktree) {
+    if (workspace?.isVincuOwnedWorktree) {
       this.requireAuthority(authorityGeneration, "execution control");
       await this.options.archiveWorkspace(workspace.workspaceId, input.requestId);
     }
@@ -353,14 +353,14 @@ export class DaemonExecutions implements HubExecutionAgents {
 }
 
 function requireHubMcpNamespace(mcpServers: Record<string, McpServerConfig> | undefined): void {
-  if (mcpServers && Object.hasOwn(mcpServers, "paseo")) {
-    throw new Error('Hub execution MCP server name "paseo" is reserved by the daemon');
+  if (mcpServers && Object.hasOwn(mcpServers, "vincu")) {
+    throw new Error('Hub execution MCP server name "vincu" is reserved by the daemon');
   }
 }
 
 function ownedCreatedWorktree(
-  worktree: CreatePaseoWorktreeWorkflowResult | null,
-): CreatePaseoWorktreeWorkflowResult | null {
+  worktree: CreateVincuWorktreeWorkflowResult | null,
+): CreateVincuWorktreeWorkflowResult | null {
   return worktree?.created === true ? worktree : null;
 }
 

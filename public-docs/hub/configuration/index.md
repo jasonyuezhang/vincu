@@ -14,7 +14,7 @@ A project is configured by one versioned document. The project's **Configuration
 
 A configuration comes from exactly one source:
 
-- **GitHub source**: one repository, the file `.paseo/hub.yml`, on the repository's current default branch.
+- **GitHub source**: one repository, the file `.vincu/hub.yml`, on the repository's current default branch.
 - **Manual source**: edited in the dashboard and saved with **Save and activate**.
 - **CLI/API install**: YAML sent explicitly with an organization API key.
 
@@ -33,16 +33,16 @@ project: my-project
 Then deploy:
 
 ```sh
-PASEO_HUB_URL=https://hub.example.com \
-PASEO_HUB_API_KEY=paseo_pk_... \
-paseo hub deploy
+VINCU_HUB_URL=https://hub.example.com \
+VINCU_HUB_API_KEY=vincu_pk_... \
+vincu hub deploy
 ```
 
-The default path is exactly `.paseo/hub.yml` relative to the current directory. The CLI does not search parent directories or alternate filenames. Use `paseo hub deploy path/to/config.yml` for another file. The bundle root remains the current directory, so partials are always read from `.paseo/partials/` under that directory. `-p, --project <slug>` overrides the file's `project` value without changing the YAML sent to Hub.
+The default path is exactly `.vincu/hub.yml` relative to the current directory. The CLI does not search parent directories or alternate filenames. Use `vincu hub deploy path/to/config.yml` for another file. The bundle root remains the current directory, so partials are always read from `.vincu/partials/` under that directory. `-p, --project <slug>` overrides the file's `project` value without changing the YAML sent to Hub.
 
-For each prompt `include`, the CLI sends one `{ path, content }` entry whose path is relative to `.paseo/partials/`. It sends only files referenced by the main YAML; nested include-looking text inside a partial is not scanned. Missing, unsafe, duplicate, unreadable, non-file, or oversized inputs fail locally before the Hub request. A configuration with only inline prompt blocks sends no `partials` field.
+For each prompt `include`, the CLI sends one `{ path, content }` entry whose path is relative to `.vincu/partials/`. It sends only files referenced by the main YAML; nested include-looking text inside a partial is not scanned. Missing, unsafe, duplicate, unreadable, non-file, or oversized inputs fail locally before the Hub request. A configuration with only inline prompt blocks sends no `partials` field.
 
-Use `--hub <origin>` or `PASEO_HUB_URL` for the Hub origin, and `--api-key <secret>` or `PASEO_HUB_API_KEY` for the organization API key. A flag takes precedence over its environment variable. The key supplies organization scope and needs `configuration:install`. `project` only selects the deployment target; workflows cannot reference it.
+Use `--hub <origin>` or `VINCU_HUB_URL` for the Hub origin, and `--api-key <secret>` or `VINCU_HUB_API_KEY` for the organization API key. A flag takes precedence over its environment variable. The key supplies organization scope and needs `configuration:install`. `project` only selects the deployment target; workflows cannot reference it.
 
 Durable Hub login and credential persistence are not implemented. Supply the origin and API key for each deployment through flags or the current process environment.
 
@@ -50,7 +50,7 @@ Durable Hub login and credential persistence are not implemented. Supply the ori
 
 A push to the default branch of the configuration repository triggers a sync:
 
-1. Hub fetches `.paseo/hub.yml` at that exact commit.
+1. Hub fetches `.vincu/hub.yml` at that exact commit.
 2. It validates the document and resolves every repository, workspace, guild, and daemon it names.
 3. On success the revision becomes active.
 
