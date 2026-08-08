@@ -25,7 +25,9 @@ export async function createProjectPickerFixture(): Promise<ProjectPickerFixture
     fixture: {
       projectPath,
       projectName: path.basename(projectPath),
-      fuzzyQuery: `psodfzt${nonce}`,
+      // Abbreviation of "vincu-desktop-fuzzy-target" (same shape as the old
+      // paseo query: brand prefix + desktop + fuzzy + target).
+      fuzzyQuery: `vindfzt${nonce}`,
     },
     removeDirectory: () => rm(root, { recursive: true, force: true }),
   };

@@ -123,7 +123,9 @@ export async function startIsolatedHostDaemon(
           "--no-audit",
           "--no-fund",
           "--no-package-lock",
-          `@getvincu/server@${options.publishedVersion}`,
+          // Historical published versions still live under @getpaseo until the
+          // npm scope migration publishes matching @getvincu/server tags.
+          `@getpaseo/server@${options.publishedVersion}`,
         ],
         { cwd: publishedPackageRoot, stdio: "ignore" },
       );
