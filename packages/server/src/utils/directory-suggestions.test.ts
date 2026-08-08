@@ -90,7 +90,7 @@ describe("searchDirectoryEntries", () => {
   it("applies result paths and entry kinds as parameters of one search", async () => {
     const directories = await searchDirectoryEntries({
       root: configuredSearchRoot,
-      query: "pso",
+      query: "vin",
       pathFormat: "absolute",
       includeFiles: false,
       includeDirectories: true,
@@ -553,7 +553,7 @@ describe("absolute directory-path configuration", () => {
 
     const results = await searchAbsoluteDirectoryPaths({
       homeDir: symlinkHome,
-      query: "pso",
+      query: "vin",
       limit: 10,
     });
 
@@ -608,13 +608,13 @@ describe("absolute directory-path configuration", () => {
   it("supports home-relative path query syntax", async () => {
     const result = await searchAbsoluteDirectoryPaths({
       homeDir,
-      query: "~/projects/pa",
+      query: "~/projects/p",
       limit: 10,
     });
 
     expect(result.map((entry) => realpathSync.native(entry))).toEqual([
-      realpathSync.native(path.join(homeDir, "projects", "vincu")),
       realpathSync.native(path.join(homeDir, "projects", "playground")),
+      realpathSync.native(path.join(homeDir, "projects", "vincu")),
     ]);
   });
 

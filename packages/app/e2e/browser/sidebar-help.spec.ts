@@ -34,10 +34,25 @@ async function expectExternalPage(
   actionTestID: string,
   expectedUrl: RegExp,
 ): Promise<void> {
+  // Capture the window.open target before navigation. Marketing domains may
+  // NXDOMAIN in CI (chrome-error://), so the final popup URL is not reliable.
+  await page.evaluate(() => {
+    const win = window as Window & { __openedExternalUrl?: string | null };
+    win.__openedExternalUrl = null;
+    const originalOpen = window.open.bind(window);
+    window.open = (url?: string | URL, target?: string, features?: string) => {
+      win.__openedExternalUrl = url == null ? null : String(url);
+      return originalOpen(url, target, features);
+    };
+  });
+
   const popupPromise = page.waitForEvent("popup");
   await page.getByTestId(actionTestID).click();
   const popup = await popupPromise;
-  expect(popup.url()).toMatch(expectedUrl);
+  const openedUrl = await page.evaluate(
+    () => (window as Window & { __openedExternalUrl?: string | null }).__openedExternalUrl ?? null,
+  );
+  expect(openedUrl ?? popup.url()).toMatch(expectedUrl);
   await popup.close();
 }
 

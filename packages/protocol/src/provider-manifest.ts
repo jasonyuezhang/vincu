@@ -227,6 +227,14 @@ export const AGENT_PROVIDER_DEFINITIONS: AgentProviderDefinition[] = [
     modes: COPILOT_MODES,
   },
   {
+    id: "cursor",
+    label: "Cursor",
+    description: "Cursor's coding agent via Agent Client Protocol",
+    // Modes and models come from cursor-agent at runtime.
+    defaultModeId: null,
+    modes: [],
+  },
+  {
     id: "opencode",
     label: "OpenCode",
     description: "Open-source coding assistant with multi-provider model support",

@@ -16,7 +16,7 @@ describe("buildWorkingDirectorySuggestions", () => {
     const results = buildWorkingDirectorySuggestions({
       recommendedPaths: ["/Users/me/projects/vincu-desktop", "/Users/me/documents"],
       serverPaths: ["/Users/me/projects/vincu-plan", "/Users/me/projects/vincu-desktop"],
-      query: "pso",
+      query: "vin",
     });
 
     expect(results).toEqual(["/Users/me/projects/vincu-desktop", "/Users/me/projects/vincu-plan"]);

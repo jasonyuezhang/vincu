@@ -110,15 +110,6 @@ const CATALOG_DATA = [
     command: ["crow-cli", "acp"],
   },
   {
-    id: "cursor",
-    title: "Cursor",
-    description: "Cursor's coding agent",
-    version: "2026.03.30",
-    iconId: "cursor",
-    installLink: "https://docs.cursor.com/en/cli/overview",
-    command: ["cursor-agent", "acp"],
-  },
-  {
     id: "deepagents",
     title: "DeepAgents",
     description: "Batteries-included AI coding and general purpose agent powered by LangChain.",

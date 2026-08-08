@@ -3109,10 +3109,75 @@ export const ProjectCheckoutLiteGitVincuPayloadSchema = z
     worktreeRoot: value.worktreeRoot ?? value.cwd,
   }));
 
+// COMPAT(paseoOwnedWorktreeRename): renamed in v0.3.0 (paseo→vincu). Remove these
+// branches after 2027-02-08 once daemon floor >= v0.3.0.
+const ProjectCheckoutLiteNotGitPaseoCompatPayloadSchema = z
+  .object({
+    cwd: z.string(),
+    isGit: z.literal(false),
+    currentBranch: z.null(),
+    remoteUrl: z.null(),
+    worktreeRoot: z.null().optional(),
+    isPaseoOwnedWorktree: z.literal(false),
+    mainRepoRoot: z.null(),
+  })
+  .transform((value) => ({
+    cwd: value.cwd,
+    isGit: false as const,
+    currentBranch: null,
+    remoteUrl: null,
+    worktreeRoot: null,
+    isVincuOwnedWorktree: false as const,
+    mainRepoRoot: null,
+  }));
+
+const ProjectCheckoutLiteGitNonPaseoCompatPayloadSchema = z
+  .object({
+    cwd: z.string(),
+    isGit: z.literal(true),
+    currentBranch: z.string().nullable(),
+    remoteUrl: z.string().nullable(),
+    worktreeRoot: z.string().optional(),
+    isPaseoOwnedWorktree: z.literal(false),
+    mainRepoRoot: z.string().nullable().optional().default(null),
+  })
+  .transform((value) => ({
+    cwd: value.cwd,
+    isGit: true as const,
+    currentBranch: value.currentBranch,
+    remoteUrl: value.remoteUrl,
+    worktreeRoot: value.worktreeRoot ?? value.cwd,
+    isVincuOwnedWorktree: false as const,
+    mainRepoRoot: value.mainRepoRoot ?? null,
+  }));
+
+const ProjectCheckoutLiteGitPaseoCompatPayloadSchema = z
+  .object({
+    cwd: z.string(),
+    isGit: z.literal(true),
+    currentBranch: z.string().nullable(),
+    remoteUrl: z.string().nullable(),
+    worktreeRoot: z.string().optional(),
+    isPaseoOwnedWorktree: z.literal(true),
+    mainRepoRoot: z.string(),
+  })
+  .transform((value) => ({
+    cwd: value.cwd,
+    isGit: true as const,
+    currentBranch: value.currentBranch,
+    remoteUrl: value.remoteUrl,
+    worktreeRoot: value.worktreeRoot ?? value.cwd,
+    isVincuOwnedWorktree: true as const,
+    mainRepoRoot: value.mainRepoRoot,
+  }));
+
 export const ProjectCheckoutLitePayloadSchema = z.union([
   ProjectCheckoutLiteNotGitPayloadSchema,
   ProjectCheckoutLiteGitNonVincuPayloadSchema,
   ProjectCheckoutLiteGitVincuPayloadSchema,
+  ProjectCheckoutLiteNotGitPaseoCompatPayloadSchema,
+  ProjectCheckoutLiteGitNonPaseoCompatPayloadSchema,
+  ProjectCheckoutLiteGitPaseoCompatPayloadSchema,
 ]);
 
 export const ProjectPlacementPayloadSchema = z.object({
@@ -3144,6 +3209,8 @@ const WorkspaceGitRuntimePayloadSchema = z
     currentBranch: z.string().nullable().optional(),
     remoteUrl: z.string().nullable().optional(),
     isVincuOwnedWorktree: z.boolean().optional(),
+    // COMPAT(paseoOwnedWorktreeRename): renamed in v0.3.0, remove after 2027-02-08.
+    isPaseoOwnedWorktree: z.boolean().optional(),
     isDirty: z.boolean().nullable().optional(),
     aheadBehind: z
       .object({
@@ -4098,7 +4165,9 @@ const CheckoutStatusCommonSchema = z.object({
 
 const CheckoutStatusNotGitSchema = CheckoutStatusCommonSchema.extend({
   isGit: z.literal(false),
-  isVincuOwnedWorktree: z.literal(false),
+  isVincuOwnedWorktree: z.literal(false).optional(),
+  // COMPAT(paseoOwnedWorktreeRename): renamed in v0.3.0, remove after 2027-02-08.
+  isPaseoOwnedWorktree: z.literal(false).optional(),
   repoRoot: z.null(),
   currentBranch: z.null(),
   isDirty: z.null(),
@@ -4112,7 +4181,9 @@ const CheckoutStatusNotGitSchema = CheckoutStatusCommonSchema.extend({
 
 const CheckoutStatusGitNonVincuSchema = CheckoutStatusCommonSchema.extend({
   isGit: z.literal(true),
-  isVincuOwnedWorktree: z.literal(false),
+  isVincuOwnedWorktree: z.literal(false).optional(),
+  // COMPAT(paseoOwnedWorktreeRename): renamed in v0.3.0, remove after 2027-02-08.
+  isPaseoOwnedWorktree: z.literal(false).optional(),
   repoRoot: z.string(),
   mainRepoRoot: z.string().nullable().optional().default(null),
   currentBranch: z.string().nullable(),
@@ -4127,7 +4198,9 @@ const CheckoutStatusGitNonVincuSchema = CheckoutStatusCommonSchema.extend({
 
 const CheckoutStatusGitVincuSchema = CheckoutStatusCommonSchema.extend({
   isGit: z.literal(true),
-  isVincuOwnedWorktree: z.literal(true),
+  isVincuOwnedWorktree: z.literal(true).optional(),
+  // COMPAT(paseoOwnedWorktreeRename): renamed in v0.3.0, remove after 2027-02-08.
+  isPaseoOwnedWorktree: z.literal(true).optional(),
   repoRoot: z.string(),
   mainRepoRoot: z.string(),
   currentBranch: z.string().nullable(),
