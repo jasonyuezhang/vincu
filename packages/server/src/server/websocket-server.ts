@@ -77,6 +77,9 @@ import {
   type WebSocketRuntimeDiagnosticSnapshot,
 } from "./websocket/runtime-metrics.js";
 import { ProviderUsageService } from "../services/quota-fetcher/service.js";
+import { ClaudeQuotaProvider } from "../services/quota-fetcher/providers/claude.js";
+import { CodexQuotaProvider } from "../services/quota-fetcher/providers/codex.js";
+import { listAccountUsageHomes, ProviderAccountsService } from "./provider-accounts/service.js";
 import { getProcessMemoryDiagnostics, getProcessUptimeSeconds } from "./process-diagnostics.js";
 import {
   CLIENT_SHUTDOWN_RPC_REASON,
@@ -554,6 +557,7 @@ export class VoiceAssistantWebSocketServer {
   private unsubscribeSpeechReadiness: (() => void) | null = null;
   private unsubscribeDaemonConfigChange: (() => void) | null = null;
   private readonly providerUsageService: ProviderUsageService;
+  private readonly providerAccountsService: ProviderAccountsService;
   private unsubscribeTerminalActivity: (() => void) | null = null;
   private readonly browserToolsBroker: BrowserToolsBroker | null;
   private readonly hubRelationships: HubRelationshipManagement | null;
@@ -686,8 +690,36 @@ export class VoiceAssistantWebSocketServer {
       });
     });
 
+    this.providerAccountsService = new ProviderAccountsService({
+      vincuHome: this.vincuHome,
+      daemonConfigStore: this.daemonConfigStore,
+      logger: this.logger,
+    });
     this.providerUsageService = new ProviderUsageService({
       logger: this.logger,
+      getExtraFetchers: () =>
+        listAccountUsageHomes(
+          this.vincuHome,
+          this.daemonConfigStore.get().providers as
+            | Record<string, import("./agent/provider-launch-config.js").ProviderOverride>
+            | undefined,
+        ).map((account) => {
+          if (account.base === "claude") {
+            return new ClaudeQuotaProvider({
+              logger: this.logger,
+              providerId: account.providerId,
+              displayName: account.label,
+              claudeHome: account.homePath,
+              claudeKeychainReader: async () => null,
+            });
+          }
+          return new CodexQuotaProvider({
+            logger: this.logger,
+            providerId: account.providerId,
+            displayName: account.label,
+            codexHome: account.homePath,
+          });
+        }),
     });
 
     this.wss = this.createWebSocketServer(server, wsConfig, auth);
@@ -1347,6 +1379,7 @@ export class VoiceAssistantWebSocketServer {
       terminalManager: this.terminalManager,
       providerSnapshotManager: this.providerSnapshotManager,
       providerUsageService: this.providerUsageService,
+      providerAccountsService: this.providerAccountsService,
       hubExecutionAgents: options.hubExecutionAgents,
       hubRelationships: options.hubRelationships,
       serviceProxy: this.serviceProxy ?? undefined,
@@ -1593,6 +1626,8 @@ export class VoiceAssistantWebSocketServer {
         commitBaseClassification: true,
         // COMPAT(providerRemoval): added in v0.1.105, drop the gate when floor >= v0.1.105.
         providerRemoval: true,
+        // COMPAT(providerAccounts): added in v0.3.0, remove gate after 2027-02-07.
+        providerAccounts: true,
         // COMPAT(importSessionWorkspaceTarget): added in v0.1.110, remove gate after 2027-01-16.
         importSessionWorkspaceTarget: true,
         // COMPAT(forgeProviders): added in v0.1.106, drop the gate when daemon floor >= v0.1.106.

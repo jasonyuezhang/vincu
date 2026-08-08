@@ -160,6 +160,7 @@ import {
 } from "./session/checkout/git-metadata-generator.js";
 import { ChatScheduleLoopSession } from "./session/chat/chat-schedule-loop-session.js";
 import { ProviderCatalogSession } from "./session/provider/provider-catalog-session.js";
+import type { ProviderAccountsService } from "./provider-accounts/service.js";
 import { WorkspaceFilesSession } from "./session/files/workspace-files-session.js";
 import { AgentConfigSession } from "./session/agent-config/agent-config-session.js";
 import { ProjectConfigSession } from "./session/project-config/project-config-session.js";
@@ -459,6 +460,7 @@ export interface SessionOptions {
   terminalManager: TerminalManager | null;
   providerSnapshotManager: ProviderSnapshotManager;
   providerUsageService: ProviderUsageService;
+  providerAccountsService: ProviderAccountsService;
   hubExecutionAgents?: HubExecutionAgents;
   hubRelationships?: HubRelationshipManagement;
   serviceProxy?: ServiceProxySubsystem;
@@ -709,6 +711,7 @@ export class Session {
       terminalManager,
       providerSnapshotManager,
       providerUsageService,
+      providerAccountsService,
       serviceProxy,
       scriptRuntimeStore,
       workspaceSetupSnapshots,
@@ -856,6 +859,7 @@ export class Session {
       },
       providerSnapshotManager,
       providerUsageService,
+      providerAccountsService,
       logger: this.sessionLogger,
     });
     this.agentConfigSession = new AgentConfigSession({
@@ -2224,6 +2228,16 @@ export class Session {
         return this.providerCatalogSession.handleProviderDiagnosticRequest(msg);
       case "provider.usage.list.request":
         return this.providerCatalogSession.handleProviderUsageListRequest(msg);
+      case "providers.accounts.create.request":
+        return this.providerCatalogSession.handleProvidersAccountsCreateRequest(msg);
+      case "providers.accounts.login.request":
+        return this.providerCatalogSession.handleProvidersAccountsLoginRequest(msg);
+      case "providers.accounts.status.request":
+        return this.providerCatalogSession.handleProvidersAccountsStatusRequest(msg);
+      case "providers.accounts.logout.request":
+        return this.providerCatalogSession.handleProvidersAccountsLogoutRequest(msg);
+      case "providers.accounts.remove.request":
+        return this.providerCatalogSession.handleProvidersAccountsRemoveRequest(msg);
       default:
         return undefined;
     }

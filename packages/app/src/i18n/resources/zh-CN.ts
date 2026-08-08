@@ -2172,10 +2172,40 @@ export const zhCN: TranslationResources = {
       loading: "正在加载...",
       addErrorTitle: "无法添加 Provider",
       updateErrorTitle: "无法更新 Provider",
+      accounts: {
+        title: "Accounts",
+        addClaude: "Add Claude account",
+        addCodex: "Add Codex account",
+        adding: "Adding...",
+        login: "Log in",
+        loggingIn: "Starting login...",
+        loginStartedTitle: "Enter this code on the login page",
+        loginOpenLabel: "Open login page",
+        loginCopyCode: "Copy code",
+        loginCodeLabel: "Device code {{code}}",
+        loginCodeCopiedToast: "{{code}} copied — paste it on the login page",
+        loginCodeMessage:
+          "Your device code is:\n\n{{code}}\n\nIt was copied to the clipboard. Open the login page and paste the code there (not in a terminal).",
+        loginUrlMessage:
+          "Open the login page to finish sign-in. Keep this window nearby if the page asks for a code.",
+        loginErrorTitle: "Unable to start login",
+        createErrorTitle: "Unable to create account",
+        hostUpdateRequired: "Update this host to manage Claude and Codex accounts in Vincu.",
+        signInForEmail: "Sign in to show email",
+        actionsMenu: "{{name}} account actions",
+        loggingOut: "Logging out...",
+        logoutConfirmTitle: "Log out of {{name}}?",
+        logoutConfirmMessage:
+          "This signs out of the account on this host. The account entry stays so you can sign in again.",
+        removeConfirmMessage:
+          "This logs out, then removes the account profile and its isolated login home. It cannot be undone.",
+      },
       actions: {
-        menu: "{{name}} actions",
-        remove: "Remove provider",
+        remove: "Remove",
         removing: "Removing...",
+        login: "Log in",
+        reconnect: "Reconnect",
+        logout: "Log out",
       },
       remove: {
         confirmTitle: "Remove {{name}}?",

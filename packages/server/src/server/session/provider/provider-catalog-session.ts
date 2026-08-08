@@ -19,6 +19,7 @@ import {
 } from "../../agent/agent-sdk-types.js";
 import type { ProviderAvailability } from "../../agent/agent-manager.js";
 import type { ProviderUsageService } from "../../../services/quota-fetcher/service.js";
+import type { ProviderAccountsService } from "../../provider-accounts/service.js";
 import { expandTilde } from "../../../utils/path.js";
 
 // COMPAT(customModeIcons): the only mode icons known to clients before v0.1.84. Any
@@ -54,6 +55,7 @@ export interface ProviderCatalogSessionOptions {
   host: ProviderCatalogSessionHost;
   providerSnapshotManager: ProviderSnapshotManager;
   providerUsageService: ProviderUsageService;
+  providerAccountsService: ProviderAccountsService;
   logger: pino.Logger;
 }
 
@@ -81,6 +83,7 @@ export class ProviderCatalogSession {
   private readonly host: ProviderCatalogSessionHost;
   private readonly providerSnapshotManager: ProviderSnapshotManager;
   private readonly providerUsageService: ProviderUsageService;
+  private readonly providerAccountsService: ProviderAccountsService;
   private readonly logger: pino.Logger;
   private unsubscribeSnapshotEvents: (() => void) | null = null;
 
@@ -88,6 +91,7 @@ export class ProviderCatalogSession {
     this.host = options.host;
     this.providerSnapshotManager = options.providerSnapshotManager;
     this.providerUsageService = options.providerUsageService;
+    this.providerAccountsService = options.providerAccountsService;
     this.logger = options.logger;
   }
 
@@ -502,6 +506,147 @@ export class ProviderCatalogSession {
         },
       });
     }
+  }
+
+  async handleProvidersAccountsCreateRequest(
+    msg: Extract<SessionInboundMessage, { type: "providers.accounts.create.request" }>,
+  ): Promise<void> {
+    const result = await this.providerAccountsService.createAccount({
+      base: msg.base,
+      label: msg.label,
+    });
+    if ("error" in result) {
+      this.host.emit({
+        type: "providers.accounts.create.response",
+        payload: {
+          requestId: msg.requestId,
+          providerId: null,
+          label: null,
+          base: null,
+          homePath: null,
+          error: result.error,
+        },
+      });
+      return;
+    }
+    this.host.emit({
+      type: "providers.accounts.create.response",
+      payload: {
+        requestId: msg.requestId,
+        providerId: result.account.providerId,
+        label: result.account.label,
+        base: result.account.base,
+        homePath: result.account.homePath,
+        error: null,
+      },
+    });
+  }
+
+  async handleProvidersAccountsLoginRequest(
+    msg: Extract<SessionInboundMessage, { type: "providers.accounts.login.request" }>,
+  ): Promise<void> {
+    const result = await this.providerAccountsService.startLogin(msg.providerId);
+    if ("error" in result) {
+      this.host.emit({
+        type: "providers.accounts.login.response",
+        payload: {
+          requestId: msg.requestId,
+          providerId: result.providerId,
+          started: false,
+          message: null,
+          loginUrl: null,
+          loginCode: null,
+          error: result.error,
+        },
+      });
+      return;
+    }
+    this.host.emit({
+      type: "providers.accounts.login.response",
+      payload: {
+        requestId: msg.requestId,
+        providerId: result.providerId,
+        started: result.started,
+        message: result.message,
+        loginUrl: result.loginUrl,
+        loginCode: result.loginCode,
+        error: null,
+      },
+    });
+  }
+
+  async handleProvidersAccountsStatusRequest(
+    msg: Extract<SessionInboundMessage, { type: "providers.accounts.status.request" }>,
+  ): Promise<void> {
+    const result = await this.providerAccountsService.getAccountStatus(msg.providerId);
+    this.host.emit({
+      type: "providers.accounts.status.response",
+      payload: {
+        requestId: msg.requestId,
+        providerId: result.providerId,
+        base: result.base,
+        label: result.label,
+        homePath: result.homePath,
+        authStatus: result.authStatus,
+        email: result.email,
+        detail: result.detail,
+        error: result.error,
+      },
+    });
+  }
+
+  async handleProvidersAccountsLogoutRequest(
+    msg: Extract<SessionInboundMessage, { type: "providers.accounts.logout.request" }>,
+  ): Promise<void> {
+    const result = await this.providerAccountsService.logoutAccount(msg.providerId);
+    if ("error" in result) {
+      this.host.emit({
+        type: "providers.accounts.logout.response",
+        payload: {
+          requestId: msg.requestId,
+          providerId: result.providerId,
+          loggedOut: false,
+          error: result.error,
+        },
+      });
+      return;
+    }
+    this.host.emit({
+      type: "providers.accounts.logout.response",
+      payload: {
+        requestId: msg.requestId,
+        providerId: result.providerId,
+        loggedOut: result.loggedOut,
+        error: null,
+      },
+    });
+  }
+
+  async handleProvidersAccountsRemoveRequest(
+    msg: Extract<SessionInboundMessage, { type: "providers.accounts.remove.request" }>,
+  ): Promise<void> {
+    const result = await this.providerAccountsService.removeAccount(msg.providerId);
+    if ("error" in result) {
+      this.host.emit({
+        type: "providers.accounts.remove.response",
+        payload: {
+          requestId: msg.requestId,
+          providerId: result.providerId,
+          removed: false,
+          error: result.error,
+        },
+      });
+      return;
+    }
+    this.host.emit({
+      type: "providers.accounts.remove.response",
+      payload: {
+        requestId: msg.requestId,
+        providerId: result.providerId,
+        removed: result.removed,
+        error: null,
+      },
+    });
   }
 }
 

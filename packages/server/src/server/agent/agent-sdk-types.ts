@@ -121,6 +121,8 @@ export interface ProviderSnapshotEntry {
   label?: string;
   description?: string;
   defaultModeId?: string | null;
+  accountEmail?: string;
+  accountBase?: "claude" | "codex";
 }
 
 export interface AgentCreateConfigParent {

@@ -67,6 +67,30 @@ function makeSubsystem(options: MakeOptions = {}) {
     host,
     providerSnapshotManager,
     providerUsageService: createStub<ProviderUsageService>(options.usage ?? {}),
+    providerAccountsService: createStub({
+      createAccount: async () => ({
+        error: { code: "unsupported", message: "not stubbed" },
+      }),
+      startLogin: async () => ({
+        providerId: "unused",
+        error: { code: "unsupported", message: "not stubbed" },
+      }),
+      getAccountStatus: async () => ({
+        providerId: "unused",
+        base: null,
+        label: null,
+        homePath: null,
+        authStatus: "unknown" as const,
+        email: null,
+        detail: null,
+        error: { code: "unsupported", message: "not stubbed" },
+      }),
+      removeAccount: async () => ({
+        providerId: "unused",
+        error: { code: "unsupported", message: "not stubbed" },
+      }),
+      listAccounts: () => [],
+    }),
     logger: pino({ level: "silent" }),
   });
   function pushSnapshotChange(

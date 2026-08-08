@@ -28,6 +28,8 @@ import { Composer } from "@/composer";
 import { getActiveMessageSubmissions } from "@/composer/submission/model";
 import { RewindComposerRestoreProvider } from "@/components/rewind/composer-restore";
 import { getProviderIcon } from "@/components/provider-icons";
+import { useProvidersSnapshot } from "@/hooks/use-providers-snapshot";
+import { formatProviderAccountSubtitle } from "@/utils/provider-definitions";
 import {
   ToastViewport,
   useToastHost,
@@ -338,11 +340,22 @@ function useAgentPanelDescriptor(
   const provider = descriptorState.provider;
   const label = resolveWorkspaceAgentTabLabel(descriptorState.title);
   const icon = getProviderIcon(provider);
+  const { entries: providerEntries } = useProvidersSnapshot(context.serverId);
+  const providerSubtitle = formatProviderAccountSubtitle({
+    provider,
+    snapshotEntries: providerEntries,
+    suffix: "agent",
+  });
+  // Fallback when snapshot hasn't loaded yet (title-case the provider id).
+  const resolvedProviderSubtitle =
+    providerEntries?.some((entry) => entry.provider === provider) === true
+      ? providerSubtitle
+      : `${formatProviderLabel(provider)} agent`;
 
   return {
     label: label ?? "",
-    subtitle: `${formatProviderLabel(provider)} agent`,
-    tooltip: label ?? `${formatProviderLabel(provider)} agent`,
+    subtitle: resolvedProviderSubtitle,
+    tooltip: label ?? resolvedProviderSubtitle,
     titleState: label ? "ready" : "loading",
     icon,
     statusBucket: descriptorState.status
