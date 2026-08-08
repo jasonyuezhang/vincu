@@ -574,6 +574,66 @@ test("OMP can be enabled without custom provider boilerplate", () => {
   expect(registry.omp.enabled).toBe(true);
 });
 
+test("DeepSeek is a disabled built-in that wraps Claude with V4 models", async () => {
+  const defaultRegistry = buildProviderRegistry(logger);
+  expect(defaultRegistry.deepseek.enabled).toBe(false);
+
+  const previousDeepSeekKey = process.env.DEEPSEEK_API_KEY;
+  const previousAnthropicToken = process.env.ANTHROPIC_AUTH_TOKEN;
+  delete process.env.DEEPSEEK_API_KEY;
+  delete process.env.ANTHROPIC_AUTH_TOKEN;
+  try {
+    const withoutKey = buildProviderRegistry(logger, {
+      providerOverrides: {
+        deepseek: { enabled: true },
+      },
+    });
+    const unavailable = withoutKey.deepseek.createClient(logger);
+    expect(unavailable.provider).toBe("deepseek");
+    expect(await unavailable.isAvailable()).toBe(false);
+    const diagnostic = await unavailable.getDiagnostic?.();
+    expect(diagnostic?.diagnostic).toContain("DEEPSEEK_API_KEY");
+
+    const registry = buildProviderRegistry(logger, {
+      providerOverrides: {
+        deepseek: {
+          enabled: true,
+          env: { DEEPSEEK_API_KEY: "sk-deepseek-test" },
+        },
+      },
+    });
+
+    expect(registry.deepseek).toMatchObject({
+      id: "deepseek",
+      label: "DeepSeek",
+      enabled: true,
+      derivedFromProviderId: null,
+    });
+
+    const client = registry.deepseek.createClient(logger);
+    expect(client.provider).toBe("deepseek");
+
+    const catalog = await registry.deepseek.fetchCatalog({ scope: "global", force: true });
+    expect(catalog.models.map((model) => model.id)).toEqual([
+      "deepseek-v4-pro",
+      "deepseek-v4-flash",
+    ]);
+    expect(catalog.models.find((model) => model.isDefault)?.id).toBe("deepseek-v4-pro");
+    expect(catalog.models.every((model) => model.provider === "deepseek")).toBe(true);
+  } finally {
+    if (previousDeepSeekKey === undefined) {
+      delete process.env.DEEPSEEK_API_KEY;
+    } else {
+      process.env.DEEPSEEK_API_KEY = previousDeepSeekKey;
+    }
+    if (previousAnthropicToken === undefined) {
+      delete process.env.ANTHROPIC_AUTH_TOKEN;
+    } else {
+      process.env.ANTHROPIC_AUTH_TOKEN = previousAnthropicToken;
+    }
+  }
+});
+
 test("new provider extending claude appears in registry", () => {
   const registry = buildProviderRegistry(logger, {
     providerOverrides: {
@@ -946,16 +1006,28 @@ test("extension inherits base override — override claude command, zai extends 
     },
   });
 
-  expect(mockState.constructorArgs.claude).toHaveLength(2);
-  expect(
-    mockState.constructorArgs.claude.every((entry) => {
-      const command: { argv?: string[] } | undefined =
-        typeof entry.runtimeSettings === "object" && entry.runtimeSettings !== null
-          ? Reflect.get(entry.runtimeSettings, "command")
-          : undefined;
-      return command?.argv?.[0] === "/opt/custom-claude";
-    }),
-  ).toBe(true);
+  const withCustomCommand = mockState.constructorArgs.claude.filter((entry) => {
+    const command: { argv?: string[] } | undefined =
+      typeof entry.runtimeSettings === "object" && entry.runtimeSettings !== null
+        ? Reflect.get(entry.runtimeSettings, "command")
+        : undefined;
+    return command?.argv?.[0] === "/opt/custom-claude";
+  });
+  expect(withCustomCommand).toHaveLength(2);
+
+  const deepseekArgs = mockState.constructorArgs.claude.find((entry) => {
+    const env: Record<string, string> | undefined =
+      typeof entry.runtimeSettings === "object" && entry.runtimeSettings !== null
+        ? Reflect.get(entry.runtimeSettings, "env")
+        : undefined;
+    return env?.ANTHROPIC_BASE_URL === "https://api.deepseek.com/anthropic";
+  });
+  expect(deepseekArgs).toBeDefined();
+  const deepseekCommand: { argv?: string[] } | undefined =
+    typeof deepseekArgs?.runtimeSettings === "object" && deepseekArgs.runtimeSettings !== null
+      ? Reflect.get(deepseekArgs.runtimeSettings, "command")
+      : undefined;
+  expect(deepseekCommand?.argv?.[0]).not.toBe("/opt/custom-claude");
 });
 
 describe("model merging", () => {

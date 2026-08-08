@@ -22,6 +22,7 @@ Provider IDs must be lowercase alphanumeric with hyphens (`/^[a-z][a-z0-9-]*$/`)
 ## Table of Contents
 
 - [Extending a built-in provider](#extending-a-built-in-provider)
+- [DeepSeek V4 API](#deepseek-v4-api)
 - [Z.AI (Zhipu) coding plan](#zai-zhipu-coding-plan)
 - [Alibaba Cloud (Qwen) coding plan](#alibaba-cloud-qwen-coding-plan)
 - [Codex with a custom OpenAI-compatible endpoint](#codex-with-a-custom-openai-compatible-endpoint)
@@ -35,7 +36,7 @@ Provider IDs must be lowercase alphanumeric with hyphens (`/^[a-z][a-z0-9-]*$/`)
 
 ## Extending a built-in provider
 
-Use `extends` to create a new provider entry that inherits from a built-in provider (claude, codex, copilot, cursor, opencode, pi, omp). The new provider gets its own entry in the provider list, with its own label, environment, and model definitions.
+Use `extends` to create a new provider entry that inherits from a built-in provider (claude, codex, copilot, cursor, opencode, pi, omp, deepseek). The new provider gets its own entry in the provider list, with its own label, environment, and model definitions.
 
 ```json
 {
@@ -238,6 +239,55 @@ requires_openai_auth = false
 - Set `models` explicitly. Custom endpoints expose their own model IDs (`anthropic/claude-opus-4-7`, `qwen/qwen3-coder`, `local/llama`, etc.), and Vincu does not discover them automatically for Codex.
 - To run multiple endpoints side-by-side, define multiple entries that each extend `"codex"` with different IDs, labels, and env. Each appears as its own provider in the app.
 - If you only want to override the binary (e.g. a nightly Codex build) without changing the endpoint, omit `OPENAI_BASE_URL` and use `command` instead — see [Custom binary for a provider](#custom-binary-for-a-provider).
+
+---
+
+## DeepSeek V4 API
+
+DeepSeek ships an Anthropic-compatible API that Claude Code can use. Vincu includes a first-class **DeepSeek** builtin provider (disabled by default) that wraps Claude Code with DeepSeek’s endpoint and V4 models.
+
+This is different from [CodeWhale](https://codewhale.net/) in the ACP catalog, which is a separate DeepSeek-oriented coding agent.
+
+### Setup
+
+1. Install [Claude Code](https://docs.anthropic.com/en/docs/claude-code) on the host (`claude` on `PATH`)
+2. Create an API key at [platform.deepseek.com](https://platform.deepseek.com)
+3. In Vincu: **Host → Providers → DeepSeek** → enable the provider
+4. Set the key on the host, either:
+   - Export `DEEPSEEK_API_KEY` (or `ANTHROPIC_AUTH_TOKEN`) in the daemon environment, or
+   - Patch provider env in `config.json`:
+
+```json
+{
+  "agents": {
+    "providers": {
+      "deepseek": {
+        "enabled": true,
+        "env": {
+          "DEEPSEEK_API_KEY": "<your-deepseek-api-key>"
+        }
+      }
+    }
+  }
+}
+```
+
+Vincu maps that key to `ANTHROPIC_AUTH_TOKEN` and sets `ANTHROPIC_BASE_URL` to `https://api.deepseek.com/anthropic`. `WebSearch` is disallowed automatically (Anthropic-only server tool).
+
+### Models
+
+| Model               | Role                          |
+| ------------------- | ----------------------------- |
+| `deepseek-v4-pro`   | Default frontier coding model |
+| `deepseek-v4-flash` | Faster / higher-volume model  |
+
+Optional Claude Code aliases such as `deepseek-v4-pro[1m]` can still be set via `ANTHROPIC_MODEL` in provider `env` if you need DeepSeek’s 1M-context naming; the picker uses the plain API ids above.
+
+### Notes
+
+- Requires the `claude` binary — DeepSeek is the model backend, Claude Code is the agent runtime
+- Official agent integration guide: [api-docs.deepseek.com/guides/coding_agents](https://api-docs.deepseek.com/guides/coding_agents)
+- OpenCode users can also `/connect` DeepSeek inside OpenCode; that path is separate from this builtin
 
 ---
 
@@ -723,7 +773,7 @@ Use `disallowedTools` to disable unsupported tools:
 
 ### Valid `extends` values
 
-Built-in providers: `claude`, `codex`, `copilot`, `cursor`, `opencode`, `pi`, `omp`
+Built-in providers: `claude`, `codex`, `copilot`, `cursor`, `deepseek`, `opencode`, `pi`, `omp`
 
 Special value: `acp` — creates a generic ACP provider (requires `command`)
 
