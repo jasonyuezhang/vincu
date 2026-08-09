@@ -1801,6 +1801,14 @@ export const fr: TranslationResources = {
           external: "Navigateur externe",
         },
       },
+      openLinks: {
+        label: "Ouvrir les liens",
+        description: "Où s'ouvrent les liens des chats, fichiers et terminaux",
+        options: {
+          inApp: "Dans Vincu",
+          external: "Navigateur externe",
+        },
+      },
       terminalScrollback: {
         label: "DéfilementTerminal",
         description: "Lignes conservées dans le tampon du terminal intégré",

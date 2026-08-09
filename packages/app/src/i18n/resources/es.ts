@@ -1798,6 +1798,14 @@ export const es: TranslationResources = {
           external: "Navegador externo",
         },
       },
+      openLinks: {
+        label: "Abrir enlaces",
+        description: "Dónde se abren los enlaces de chats, archivos y terminales",
+        options: {
+          inApp: "En Vincu",
+          external: "Navegador externo",
+        },
+      },
       terminalScrollback: {
         label: "Historial de terminal",
         description: "Líneas mantenidas en el búfer de terminal incorporado",

@@ -1752,6 +1752,14 @@ export const ar: TranslationResources = {
           external: "متصفح خارجي",
         },
       },
+      openLinks: {
+        label: "فتح الروابط",
+        description: "مكان فتح الروابط من الدردشات والملفات والمحطات الطرفية",
+        options: {
+          inApp: "في Vincu",
+          external: "متصفح خارجي",
+        },
+      },
       terminalScrollback: {
         label: "التمرير Terminal",
         description: "يتم الاحتفاظ بالخطوط في المخزن المؤقت الطرفي المدمج",

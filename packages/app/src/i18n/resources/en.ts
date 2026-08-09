@@ -1762,6 +1762,14 @@ export const en = {
           external: "External browser",
         },
       },
+      openLinks: {
+        label: "Open links",
+        description: "Where links in chats, files, and terminals open",
+        options: {
+          inApp: "In Vincu",
+          external: "External browser",
+        },
+      },
       terminalScrollback: {
         label: "Terminal scrollback",
         description: "Lines kept in the built-in terminal buffer",
