@@ -19,6 +19,7 @@ import {
   type PressableStateCallbackType,
 } from "react-native";
 import { StyleSheet, useUnistyles, withUnistyles } from "react-native-unistyles";
+import { BUILTIN_PROVIDER_IDS } from "@getvincu/protocol/provider-manifest";
 import { useIsCompactFormFactor } from "@/constants/layout";
 import { isNative } from "@/constants/platform";
 import { settingsStyles } from "@/styles/settings";
@@ -1152,12 +1153,26 @@ export function ProvidersSection({ serverId }: ProvidersSectionProps) {
       ) {
         return;
       }
+      // Only patch providers the daemon can persist: builtins and ids that already
+      // have a config entry. Runtime-only providers (dev mock providers) have no
+      // config entry, and creating one with just `order` fails persisted-config
+      // validation ("custom provider must declare extends/label"), which would
+      // reject the whole patch.
+      const persistableIds = new Set<string>([
+        ...BUILTIN_PROVIDER_IDS,
+        ...Object.keys(config?.providers ?? {}),
+      ]);
+      const providers = Object.fromEntries(
+        orderedIds
+          .filter((providerId) => persistableIds.has(providerId))
+          .map((providerId, order) => [providerId, { order }]),
+      );
+      if (Object.keys(providers).length === 0) {
+        return;
+      }
       // Keep the list in the dropped order while patchConfig + snapshot catch up.
       // Drag state clears before those updates, so without this the row snaps back.
       setOptimisticOrderIds(orderedIds);
-      const providers = Object.fromEntries(
-        orderedIds.map((providerId, order) => [providerId, { order }]),
-      );
       void patchConfig({ providers }).catch((error: unknown) => {
         setOptimisticOrderIds(null);
         Alert.alert(
@@ -1166,7 +1181,7 @@ export function ProvidersSection({ serverId }: ProvidersSectionProps) {
         );
       });
     },
-    [patchConfig, providerDefinitions, t],
+    [config?.providers, patchConfig, providerDefinitions, t],
   );
 
   const handleRemoveProvider = useCallback(
