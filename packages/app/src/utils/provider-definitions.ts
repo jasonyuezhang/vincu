@@ -40,6 +40,25 @@ export function resolveProviderLabel(
   return snapshotEntries?.find((entry) => entry.provider === provider)?.label ?? provider;
 }
 
+export function resolveProviderAccountEmail(
+  provider: string,
+  snapshotEntries: ProviderSnapshotEntry[] | undefined,
+): string | null {
+  const email = snapshotEntries?.find((entry) => entry.provider === provider)?.accountEmail;
+  return typeof email === "string" && email.trim().length > 0 ? email.trim() : null;
+}
+
+export function formatProviderAccountSubtitle(options: {
+  provider: string;
+  snapshotEntries: ProviderSnapshotEntry[] | undefined;
+  suffix?: string;
+}): string {
+  const label = resolveProviderLabel(options.provider, options.snapshotEntries);
+  const email = resolveProviderAccountEmail(options.provider, options.snapshotEntries);
+  const base = email ? `${label} · ${email}` : label;
+  return options.suffix ? `${base} ${options.suffix}` : base;
+}
+
 export function resolveProviderDefinition(
   provider: string,
   snapshotEntries: ProviderSnapshotEntry[] | undefined,

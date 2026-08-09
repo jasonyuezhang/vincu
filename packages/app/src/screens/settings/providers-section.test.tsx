@@ -45,6 +45,7 @@ const { theme, snapshotState, configState, patchConfigMock, openProviderSettings
 
 vi.mock("react-native", () => ({
   Platform: { OS: "web" },
+  Alert: { alert: vi.fn() },
   View: ({ children, testID }: { children?: React.ReactNode; testID?: string }) =>
     React.createElement("div", { "data-testid": testID }, children),
   Text: ({ children }: { children?: React.ReactNode }) =>
@@ -92,16 +93,80 @@ vi.mock("react-native-unistyles", () => ({
       typeof factory === "function" ? (factory as (t: typeof theme) => unknown)(theme) : factory,
   },
   useUnistyles: () => ({ theme, rt: { breakpoint: "md" } }),
+  withUnistyles: (Component: unknown) => Component,
 }));
 
 vi.mock("lucide-react-native", () => {
   const icon = (name: string) => () => React.createElement("span", { "data-icon": name });
   return {
     ChevronRight: icon("ChevronRight"),
-    MoreHorizontal: icon("MoreHorizontal"),
+    Copy: icon("Copy"),
+    ExternalLink: icon("ExternalLink"),
+    LogIn: icon("LogIn"),
+    LogOut: icon("LogOut"),
+    MoreVertical: icon("MoreVertical"),
+    RefreshCw: icon("RefreshCw"),
     Trash2: icon("Trash2"),
   };
 });
+
+vi.mock("@/components/ui/dropdown-menu", () => ({
+  DropdownMenu: ({ children }: { children?: React.ReactNode }) =>
+    React.createElement("div", { "data-testid": "dropdown-menu" }, children),
+  DropdownMenuTrigger: ({
+    children,
+    onPressIn,
+    accessibilityRole,
+    accessibilityLabel,
+    testID,
+  }: {
+    children?:
+      | React.ReactNode
+      | ((state: { pressed: boolean; hovered: boolean; open: boolean }) => React.ReactNode);
+    onPressIn?: (event: { stopPropagation: () => void }) => void;
+    accessibilityRole?: string;
+    accessibilityLabel?: string;
+    testID?: string;
+  }) =>
+    React.createElement(
+      "button",
+      {
+        type: "button",
+        role: accessibilityRole,
+        "aria-label": accessibilityLabel,
+        "data-testid": testID,
+        onMouseDown: (event: React.MouseEvent) => onPressIn?.(event),
+        onClick: (event: React.MouseEvent) => event.stopPropagation(),
+      },
+      typeof children === "function"
+        ? children({ pressed: false, hovered: false, open: false })
+        : children,
+    ),
+  DropdownMenuContent: ({ children }: { children?: React.ReactNode }) =>
+    React.createElement("div", { "data-testid": "dropdown-menu-content" }, children),
+  DropdownMenuItem: ({
+    children,
+    onSelect,
+    testID,
+  }: {
+    children?: React.ReactNode;
+    onSelect?: () => void;
+    testID?: string;
+  }) =>
+    React.createElement(
+      "button",
+      {
+        type: "button",
+        "data-testid": testID,
+        onClick: (event: React.MouseEvent) => {
+          event.stopPropagation();
+          onSelect?.();
+        },
+      },
+      children,
+    ),
+  DropdownMenuSeparator: () => React.createElement("hr"),
+}));
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -119,9 +184,11 @@ vi.mock("react-i18next", () => ({
           "settings.providers.models.many": "{{count}} models",
           "settings.providers.addErrorTitle": "Unable to add provider",
           "settings.providers.updateErrorTitle": "Unable to update provider",
-          "settings.providers.actions.menu": "{{name}} actions",
-          "settings.providers.actions.remove": "Remove provider",
+          "settings.providers.actions.remove": "Remove",
           "settings.providers.actions.removing": "Removing...",
+          "settings.providers.actions.login": "Log in",
+          "settings.providers.accounts.loggingIn": "Starting login...",
+          "settings.providers.accounts.signInForEmail": "Sign in to show email",
           "settings.providers.remove.confirmTitle": "Remove {{name}}?",
           "settings.providers.remove.confirmMessage":
             "This deletes the provider entry from config.json. It cannot be undone.",
@@ -166,51 +233,18 @@ vi.mock("@/components/ui/loading-spinner", () => ({
   LoadingSpinner: () => React.createElement("span", { "data-testid": "loading-spinner" }),
 }));
 
-vi.mock("@/components/ui/dropdown-menu", () => ({
-  DropdownMenu: ({ children }: { children?: React.ReactNode }) =>
-    React.createElement("div", null, children),
-  DropdownMenuTrigger: ({
+vi.mock("@/components/ui/button", () => ({
+  Button: ({
     children,
+    onPress,
     onPressIn,
-    accessibilityRole,
-    accessibilityLabel,
-    testID,
-  }: {
-    children?:
-      | React.ReactNode
-      | ((state: { pressed: boolean; hovered: boolean; open: boolean }) => React.ReactNode);
-    onPressIn?: (event: { stopPropagation: () => void }) => void;
-    accessibilityRole?: string;
-    accessibilityLabel?: string;
-    testID?: string;
-  }) =>
-    React.createElement(
-      "button",
-      {
-        type: "button",
-        role: accessibilityRole,
-        "aria-label": accessibilityLabel,
-        "data-testid": testID,
-        onMouseDown: (event: React.MouseEvent) => onPressIn?.(event),
-        onClick: (event: React.MouseEvent) => event.stopPropagation(),
-      },
-      typeof children === "function"
-        ? children({ pressed: false, hovered: false, open: false })
-        : children,
-    ),
-  DropdownMenuContent: ({ children }: { children?: React.ReactNode }) =>
-    React.createElement("div", null, children),
-  DropdownMenuItem: ({
-    children,
-    onSelect,
-    status,
-    pendingLabel,
+    disabled,
     testID,
   }: {
     children?: React.ReactNode;
-    onSelect?: () => void;
-    status?: "idle" | "pending" | "success";
-    pendingLabel?: string;
+    onPress?: () => void;
+    onPressIn?: (event: { stopPropagation: () => void }) => void;
+    disabled?: boolean;
     testID?: string;
   }) =>
     React.createElement(
@@ -218,14 +252,24 @@ vi.mock("@/components/ui/dropdown-menu", () => ({
       {
         type: "button",
         "data-testid": testID,
-        disabled: status === "pending" || status === "success",
+        disabled,
+        onMouseDown: (event: React.MouseEvent) => onPressIn?.(event),
         onClick: (event: React.MouseEvent) => {
           event.stopPropagation();
-          onSelect?.();
+          if (disabled) return;
+          onPress?.();
         },
       },
-      status === "pending" ? pendingLabel : children,
+      children,
     ),
+}));
+
+vi.mock("@/contexts/toast-context", () => ({
+  useToast: () => ({
+    show: vi.fn(),
+    error: vi.fn(),
+    copied: vi.fn(),
+  }),
 }));
 
 vi.mock("@/components/provider-icons", () => ({
@@ -265,6 +309,7 @@ vi.mock("@/hooks/use-daemon-config", () => ({
 
 vi.mock("@/runtime/host-runtime", () => ({
   useHostRuntimeIsConnected: () => true,
+  useHostRuntimeClient: () => null,
 }));
 
 vi.mock("@/runtime/host-features", () => ({
@@ -273,6 +318,14 @@ vi.mock("@/runtime/host-features", () => ({
 
 vi.mock("@/utils/confirm-dialog", () => ({
   confirmDialog: vi.fn(async () => true),
+}));
+
+vi.mock("@/utils/open-external-url", () => ({
+  openExternalUrl: vi.fn(async () => undefined),
+}));
+
+vi.mock("@/utils/copy-to-clipboard", () => ({
+  copyToClipboard: vi.fn(async () => undefined),
 }));
 
 import { ProvidersSection } from "./providers-section";

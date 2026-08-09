@@ -35,6 +35,9 @@ import {
   formatProviderDiagnosticError,
 } from "./providers/diagnostic-utils.js";
 import type { MutableDaemonConfig } from "../daemon-config-store.js";
+import { isProviderAccountBase } from "../provider-accounts/constants.js";
+import { resolveProviderAccountHome } from "../provider-accounts/homes.js";
+import { readProviderAccountEmail } from "../provider-accounts/identity.js";
 
 const DEFAULT_REFRESH_TIMEOUT_MS = 60_000;
 const DEFAULT_DIAGNOSTIC_TIMEOUT_MS = 120_000;
@@ -534,6 +537,7 @@ export class ProviderSnapshotManager {
         label: definition.label,
         description: definition.description,
         defaultModeId: definition.defaultModeId,
+        ...this.resolveAccountIdentity(provider),
         error: toErrorMessage(error),
       };
     }
@@ -569,6 +573,31 @@ export class ProviderSnapshotManager {
     return !isBuiltin && this.providerOverrides?.[provider]?.extends ? "custom" : "builtin";
   }
 
+  private resolveAccountIdentity(provider: AgentProvider): {
+    accountBase?: "claude" | "codex";
+    accountEmail?: string;
+  } {
+    const override = this.providerOverrides?.[provider];
+    if (!override?.extends || !isProviderAccountBase(override.extends)) {
+      return {};
+    }
+    if (override.env?.VINCU_PROVIDER_ACCOUNT !== "1") {
+      return {};
+    }
+    const homePath = resolveProviderAccountHome(override, override.extends);
+    if (!homePath) {
+      return { accountBase: override.extends };
+    }
+    return {
+      accountBase: override.extends,
+      accountEmail:
+        readProviderAccountEmail({
+          base: override.extends,
+          homePath,
+        }) ?? undefined,
+    };
+  }
+
   private createLoadingEntries(): Map<AgentProvider, ProviderSnapshotEntry> {
     const entries = new Map<AgentProvider, ProviderSnapshotEntry>();
     for (const provider of this.getProviderIds()) {
@@ -581,6 +610,7 @@ export class ProviderSnapshotManager {
         label: definition?.label,
         description: definition?.description,
         defaultModeId: definition?.defaultModeId ?? null,
+        ...this.resolveAccountIdentity(provider),
       });
     }
     return entries;
@@ -600,6 +630,7 @@ export class ProviderSnapshotManager {
         label: definition?.label,
         description: definition?.description,
         defaultModeId: definition?.defaultModeId ?? null,
+        ...this.resolveAccountIdentity(provider),
       };
 
       if (!definition?.enabled || !current || current.status === "loading") {
@@ -764,6 +795,7 @@ export class ProviderSnapshotManager {
       label: definition.label,
       description: definition.description,
       defaultModeId: definition.defaultModeId,
+      ...this.resolveAccountIdentity(provider),
     };
     const setEntry = (entry: ProviderSnapshotEntry) => {
       if (!this.isCurrentProviderLoad(snapshotCwd, provider, load)) {

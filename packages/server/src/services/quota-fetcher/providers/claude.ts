@@ -91,6 +91,8 @@ interface ClaudeCredentialRecord {
 interface ClaudeQuotaProviderOptions {
   logger: Logger;
   claudeHome?: string;
+  providerId?: string;
+  displayName?: string;
   claudeKeychainReader?: () => Promise<unknown | null>;
   platform?: typeof process.platform;
   fetch?: ProviderApiFetch;
@@ -313,8 +315,8 @@ async function readClaudeKeychainCredentials(): Promise<unknown | null> {
 }
 
 export class ClaudeQuotaProvider implements ProviderUsageFetcher {
-  readonly providerId = "claude";
-  readonly displayName = "Claude";
+  readonly providerId: string;
+  readonly displayName: string;
 
   private readonly logger: Logger;
   private readonly claudeHome: string;
@@ -324,8 +326,13 @@ export class ClaudeQuotaProvider implements ProviderUsageFetcher {
 
   constructor(options: ClaudeQuotaProviderOptions) {
     this.logger = options.logger.child({ module: "claude-quota-provider" });
+    this.providerId = options.providerId ?? "claude";
+    this.displayName = options.displayName ?? "Claude";
     this.claudeHome =
-      options.claudeHome || process.env["CLAUDE_HOME"] || join(homedir(), ".claude");
+      options.claudeHome ||
+      process.env["CLAUDE_CONFIG_DIR"] ||
+      process.env["CLAUDE_HOME"] ||
+      join(homedir(), ".claude");
     this.readKeychainCredentials = options.claudeKeychainReader ?? readClaudeKeychainCredentials;
     this.platform = options.platform ?? process.platform;
     this.fetchApi = options.fetch ?? fetch;

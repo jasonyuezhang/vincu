@@ -282,6 +282,10 @@ export const ProviderSnapshotEntrySchema = z.object({
   label: z.string().optional(),
   description: z.string().optional(),
   defaultModeId: z.string().nullable().optional(),
+  // COMPAT(providerAccountEmail): added in v0.3.0, remove optional once floor includes it.
+  accountEmail: z.string().optional(),
+  // COMPAT(providerAccountBase): added in v0.3.0, remove optional once floor includes it.
+  accountBase: z.enum(["claude", "codex"]).optional(),
 });
 
 export const CompactProviderSnapshotModelSchema = AgentModelDefinitionSchema.omit({
@@ -1371,6 +1375,39 @@ export const ProviderDiagnosticRequestMessageSchema = z.object({
 
 export const ProviderUsageListRequestMessageSchema = z.object({
   type: z.literal("provider.usage.list.request"),
+  requestId: z.string(),
+});
+
+export const ProviderAccountBaseSchema = z.enum(["claude", "codex"]);
+
+export const ProvidersAccountsCreateRequestSchema = z.object({
+  type: z.literal("providers.accounts.create.request"),
+  base: ProviderAccountBaseSchema,
+  label: z.string().min(1),
+  requestId: z.string(),
+});
+
+export const ProvidersAccountsLoginRequestSchema = z.object({
+  type: z.literal("providers.accounts.login.request"),
+  providerId: z.string().min(1),
+  requestId: z.string(),
+});
+
+export const ProvidersAccountsStatusRequestSchema = z.object({
+  type: z.literal("providers.accounts.status.request"),
+  providerId: z.string().min(1),
+  requestId: z.string(),
+});
+
+export const ProvidersAccountsLogoutRequestSchema = z.object({
+  type: z.literal("providers.accounts.logout.request"),
+  providerId: z.string().min(1),
+  requestId: z.string(),
+});
+
+export const ProvidersAccountsRemoveRequestSchema = z.object({
+  type: z.literal("providers.accounts.remove.request"),
+  providerId: z.string().min(1),
   requestId: z.string(),
 });
 
@@ -2578,6 +2615,11 @@ export const SessionInboundMessageSchema = z.discriminatedUnion("type", [
   RefreshProvidersSnapshotRequestMessageSchema,
   ProviderDiagnosticRequestMessageSchema,
   ProviderUsageListRequestMessageSchema,
+  ProvidersAccountsCreateRequestSchema,
+  ProvidersAccountsLoginRequestSchema,
+  ProvidersAccountsStatusRequestSchema,
+  ProvidersAccountsLogoutRequestSchema,
+  ProvidersAccountsRemoveRequestSchema,
   ResumeAgentRequestMessageSchema,
   ImportAgentRequestMessageSchema,
   RefreshAgentRequestMessageSchema,
@@ -2928,6 +2970,8 @@ export const ServerInfoStatusPayloadSchema = z
         commitBaseClassification: z.boolean().optional(),
         // COMPAT(providerRemoval): added in v0.1.105, drop the gate when floor >= v0.1.105.
         providerRemoval: z.boolean().optional(),
+        // COMPAT(providerAccounts): added in v0.3.0, remove gate after 2027-02-07.
+        providerAccounts: z.boolean().optional(),
         // COMPAT(importSessionWorkspaceTarget): added in v0.1.110, remove gate after 2027-01-16.
         importSessionWorkspaceTarget: z.boolean().optional(),
         // COMPAT(forgeProviders): added in v0.1.106, drop the gate when daemon floor >= v0.1.106.
@@ -5150,6 +5194,81 @@ export const ProviderUsageListResponseMessageSchema = z.object({
   }),
 });
 
+export const ProviderAccountErrorSchema = z
+  .object({
+    code: z.string(),
+    message: z.string(),
+  })
+  .nullable();
+
+export const ProvidersAccountsCreateResponseSchema = z.object({
+  type: z.literal("providers.accounts.create.response"),
+  payload: z.object({
+    requestId: z.string(),
+    providerId: z.string().nullable(),
+    label: z.string().nullable(),
+    base: ProviderAccountBaseSchema.nullable(),
+    homePath: z.string().nullable(),
+    error: ProviderAccountErrorSchema,
+  }),
+});
+
+export const ProvidersAccountsLoginResponseSchema = z.object({
+  type: z.literal("providers.accounts.login.response"),
+  payload: z.object({
+    requestId: z.string(),
+    providerId: z.string(),
+    started: z.boolean(),
+    message: z.string().nullable(),
+    // COMPAT(providerAccountLoginHints): added in v0.3.0, remove optional once floor includes them.
+    loginUrl: z.string().nullable().optional(),
+    loginCode: z.string().nullable().optional(),
+    error: ProviderAccountErrorSchema,
+  }),
+});
+
+export const ProviderAccountAuthStatusSchema = z.enum([
+  "authenticated",
+  "unauthenticated",
+  "unknown",
+]);
+
+export const ProvidersAccountsStatusResponseSchema = z.object({
+  type: z.literal("providers.accounts.status.response"),
+  payload: z.object({
+    requestId: z.string(),
+    providerId: z.string(),
+    base: ProviderAccountBaseSchema.nullable(),
+    label: z.string().nullable(),
+    homePath: z.string().nullable(),
+    authStatus: ProviderAccountAuthStatusSchema,
+    // COMPAT(providerAccountEmail): added in v0.3.0, remove optional once floor includes it.
+    email: z.string().nullable().optional(),
+    detail: z.string().nullable(),
+    error: ProviderAccountErrorSchema,
+  }),
+});
+
+export const ProvidersAccountsLogoutResponseSchema = z.object({
+  type: z.literal("providers.accounts.logout.response"),
+  payload: z.object({
+    requestId: z.string(),
+    providerId: z.string(),
+    loggedOut: z.boolean(),
+    error: ProviderAccountErrorSchema,
+  }),
+});
+
+export const ProvidersAccountsRemoveResponseSchema = z.object({
+  type: z.literal("providers.accounts.remove.response"),
+  payload: z.object({
+    requestId: z.string(),
+    providerId: z.string(),
+    removed: z.boolean(),
+    error: ProviderAccountErrorSchema,
+  }),
+});
+
 const AgentSlashCommandSchema = z.object({
   name: z.string(),
   description: z.string(),
@@ -5553,6 +5672,11 @@ export const SessionOutboundMessageSchema = z.discriminatedUnion("type", [
   RefreshProvidersSnapshotResponseMessageSchema,
   ProviderDiagnosticResponseMessageSchema,
   ProviderUsageListResponseMessageSchema,
+  ProvidersAccountsCreateResponseSchema,
+  ProvidersAccountsLoginResponseSchema,
+  ProvidersAccountsStatusResponseSchema,
+  ProvidersAccountsLogoutResponseSchema,
+  ProvidersAccountsRemoveResponseSchema,
   ListCommandsResponseSchema,
   ListTerminalsResponseSchema,
   TerminalsChangedSchema,
@@ -5734,6 +5858,18 @@ export type ProviderUsageDetail = z.infer<typeof ProviderUsageDetailSchema>;
 export type ProviderUsageListResponseMessage = z.infer<
   typeof ProviderUsageListResponseMessageSchema
 >;
+export type ProviderAccountBase = z.infer<typeof ProviderAccountBaseSchema>;
+export type ProviderAccountAuthStatus = z.infer<typeof ProviderAccountAuthStatusSchema>;
+export type ProvidersAccountsCreateRequest = z.infer<typeof ProvidersAccountsCreateRequestSchema>;
+export type ProvidersAccountsCreateResponse = z.infer<typeof ProvidersAccountsCreateResponseSchema>;
+export type ProvidersAccountsLoginRequest = z.infer<typeof ProvidersAccountsLoginRequestSchema>;
+export type ProvidersAccountsLoginResponse = z.infer<typeof ProvidersAccountsLoginResponseSchema>;
+export type ProvidersAccountsStatusRequest = z.infer<typeof ProvidersAccountsStatusRequestSchema>;
+export type ProvidersAccountsStatusResponse = z.infer<typeof ProvidersAccountsStatusResponseSchema>;
+export type ProvidersAccountsLogoutRequest = z.infer<typeof ProvidersAccountsLogoutRequestSchema>;
+export type ProvidersAccountsLogoutResponse = z.infer<typeof ProvidersAccountsLogoutResponseSchema>;
+export type ProvidersAccountsRemoveRequest = z.infer<typeof ProvidersAccountsRemoveRequestSchema>;
+export type ProvidersAccountsRemoveResponse = z.infer<typeof ProvidersAccountsRemoveResponseSchema>;
 export type ChatCreateResponse = z.infer<typeof ChatCreateResponseSchema>;
 export type ChatListResponse = z.infer<typeof ChatListResponseSchema>;
 export type ChatInspectResponse = z.infer<typeof ChatInspectResponseSchema>;

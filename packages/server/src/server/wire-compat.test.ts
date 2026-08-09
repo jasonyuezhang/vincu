@@ -268,6 +268,37 @@ function createSessionForWireCompatTest(options?: {
     stt: null,
     tts: null,
     providerSnapshotManager: createProviderSnapshotManagerStub().manager,
+    providerUsageService: {
+      listUsage: async () => ({ fetchedAt: new Date(0).toISOString(), providers: [] }),
+    } as SessionOptions["providerUsageService"],
+    providerAccountsService: {
+      createAccount: async () => ({
+        error: { code: "unsupported", message: "not stubbed" },
+      }),
+      startLogin: async () => ({
+        providerId: "unused",
+        error: { code: "unsupported", message: "not stubbed" },
+      }),
+      getAccountStatus: async () => ({
+        providerId: "unused",
+        base: null,
+        label: null,
+        homePath: null,
+        authStatus: "unknown" as const,
+        email: null,
+        detail: null,
+        error: { code: "unsupported", message: "not stubbed" },
+      }),
+      logoutAccount: async () => ({
+        providerId: "unused",
+        error: { code: "unsupported", message: "not stubbed" },
+      }),
+      removeAccount: async () => ({
+        providerId: "unused",
+        error: { code: "unsupported", message: "not stubbed" },
+      }),
+      listAccounts: () => [],
+    } as unknown as SessionOptions["providerAccountsService"],
     terminalManager: null,
   });
 

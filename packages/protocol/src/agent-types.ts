@@ -114,6 +114,10 @@ export interface ProviderSnapshotEntry {
   label?: string;
   description?: string;
   defaultModeId?: string | null;
+  /** OAuth account email when this provider is a linked Claude/Codex account. */
+  accountEmail?: string;
+  /** Present when this snapshot entry is a linked Claude/Codex OAuth account. */
+  accountBase?: "claude" | "codex";
 }
 
 export interface AgentFeatureToggle {

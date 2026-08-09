@@ -293,9 +293,23 @@ Optional Claude Code aliases such as `deepseek-v4-pro[1m]` can still be set via 
 
 ## Multiple profiles for the same provider
 
+### OAuth accounts (Claude and Codex)
+
+For Claude Max / ChatGPT OAuth, use **Host → Providers → Accounts**. Each account is a derived provider with an isolated home under `$VINCU_HOME/provider-accounts/<id>/` (`CLAUDE_CONFIG_DIR` or `CODEX_HOME`). Pick the account when you launch an agent; there is no mid-session rotation.
+
+Before sign-in, the row shows **Log in** and **Remove**. Codex uses device auth: Vincu copies the one-time code, opens the login page, and keeps the code on the account row — paste with Cmd/Ctrl+V (not from a terminal). Claude’s CLI prints an OAuth URL the app opens the same way.
+
+Until that login finishes (or a custom profile has an API key in env), the account row has no enable toggle and stays unavailable for new agents. After login, Vincu reads the account email (Claude via `auth status`, Codex from the OAuth `id_token`) on the second line under **Claude** / **Codex**, shows the toggle, and replaces the inline buttons with a ⋯ menu: **Reconnect** (run login again), **Log out** (CLI logout + clear credentials; the entry stays disabled), **Remove** (logout then delete the override and home).
+
+Mutable config keeps `VINCU_PROVIDER_ACCOUNT` plus `CODEX_HOME` / `CLAUDE_CONFIG_DIR` across daemon restarts — without the home path, login returns “account not found”.
+
+Builtin `claude` / `codex` keep using `~/.claude` / `~/.codex`.
+
+Requires a host that advertises `server_info.features.providerAccounts`.
+
 You can create multiple entries that extend the same built-in provider. Each gets its own entry in the provider list with independent credentials, models, and environment.
 
-Example: two different Anthropic accounts as separate profiles:
+Example: two different Anthropic API-key accounts as separate profiles:
 
 ```json
 {

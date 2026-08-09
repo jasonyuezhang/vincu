@@ -51,6 +51,14 @@ import {
   getAgentProviderDefinition,
   type AgentProviderDefinition,
 } from "@getvincu/protocol/provider-manifest";
+import { isProviderAccountReadyForEnable } from "../provider-accounts/credentials.js";
+
+function resolveDerivedProviderEnabled(override: ProviderOverride): boolean {
+  if (override.enabled === false) {
+    return false;
+  }
+  return isProviderAccountReadyForEnable(override);
+}
 
 function isNonEmptyStringArray(value: string[]): value is [string, ...string[]] {
   return value.length > 0;
@@ -688,7 +696,7 @@ function addDerivedProviders(
         profileModels: override.models ?? [],
         additionalModels: override.additionalModels ?? [],
         profileModelsAreAdditive: false,
-        enabled: override.enabled !== false,
+        enabled: resolveDerivedProviderEnabled(override),
         derivedFromProviderId: null,
         providerParams: override.params,
         createBaseClient: (logger) => {
@@ -737,7 +745,7 @@ function addDerivedProviders(
       profileModels: override.models ?? [],
       additionalModels: override.additionalModels ?? [],
       profileModelsAreAdditive: false,
-      enabled: override.enabled !== false,
+      enabled: resolveDerivedProviderEnabled(override),
       derivedFromProviderId: baseProviderId,
       providerParams,
       createBaseClient: (logger) =>

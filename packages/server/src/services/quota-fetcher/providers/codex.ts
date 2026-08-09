@@ -76,6 +76,8 @@ interface CodexAuthRecord {
 interface CodexQuotaProviderOptions {
   logger: Logger;
   codexHome?: string;
+  providerId?: string;
+  displayName?: string;
   fetch?: ProviderApiFetch;
 }
 
@@ -90,13 +92,15 @@ function codexWindow(
 }
 
 export class CodexQuotaProvider implements ProviderUsageFetcher {
-  readonly providerId = "codex";
-  readonly displayName = "Codex";
+  readonly providerId: string;
+  readonly displayName: string;
 
   private readonly codexHome: string;
   private readonly fetchApi: ProviderApiFetch;
 
   constructor(options: CodexQuotaProviderOptions) {
+    this.providerId = options.providerId ?? "codex";
+    this.displayName = options.displayName ?? "Codex";
     this.codexHome = options.codexHome || process.env["CODEX_HOME"] || join(homedir(), ".codex");
     this.fetchApi = options.fetch ?? fetch;
   }

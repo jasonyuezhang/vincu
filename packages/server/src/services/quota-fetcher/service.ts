@@ -7,6 +7,7 @@ import { unavailableUsage } from "./usage.js";
 export interface ProviderUsageServiceOptions {
   logger: Logger;
   fetchers?: ProviderUsageFetcher[];
+  getExtraFetchers?: () => ProviderUsageFetcher[];
   fetch?: ProviderApiFetch;
   cacheTtlMs?: number;
   now?: () => number;
@@ -22,6 +23,7 @@ const DEFAULT_PROVIDER_USAGE_CACHE_TTL_MS = 5 * 60 * 1000;
 export class ProviderUsageService {
   private readonly logger: Logger;
   private readonly fetchers: ProviderUsageFetcher[];
+  private readonly getExtraFetchers: (() => ProviderUsageFetcher[]) | null;
   private readonly cacheTtlMs: number;
   private readonly now: () => number;
   private cached: { fetchedAtMs: number; result: ProviderUsageListResult } | null = null;
@@ -35,6 +37,7 @@ export class ProviderUsageService {
         logger: this.logger,
         fetch: options.fetch,
       });
+    this.getExtraFetchers = options.getExtraFetchers ?? null;
     this.cacheTtlMs = options.cacheTtlMs ?? DEFAULT_PROVIDER_USAGE_CACHE_TTL_MS;
     this.now = options.now ?? Date.now;
   }
@@ -65,9 +68,10 @@ export class ProviderUsageService {
   }
 
   private async fetchFreshUsage(nowMs: number): Promise<ProviderUsageListResult> {
-    const settled = await Promise.allSettled(this.fetchers.map((fetcher) => fetcher.fetchUsage()));
+    const fetchers = [...this.fetchers, ...(this.getExtraFetchers?.() ?? [])];
+    const settled = await Promise.allSettled(fetchers.map((fetcher) => fetcher.fetchUsage()));
     const providers = settled.map((result, index) => {
-      const fetcher = this.fetchers[index];
+      const fetcher = fetchers[index];
       if (result.status === "fulfilled") {
         return result.value;
       }

@@ -218,6 +218,7 @@ import {
   type HubRelationshipRemote,
 } from "./hub/relationship-remote.js";
 import { DaemonExecutions } from "./hub/daemon-executions.js";
+import { toMutableProviderAccountEnv } from "./provider-accounts/mutable-env.js";
 
 const MAX_MCP_DEBUG_BATCH_ITEMS = 10;
 const REDACTED_LOG_VALUE = "[redacted]";
@@ -516,6 +517,18 @@ function createInitialMutableDaemonConfig(config: VincuDaemonConfig): MutableDae
       }
       if (override.additionalModels) {
         providerConfig.additionalModels = override.additionalModels;
+      }
+      // Keep account markers + home paths after restart. Arbitrary env secrets in
+      // custom-provider overrides stay daemon-only (not copied into mutable config).
+      if (override.extends) {
+        providerConfig.extends = override.extends;
+      }
+      if (override.label) {
+        providerConfig.label = override.label;
+      }
+      const accountEnv = toMutableProviderAccountEnv(override.env);
+      if (accountEnv) {
+        providerConfig.env = accountEnv;
       }
       return [providerId, providerConfig];
     }),

@@ -2213,10 +2213,40 @@ export const ko: TranslationResources = {
       loading: "불러오는 중...",
       addErrorTitle: "프로바이더를 추가할 수 없습니다",
       updateErrorTitle: "프로바이더를 업데이트할 수 없습니다",
+      accounts: {
+        title: "Accounts",
+        addClaude: "Add Claude account",
+        addCodex: "Add Codex account",
+        adding: "Adding...",
+        login: "Log in",
+        loggingIn: "Starting login...",
+        loginStartedTitle: "Enter this code on the login page",
+        loginOpenLabel: "Open login page",
+        loginCopyCode: "Copy code",
+        loginCodeLabel: "Device code {{code}}",
+        loginCodeCopiedToast: "{{code}} copied — paste it on the login page",
+        loginCodeMessage:
+          "Your device code is:\n\n{{code}}\n\nIt was copied to the clipboard. Open the login page and paste the code there (not in a terminal).",
+        loginUrlMessage:
+          "Open the login page to finish sign-in. Keep this window nearby if the page asks for a code.",
+        loginErrorTitle: "Unable to start login",
+        createErrorTitle: "Unable to create account",
+        hostUpdateRequired: "Update this host to manage Claude and Codex accounts in Vincu.",
+        signInForEmail: "Sign in to show email",
+        actionsMenu: "{{name}} account actions",
+        loggingOut: "Logging out...",
+        logoutConfirmTitle: "Log out of {{name}}?",
+        logoutConfirmMessage:
+          "This signs out of the account on this host. The account entry stays so you can sign in again.",
+        removeConfirmMessage:
+          "This logs out, then removes the account profile and its isolated login home. It cannot be undone.",
+      },
       actions: {
-        menu: "{{name}} 작업",
-        remove: "프로바이더 제거",
+        remove: "제거",
         removing: "제거 중...",
+        login: "Log in",
+        reconnect: "Reconnect",
+        logout: "Log out",
       },
       remove: {
         confirmTitle: "{{name}}를 제거하시겠습니까?",

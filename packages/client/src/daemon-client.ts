@@ -4667,6 +4667,83 @@ export class DaemonClient {
     });
   }
 
+  async createProviderAccount(input: {
+    base: "claude" | "codex";
+    label: string;
+    requestId?: string;
+  }): Promise<
+    Extract<SessionOutboundMessage, { type: "providers.accounts.create.response" }>["payload"]
+  > {
+    return this.sendNamespacedCorrelatedSessionRequest<"providers.accounts.create.response">({
+      requestId: input.requestId,
+      message: {
+        type: "providers.accounts.create.request",
+        base: input.base,
+        label: input.label,
+      },
+    });
+  }
+
+  async loginProviderAccount(input: {
+    providerId: string;
+    requestId?: string;
+  }): Promise<
+    Extract<SessionOutboundMessage, { type: "providers.accounts.login.response" }>["payload"]
+  > {
+    return this.sendNamespacedCorrelatedSessionRequest<"providers.accounts.login.response">({
+      requestId: input.requestId,
+      message: {
+        type: "providers.accounts.login.request",
+        providerId: input.providerId,
+      },
+    });
+  }
+
+  async getProviderAccountStatus(input: {
+    providerId: string;
+    requestId?: string;
+  }): Promise<
+    Extract<SessionOutboundMessage, { type: "providers.accounts.status.response" }>["payload"]
+  > {
+    return this.sendNamespacedCorrelatedSessionRequest<"providers.accounts.status.response">({
+      requestId: input.requestId,
+      message: {
+        type: "providers.accounts.status.request",
+        providerId: input.providerId,
+      },
+    });
+  }
+
+  async logoutProviderAccount(input: {
+    providerId: string;
+    requestId?: string;
+  }): Promise<
+    Extract<SessionOutboundMessage, { type: "providers.accounts.logout.response" }>["payload"]
+  > {
+    return this.sendNamespacedCorrelatedSessionRequest<"providers.accounts.logout.response">({
+      requestId: input.requestId,
+      message: {
+        type: "providers.accounts.logout.request",
+        providerId: input.providerId,
+      },
+    });
+  }
+
+  async removeProviderAccount(input: {
+    providerId: string;
+    requestId?: string;
+  }): Promise<
+    Extract<SessionOutboundMessage, { type: "providers.accounts.remove.response" }>["payload"]
+  > {
+    return this.sendNamespacedCorrelatedSessionRequest<"providers.accounts.remove.response">({
+      requestId: input.requestId,
+      message: {
+        type: "providers.accounts.remove.request",
+        providerId: input.providerId,
+      },
+    });
+  }
+
   async listCommands(options: ListCommandsOptions): Promise<ListCommandsPayload>;
   async listCommands(agentId: string, requestId?: string): Promise<ListCommandsPayload>;
   async listCommands(
