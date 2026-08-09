@@ -25,6 +25,12 @@ echo "════════════════════════�
 export VINCU_CORS_ORIGINS="${VINCU_CORS_ORIGINS:-*}"
 export VINCU_NODE_INSPECT="${VINCU_NODE_INSPECT:---inspect=0}"
 
+# Stop any daemon already running on this dev home so the new one can bind.
+# VINCU_HOME is the checkout-local dev home, so this never touches the main
+# daemon on port 6767.
+npx tsx "$SCRIPT_DIR/../packages/cli/src/index.js" daemon stop ||
+  echo "  Warning: could not stop existing dev daemon; continuing"
+
 if [ "${VINCU_SKIP_DEV_SERVER_BUILD:-0}" = "1" ]; then
   exec npm run dev:server:watch
 fi
