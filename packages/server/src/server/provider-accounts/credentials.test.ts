@@ -43,4 +43,28 @@ describe("provider account credentials", () => {
       }),
     ).toBe(true);
   });
+
+  test("cursor oauth accounts require cli-config authInfo", () => {
+    const home = mkdtempSync(path.join(tmpdir(), "vincu-cursor-creds-"));
+    tempDirs.push(home);
+
+    expect(
+      isProviderAccountReadyForEnable({
+        extends: "cursor",
+        env: { VINCU_PROVIDER_ACCOUNT: "1", CURSOR_CONFIG_DIR: home },
+      }),
+    ).toBe(false);
+
+    writeFileSync(
+      path.join(home, "cli-config.json"),
+      JSON.stringify({ authInfo: { userId: "1" } }),
+    );
+    expect(hasProviderAccountCredentials("cursor", home)).toBe(true);
+    expect(
+      isProviderAccountReadyForEnable({
+        extends: "cursor",
+        env: { VINCU_PROVIDER_ACCOUNT: "1", CURSOR_CONFIG_DIR: home },
+      }),
+    ).toBe(true);
+  });
 });

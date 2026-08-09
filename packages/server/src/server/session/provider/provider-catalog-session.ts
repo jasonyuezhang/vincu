@@ -514,6 +514,8 @@ export class ProviderCatalogSession {
     const result = await this.providerAccountsService.createAccount({
       base: msg.base,
       label: msg.label,
+      authMode: msg.authMode,
+      apiKey: msg.apiKey,
     });
     if ("error" in result) {
       this.host.emit({

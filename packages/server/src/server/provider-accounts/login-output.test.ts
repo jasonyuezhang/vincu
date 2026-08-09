@@ -35,6 +35,21 @@ describe("parseProviderAccountLoginOutput", () => {
     });
   });
 
+  test("extracts Cursor loginDeepControl URL without a device code", () => {
+    const output = [
+      "Starting login process...",
+      "Authenticating with Cursor...",
+      "Waiting for browser authentication...",
+      "Open a browser and navigate to this link: https://cursor.com/loginDeepControl?challenge=abc&uuid=def&mode=login&redirectTarget=cli",
+    ].join("\n");
+
+    expect(parseProviderAccountLoginOutput(output)).toEqual({
+      loginUrl:
+        "https://cursor.com/loginDeepControl?challenge=abc&uuid=def&mode=login&redirectTarget=cli",
+      loginCode: null,
+    });
+  });
+
   test("buildProviderAccountLoginMessage prefers URL and code", () => {
     expect(
       buildProviderAccountLoginMessage({

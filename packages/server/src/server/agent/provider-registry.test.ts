@@ -481,10 +481,10 @@ beforeEach(() => {
   mockState.reset();
 });
 
-test("builds registry with no overrides — same as built-in count", () => {
+test("builds empty registry with no overrides — builtins are instance-only", () => {
   const registry = buildProviderRegistry(logger);
 
-  expect(Object.keys(registry)).toHaveLength(AGENT_PROVIDER_DEFINITIONS.length);
+  expect(Object.keys(registry)).toEqual([]);
 });
 
 test("includes mock provider only for development builds", () => {
@@ -498,6 +498,22 @@ test("includes mock provider only for development builds", () => {
     label: "Mock Load Test",
     defaultModeId: "load-test",
   });
+});
+
+test("orders registry entries by provider override order", () => {
+  const registry = buildProviderRegistry(logger, {
+    providerOverrides: {
+      claude: { enabled: true, order: 2 },
+      codex: { enabled: true, order: 0 },
+      pi: { enabled: true, order: 1 },
+    },
+  });
+
+  expect(Object.keys(registry).filter((id) => ["claude", "codex", "pi"].includes(id))).toEqual([
+    "codex",
+    "pi",
+    "claude",
+  ]);
 });
 
 test("built-in override applies command", () => {
@@ -543,7 +559,10 @@ test("built-in override applies env", () => {
 
 test("OMP is a disabled built-in backed by the real OMP adapter", async () => {
   const omp = new FakeOmp();
-  const registry = buildProviderRegistry(logger, { ompRuntime: omp });
+  const registry = buildProviderRegistry(logger, {
+    ompRuntime: omp,
+    providerOverrides: { omp: {} },
+  });
 
   expect(registry.omp).toMatchObject({
     id: "omp",
@@ -575,7 +594,9 @@ test("OMP can be enabled without custom provider boilerplate", () => {
 });
 
 test("DeepSeek is a disabled built-in that wraps Claude with V4 models", async () => {
-  const defaultRegistry = buildProviderRegistry(logger);
+  const defaultRegistry = buildProviderRegistry(logger, {
+    providerOverrides: { deepseek: {} },
+  });
   expect(defaultRegistry.deepseek.enabled).toBe(false);
 
   const previousDeepSeekKey = process.env.DEEPSEEK_API_KEY;
@@ -756,7 +777,9 @@ test("ACP provider params can disable MCP support", () => {
 });
 
 test("Cursor is an enabled built-in ACP provider", () => {
-  const registry = buildProviderRegistry(logger);
+  const registry = buildProviderRegistry(logger, {
+    providerOverrides: { cursor: { enabled: true } },
+  });
 
   expect(registry.cursor).toMatchObject({
     id: "cursor",
@@ -901,6 +924,7 @@ test("enabled: false keeps provider metadata in registry", () => {
       claude: {
         enabled: false,
       },
+      codex: { enabled: true },
     },
   });
 
@@ -923,6 +947,7 @@ test("enabled: false still produces a client (enabled gate is enforced elsewhere
       claude: {
         enabled: false,
       },
+      codex: { enabled: true },
     },
   });
 
@@ -999,6 +1024,7 @@ test("extension inherits base override — override claude command, zai extends 
       claude: {
         command: ["/opt/custom-claude"],
       },
+      deepseek: {},
       zai: {
         extends: "claude",
         label: "ZAI",
@@ -1441,7 +1467,9 @@ describe("model merging", () => {
       },
     ]);
 
-    const registry = buildProviderRegistry(logger);
+    const registry = buildProviderRegistry(logger, {
+      providerOverrides: { claude: {} },
+    });
     const { models } = await registry.claude.fetchCatalog({
       scope: "workspace",
       cwd: "/tmp/registry-models",
@@ -1636,7 +1664,9 @@ describe("fetchCatalog", () => {
       { provider: "codex", id: "codex-runtime", label: "Codex Runtime" },
     ]);
 
-    const registry = buildProviderRegistry(logger);
+    const registry = buildProviderRegistry(logger, {
+      providerOverrides: { codex: {} },
+    });
     const catalog = await registry.codex.fetchCatalog({
       scope: "workspace",
       cwd: "/tmp/catalog",
@@ -1732,7 +1762,9 @@ describe("fetchCatalog", () => {
       isAvailable: vi.fn(async () => true),
     } satisfies Partial<AgentClient> as AgentClient;
 
-    const registry = buildProviderRegistry(logger);
+    const registry = buildProviderRegistry(logger, {
+      providerOverrides: { codex: {} },
+    });
     const catalog = await registry.codex.fetchCatalog(
       { cwd: "/tmp/catalog", force: false },
       injectedClient,
@@ -1754,7 +1786,9 @@ describe("fetchCatalog", () => {
       isAvailable: vi.fn(async () => true),
     } satisfies Partial<AgentClient> as AgentClient;
 
-    const registry = buildProviderRegistry(logger);
+    const registry = buildProviderRegistry(logger, {
+      providerOverrides: { codex: {} },
+    });
     const catalog = await registry.codex.fetchCatalog(
       { cwd: "/tmp/catalog", force: false },
       injectedClient,

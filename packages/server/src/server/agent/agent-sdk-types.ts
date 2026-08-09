@@ -122,7 +122,7 @@ export interface ProviderSnapshotEntry {
   description?: string;
   defaultModeId?: string | null;
   accountEmail?: string;
-  accountBase?: "claude" | "codex";
+  accountBase?: "claude" | "codex" | "cursor";
 }
 
 export interface AgentCreateConfigParent {

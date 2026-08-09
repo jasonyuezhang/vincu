@@ -7,41 +7,54 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ProviderSnapshotEntry } from "@getvincu/protocol/agent-types";
 import type { MutableDaemonConfig } from "@getvincu/protocol/messages";
 
-const { theme, snapshotState, configState, patchConfigMock, openProviderSettingsMock } = vi.hoisted(
-  () => ({
-    theme: {
-      spacing: { 1: 4, "1.5": 6, 2: 8, 3: 12, 4: 16, 6: 24 },
-      iconSize: { sm: 14, md: 20 },
-      fontSize: { xs: 11, sm: 13, base: 15 },
-      fontWeight: { normal: "400" },
-      borderRadius: { lg: 8 },
-      opacity: { 50: 0.5 },
-      colors: {
-        surface1: "#111",
-        surface2: "#222",
-        surface3: "#333",
-        foreground: "#fff",
-        foregroundMuted: "#aaa",
-        border: "#555",
-        accent: "#0a84ff",
-        statusSuccess: "#00ff00",
-        statusWarning: "#ff9500",
-        statusDanger: "#ff0000",
-        palette: { red: { 300: "#ff6b6b" }, white: "#fff" },
-      },
+const {
+  theme,
+  snapshotState,
+  configState,
+  patchConfigMock,
+  openProviderSettingsMock,
+  hostFeatures,
+  createProviderAccountMock,
+  loginProviderAccountMock,
+} = vi.hoisted(() => ({
+  theme: {
+    spacing: { 1: 4, "1.5": 6, 2: 8, 3: 12, 4: 16, 6: 24 },
+    iconSize: { sm: 14, md: 20 },
+    fontSize: { xs: 11, sm: 13, base: 15 },
+    fontWeight: { normal: "400", medium: "500" },
+    borderRadius: { lg: 8 },
+    opacity: { 50: 0.5 },
+    colors: {
+      surface1: "#111",
+      surface2: "#222",
+      surface3: "#333",
+      foreground: "#fff",
+      foregroundMuted: "#aaa",
+      border: "#555",
+      accent: "#0a84ff",
+      statusSuccess: "#00ff00",
+      statusWarning: "#ff9500",
+      statusDanger: "#ff0000",
+      palette: { red: { 300: "#ff6b6b" }, white: "#fff" },
     },
-    snapshotState: {
-      entries: undefined as ProviderSnapshotEntry[] | undefined,
-      isLoading: false,
-      isRefreshing: false,
-    },
-    configState: {
-      config: null as MutableDaemonConfig | null,
-    },
-    patchConfigMock: vi.fn(async () => undefined),
-    openProviderSettingsMock: vi.fn(),
-  }),
-);
+  },
+  snapshotState: {
+    entries: undefined as ProviderSnapshotEntry[] | undefined,
+    isLoading: false,
+    isRefreshing: false,
+  },
+  configState: {
+    config: null as MutableDaemonConfig | null,
+  },
+  patchConfigMock: vi.fn(async () => undefined),
+  openProviderSettingsMock: vi.fn(),
+  hostFeatures: {
+    providerRemoval: false,
+    providerAccounts: false,
+  },
+  createProviderAccountMock: vi.fn(),
+  loginProviderAccountMock: vi.fn(),
+}));
 
 vi.mock("react-native", () => ({
   Platform: { OS: "web" },
@@ -50,6 +63,23 @@ vi.mock("react-native", () => ({
     React.createElement("div", { "data-testid": testID }, children),
   Text: ({ children }: { children?: React.ReactNode }) =>
     React.createElement("span", null, children),
+  TextInput: ({
+    value,
+    onChangeText,
+    placeholder,
+    testID,
+  }: {
+    value?: string;
+    onChangeText?: (value: string) => void;
+    placeholder?: string;
+    testID?: string;
+  }) =>
+    React.createElement("input", {
+      "data-testid": testID,
+      value: value ?? "",
+      placeholder,
+      onChange: (event: { target: { value: string } }) => onChangeText?.(event.target.value),
+    }),
   Pressable: ({
     children,
     onPress,
@@ -99,16 +129,75 @@ vi.mock("react-native-unistyles", () => ({
 vi.mock("lucide-react-native", () => {
   const icon = (name: string) => () => React.createElement("span", { "data-icon": name });
   return {
-    ChevronRight: icon("ChevronRight"),
     Copy: icon("Copy"),
     ExternalLink: icon("ExternalLink"),
+    GripVertical: icon("GripVertical"),
     LogIn: icon("LogIn"),
     LogOut: icon("LogOut"),
     MoreVertical: icon("MoreVertical"),
+    Pencil: icon("Pencil"),
     RefreshCw: icon("RefreshCw"),
     Trash2: icon("Trash2"),
   };
 });
+
+vi.mock("@/components/draggable-list", () => ({
+  DraggableList: ({
+    data,
+    keyExtractor,
+    renderItem,
+    onDragEnd,
+    testID,
+  }: {
+    data: unknown[];
+    keyExtractor: (item: unknown, index: number) => string;
+    renderItem: (info: {
+      item: unknown;
+      index: number;
+      drag: () => void;
+      isActive: boolean;
+      dragHandleProps?: {
+        attributes?: Record<string, unknown>;
+        listeners?: Record<string, unknown>;
+        setActivatorNodeRef?: (node: unknown) => void;
+      };
+    }) => React.ReactElement;
+    onDragEnd: (data: unknown[]) => void;
+    testID?: string;
+  }) =>
+    React.createElement(
+      "div",
+      { "data-testid": testID },
+      data.map((item, index) =>
+        React.createElement(
+          React.Fragment,
+          { key: keyExtractor(item, index) },
+          renderItem({
+            item,
+            index,
+            drag: () => undefined,
+            isActive: false,
+            dragHandleProps: {
+              attributes: {},
+              listeners: {},
+              setActivatorNodeRef: () => undefined,
+            },
+          }),
+        ),
+      ),
+      React.createElement("button", {
+        type: "button",
+        "data-testid": "provider-list-simulate-reorder",
+        onClick: () => {
+          if (data.length < 2) return;
+          const next = [...data];
+          const [first] = next.splice(0, 1);
+          next.push(first);
+          onDragEnd(next);
+        },
+      }),
+    ),
+}));
 
 vi.mock("@/components/ui/dropdown-menu", () => ({
   DropdownMenu: ({ children }: { children?: React.ReactNode }) =>
@@ -184,6 +273,13 @@ vi.mock("react-i18next", () => ({
           "settings.providers.models.many": "{{count}} models",
           "settings.providers.addErrorTitle": "Unable to add provider",
           "settings.providers.updateErrorTitle": "Unable to update provider",
+          "settings.providers.emptyList": "Add a provider to get started.",
+          "settings.providers.builtinProviders": "Built-in providers",
+          "settings.providers.catalogProviders": "ACP catalog",
+          "settings.providers.signInWithAccount": "Sign in with account",
+          "settings.providers.useApiKey": "Use API key",
+          "settings.providers.choosingAuth": "How should {{name}} authenticate?",
+          "settings.providers.addingInstance": "Adding...",
           "settings.providers.actions.remove": "Remove",
           "settings.providers.actions.removing": "Removing...",
           "settings.providers.actions.login": "Log in",
@@ -286,6 +382,19 @@ vi.mock("@/components/provider-catalog-list", () => ({
   ProviderCatalogList: () => null,
 }));
 
+vi.mock("@/components/rename-modal", () => ({
+  AdaptiveRenameModal: ({
+    visible,
+    title,
+    testID,
+  }: {
+    visible: boolean;
+    title?: string;
+    testID?: string;
+  }) =>
+    visible ? React.createElement("div", { "data-testid": testID ?? "rename-modal" }, title) : null,
+}));
+
 vi.mock("@/hooks/use-providers-snapshot", () => ({
   useProvidersSnapshot: () => ({
     entries: snapshotState.entries,
@@ -309,11 +418,15 @@ vi.mock("@/hooks/use-daemon-config", () => ({
 
 vi.mock("@/runtime/host-runtime", () => ({
   useHostRuntimeIsConnected: () => true,
-  useHostRuntimeClient: () => null,
+  useHostRuntimeClient: () => ({
+    createProviderAccount: createProviderAccountMock,
+    loginProviderAccount: loginProviderAccountMock,
+  }),
 }));
 
 vi.mock("@/runtime/host-features", () => ({
-  useHostFeature: () => false,
+  useHostFeature: (_serverId: string, feature: keyof typeof hostFeatures) =>
+    hostFeatures[feature] ?? false,
 }));
 
 vi.mock("@/utils/confirm-dialog", () => ({
@@ -396,9 +509,13 @@ describe("ProvidersSection", () => {
     snapshotState.isLoading = false;
     snapshotState.isRefreshing = false;
     configState.config = null;
+    hostFeatures.providerRemoval = false;
+    hostFeatures.providerAccounts = false;
     patchConfigMock.mockReset();
     patchConfigMock.mockResolvedValue(undefined);
     openProviderSettingsMock.mockReset();
+    createProviderAccountMock.mockReset();
+    loginProviderAccountMock.mockReset();
   });
 
   afterEach(() => {
@@ -420,10 +537,11 @@ describe("ProvidersSection", () => {
   }
 
   function findRow(accessibilityLabel: string): HTMLElement {
-    const row = container?.querySelector<HTMLElement>(
+    const pressable = container?.querySelector<HTMLElement>(
       `[role="button"][aria-label="${accessibilityLabel}"]`,
     );
-    if (!row) throw new Error(`Expected row with aria-label "${accessibilityLabel}"`);
+    if (!pressable) throw new Error(`Expected row with aria-label "${accessibilityLabel}"`);
+    const row = pressable.closest<HTMLElement>('[data-testid^="provider-row-"]') ?? pressable;
     return row;
   }
 
@@ -449,7 +567,7 @@ describe("ProvidersSection", () => {
     expect(indexOfText(codexNodes, "Disabled")).toBeGreaterThanOrEqual(0);
   });
 
-  it("composes the row as chevron, icon, label, status, model count, then switch", () => {
+  it("composes the row as drag handle, icon, label, status, model count, then switch", () => {
     snapshotState.entries = [claudeEntry];
     configState.config = makeConfig();
 
@@ -457,15 +575,17 @@ describe("ProvidersSection", () => {
 
     const row = findRow("Claude provider details");
     const nodes = descendants(row);
-    const chevron = indexOfMatches(nodes, '[data-icon="ChevronRight"]');
+    const dragHandle = indexOfMatches(nodes, '[data-testid="provider-drag-handle-claude"]');
+    const grip = indexOfMatches(nodes, '[data-icon="GripVertical"]');
     const icon = indexOfMatches(nodes, '[data-icon="provider-claude"]');
     const label = indexOfText(nodes, "Claude");
     const status = indexOfText(nodes, "Available");
     const modelCount = indexOfText(nodes, "3 models");
     const switchEl = indexOfMatches(nodes, '[role="switch"]');
 
-    expect(chevron).toBeGreaterThanOrEqual(0);
-    expect(icon).toBeGreaterThan(chevron);
+    expect(dragHandle).toBeGreaterThanOrEqual(0);
+    expect(grip).toBeGreaterThanOrEqual(0);
+    expect(icon).toBeGreaterThan(dragHandle);
     expect(label).toBeGreaterThan(icon);
     expect(status).toBeGreaterThan(label);
     expect(modelCount).toBeGreaterThan(status);
@@ -480,9 +600,12 @@ describe("ProvidersSection", () => {
 
     expect(openProviderSettingsMock).not.toHaveBeenCalled();
 
-    const row = findRow("Codex provider details");
+    const row = container?.querySelector<HTMLElement>(
+      '[role="button"][aria-label="Codex provider details"]',
+    );
+    expect(row).not.toBeNull();
     act(() => {
-      row.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+      row?.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
     });
 
     expect(openProviderSettingsMock).toHaveBeenCalledTimes(1);
@@ -511,5 +634,156 @@ describe("ProvidersSection", () => {
     expect(patchConfigMock).toHaveBeenCalledWith({
       providers: { claude: { enabled: false } },
     });
+  });
+
+  it("rewrites provider order through patchConfig when a row is dragged", async () => {
+    snapshotState.entries = [claudeEntry, disabledCodexEntry];
+    configState.config = makeConfig({ codex: { enabled: false } });
+
+    render();
+
+    expect(container?.querySelector('[data-testid="provider-drag-handle-claude"]')).not.toBeNull();
+
+    const simulateReorder = container?.querySelector<HTMLButtonElement>(
+      '[data-testid="provider-list-simulate-reorder"]',
+    );
+    expect(simulateReorder).not.toBeNull();
+
+    await act(async () => {
+      simulateReorder?.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(patchConfigMock).toHaveBeenCalledWith({
+      providers: {
+        codex: { order: 0 },
+        claude: { order: 1 },
+      },
+    });
+  });
+
+  it("shows account instance label with company as same-line subtitle", () => {
+    hostFeatures.providerAccounts = true;
+    snapshotState.entries = [
+      {
+        provider: "codex-codex-account",
+        status: "ready",
+        enabled: true,
+        label: "Codex account",
+        description: "OpenAI Codex",
+        defaultModeId: null,
+        modes: [],
+        accountBase: "codex",
+        accountEmail: "jason@usenash.com",
+        source: "custom",
+      },
+    ];
+    configState.config = makeConfig({
+      "codex-codex-account": {
+        extends: "codex",
+        label: "Codex account",
+        enabled: true,
+        env: { VINCU_PROVIDER_ACCOUNT: "1" },
+      },
+    });
+
+    render();
+
+    const row = findRow("Codex account, Codex, jason@usenash.com provider details");
+    const nodes = descendants(row);
+    const label = indexOfText(nodes, "Codex account");
+    const company = indexOfText(nodes, "Codex");
+    expect(label).toBeGreaterThanOrEqual(0);
+    expect(company).toBeGreaterThan(label);
+  });
+
+  it("puts rename for unsigned accounts in the three-dot menu", () => {
+    hostFeatures.providerAccounts = true;
+    snapshotState.entries = [
+      {
+        provider: "cursor-cursor-account",
+        status: "unavailable",
+        enabled: false,
+        label: "Cursor account",
+        description: "Cursor",
+        defaultModeId: null,
+        modes: [],
+        accountBase: "cursor",
+        source: "custom",
+      },
+    ];
+    configState.config = makeConfig({
+      "cursor-cursor-account": {
+        extends: "cursor",
+        label: "Cursor account",
+        enabled: false,
+        env: { VINCU_PROVIDER_ACCOUNT: "1" },
+      },
+    });
+
+    render();
+
+    expect(
+      container?.querySelector('[data-testid="provider-account-menu-cursor-cursor-account"]'),
+    ).not.toBeNull();
+    expect(
+      container?.querySelector('[data-testid="provider-rename-cursor-cursor-account"]'),
+    ).not.toBeNull();
+    expect(
+      container?.querySelector('[data-testid="provider-login-cursor-cursor-account"]'),
+    ).not.toBeNull();
+  });
+
+  it("shows empty-state copy when there are no provider instances", () => {
+    snapshotState.entries = [];
+    configState.config = makeConfig();
+    hostFeatures.providerAccounts = true;
+
+    render();
+
+    expect(container?.textContent).toContain("Add a provider to get started.");
+    expect(container?.querySelector('[data-testid="host-page-provider-accounts-card"]')).toBeNull();
+    expect(container?.querySelector('[data-testid="provider-add-builtin-claude"]')).not.toBeNull();
+    expect(container?.querySelector('[data-testid="provider-add-builtin-cursor"]')).not.toBeNull();
+  });
+
+  it("routes Claude add through Sign in vs API key chooser", async () => {
+    snapshotState.entries = [];
+    configState.config = makeConfig();
+    hostFeatures.providerAccounts = true;
+    createProviderAccountMock.mockResolvedValue({
+      providerId: "claude-account",
+      error: null,
+    });
+    loginProviderAccountMock.mockResolvedValue({
+      error: null,
+      loginUrl: "https://example.com/login",
+      loginCode: null,
+    });
+
+    render();
+
+    const claudeAdd = container?.querySelector<HTMLButtonElement>(
+      '[data-testid="provider-add-builtin-claude"]',
+    );
+    expect(claudeAdd).not.toBeNull();
+    await act(async () => {
+      claudeAdd?.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container?.querySelector('[data-testid="provider-add-auth-sign-in"]')).not.toBeNull();
+    expect(container?.querySelector('[data-testid="provider-add-auth-api-key"]')).not.toBeNull();
+
+    await act(async () => {
+      container
+        ?.querySelector<HTMLButtonElement>('[data-testid="provider-add-auth-sign-in"]')
+        ?.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(createProviderAccountMock).toHaveBeenCalledWith({
+      base: "claude",
+      label: "Claude account",
+      authMode: "oauth",
+    });
+    expect(loginProviderAccountMock).toHaveBeenCalledWith({ providerId: "claude-account" });
   });
 });

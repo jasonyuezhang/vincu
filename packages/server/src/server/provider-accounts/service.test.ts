@@ -1,3 +1,4 @@
+import { spawn } from "node:child_process";
 import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -114,6 +115,98 @@ describe("ProviderAccountsService", () => {
     });
   });
 
+  test("createAccount api_key writes env key and enables when non-empty", async () => {
+    const { service, daemonConfigStore } = createService();
+
+    const created = await service.createAccount({
+      base: "claude",
+      label: "API Work",
+      authMode: "api_key",
+      apiKey: "sk-ant-test",
+    });
+    expect("error" in created).toBe(false);
+    if ("error" in created) {
+      throw new Error(created.error.message);
+    }
+
+    expect(created.account.authMode).toBe("api_key");
+    expect(created.account.homePath).toBeNull();
+    expect(daemonConfigStore.get().providers[created.account.providerId]).toMatchObject({
+      extends: "claude",
+      label: "API Work",
+      enabled: true,
+      env: {
+        ANTHROPIC_API_KEY: "sk-ant-test",
+      },
+    });
+    expect(
+      daemonConfigStore.get().providers[created.account.providerId]?.env?.VINCU_PROVIDER_ACCOUNT,
+    ).toBeUndefined();
+  });
+
+  test("createAccount cursor oauth isolates CURSOR_CONFIG_DIR", async () => {
+    const { service, vincuHome, daemonConfigStore } = createService();
+
+    const created = await service.createAccount({
+      base: "cursor",
+      label: "Personal",
+      authMode: "oauth",
+    });
+    expect("error" in created).toBe(false);
+    if ("error" in created) {
+      throw new Error(created.error.message);
+    }
+
+    expect(created.account.providerId).toBe("cursor-personal");
+    expect(created.account.homePath).toBe(providerAccountHomePath(vincuHome, "cursor-personal"));
+    expect(daemonConfigStore.get().providers["cursor-personal"]).toMatchObject({
+      extends: "cursor",
+      enabled: false,
+      env: {
+        VINCU_PROVIDER_ACCOUNT: "1",
+        CURSOR_CONFIG_DIR: created.account.homePath,
+      },
+    });
+  });
+
+  test("startLogin for cursor explains when cursor-agent is missing", async () => {
+    const vincuHome = mkdtempSync(path.join(tmpdir(), "vincu-provider-accounts-"));
+    tempDirs.push(vincuHome);
+    const daemonConfigStore = new DaemonConfigStore(vincuHome, {
+      relay: { enabled: false },
+      mcp: { injectIntoAgents: false },
+      browserTools: { enabled: false },
+      providers: {},
+      metadataGeneration: { providers: [] },
+      autoArchiveAfterMerge: false,
+      enableTerminalAgentHooks: false,
+      appendSystemPrompt: "",
+    });
+    const missingCursor = path.join(vincuHome, "missing-cursor-agent");
+    const service = new ProviderAccountsService({
+      vincuHome,
+      daemonConfigStore,
+      logger: pino({ level: "silent" }),
+      resolveLaunchCommand: async () => ({ command: missingCursor, args: [] }),
+    });
+
+    const created = await service.createAccount({
+      base: "cursor",
+      label: "Personal",
+      authMode: "oauth",
+    });
+    if ("error" in created) {
+      throw new Error(created.error.message);
+    }
+
+    const login = await service.startLogin(created.account.providerId);
+    expect("error" in login).toBe(true);
+    if (!("error" in login)) {
+      throw new Error("expected login error");
+    }
+    expect(login.error.message).toContain("cursor-agent is not installed");
+  });
+
   test("getAccountStatus probes seeded Codex auth.json under account home", async () => {
     const { service } = createService();
     const created = await service.createAccount({
@@ -146,5 +239,42 @@ describe("ProviderAccountsService", () => {
     expect(authenticated.email).toBe("codex-work@example.com");
     expect(authenticated.homePath).toBe(created.account.homePath);
     expect(authenticated.error).toBeNull();
+  });
+
+  test("getAccountStatus reaps a persisted detached login pid after auth", async () => {
+    const { service } = createService();
+    const created = await service.createAccount({
+      base: "codex",
+      label: "Work",
+    });
+    if ("error" in created) {
+      throw new Error(created.error.message);
+    }
+
+    const sleeper = spawn("sleep", ["60"], { detached: true, stdio: "ignore" });
+    sleeper.unref();
+    expect(typeof sleeper.pid).toBe("number");
+    writeFileSync(path.join(created.account.homePath, ".vincu-login.pid"), `${sleeper.pid}\n`);
+
+    const idTokenPayload = Buffer.from(
+      JSON.stringify({ email: "codex-work@example.com" }),
+    ).toString("base64url");
+    writeFileSync(
+      path.join(created.account.homePath, "auth.json"),
+      JSON.stringify({
+        tokens: {
+          access_token: "tok_test",
+          id_token: `hdr.${idTokenPayload}.sig`,
+        },
+      }),
+      "utf8",
+    );
+
+    const authenticated = await service.getAccountStatus(created.account.providerId);
+    expect(authenticated.authStatus).toBe("authenticated");
+    expect(existsSync(path.join(created.account.homePath, ".vincu-login.pid"))).toBe(false);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(() => process.kill(sleeper.pid!, 0)).toThrow();
   });
 });

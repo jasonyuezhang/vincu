@@ -1,5 +1,30 @@
 import type { AgentModelDefinition } from "@getvincu/protocol/agent-types";
+import type { ProviderProfileModel } from "@getvincu/protocol/provider-config";
 import { filterSelectableModels } from "@/provider-selection/model-catalog";
+
+export function buildAdditionalModelsWithDefault(
+  additionalModels: ProviderProfileModel[],
+  selected: Pick<ProviderProfileModel, "id" | "label" | "description">,
+): ProviderProfileModel[] {
+  const nextModels: ProviderProfileModel[] = additionalModels.map((model) =>
+    model.isDefault === true ? Object.assign({}, model, { isDefault: false }) : model,
+  );
+  const existingIndex = nextModels.findIndex((model) => model.id === selected.id);
+  if (existingIndex === -1) {
+    nextModels.push({
+      id: selected.id,
+      label: selected.label,
+      ...(selected.description ? { description: selected.description } : {}),
+      isDefault: true,
+    });
+    return nextModels;
+  }
+  const existing = nextModels[existingIndex];
+  if (existing) {
+    nextModels[existingIndex] = Object.assign({}, existing, { isDefault: true });
+  }
+  return nextModels;
+}
 
 export interface ProviderDiscoveredModelsCache {
   serverId: string;

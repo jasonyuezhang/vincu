@@ -55,6 +55,20 @@ describe("resolveProviderAccountBase", () => {
     ).toBe("codex");
     expect(providerAccountCompanyName("codex")).toBe("Codex");
     expect(providerAccountCompanyName("claude")).toBe("Claude");
+    expect(providerAccountCompanyName("cursor")).toBe("Cursor");
+    expect(
+      resolveProviderAccountBase(
+        {
+          providers: {
+            "cursor-work": {
+              extends: "cursor",
+              env: { VINCU_PROVIDER_ACCOUNT: "1", CURSOR_CONFIG_DIR: "/tmp/home" },
+            },
+          },
+        } as never,
+        "cursor-work",
+      ),
+    ).toBe("cursor");
   });
 });
 

@@ -293,21 +293,23 @@ Optional Claude Code aliases such as `deepseek-v4-pro[1m]` can still be set via 
 
 ## Multiple profiles for the same provider
 
-### OAuth accounts (Claude and Codex)
+### Instance-only providers
 
-For Claude Max / ChatGPT OAuth, use **Host → Providers → Accounts**. Each account is a derived provider with an isolated home under `$VINCU_HOME/provider-accounts/<id>/` (`CLAUDE_CONFIG_DIR` or `CODEX_HOME`). Pick the account when you launch an agent; there is no mid-session rotation.
+Built-in provider types (Claude, Codex, Cursor, …) do not appear in Settings or launch pickers until you **Add** one. Manifest entries still exist for `extends` resolution; listing requires an `agents.providers[<id>]` override (OAuth account, API-key profile, ACP custom, or an explicit stub).
 
-Before sign-in, the row shows **Log in** and **Remove**. Codex uses device auth: Vincu copies the one-time code, opens the login page, and keeps the code on the account row — paste with Cmd/Ctrl+V (not from a terminal). Claude’s CLI prints an OAuth URL the app opens the same way.
+Hosts that previously relied on ambient `~/.claude` / `~/.codex` / `~/.cursor` without an override see an empty list until the first Add. Existing config overrides keep working.
 
-Until that login finishes (or a custom profile has an API key in env), the account row has no enable toggle and stays unavailable for new agents. After login, Vincu reads the account email (Claude via `auth status`, Codex from the OAuth `id_token`) on the second line under **Claude** / **Codex**, shows the toggle, and replaces the inline buttons with a ⋯ menu: **Reconnect** (run login again), **Log out** (CLI logout + clear credentials; the entry stays disabled), **Remove** (logout then delete the override and home).
+### OAuth and API-key instances (Claude, Codex, Cursor)
 
-Mutable config keeps `VINCU_PROVIDER_ACCOUNT` plus `CODEX_HOME` / `CLAUDE_CONFIG_DIR` across daemon restarts — without the home path, login returns “account not found”.
+Use **Host → Providers → Add provider**. Pick Claude, Codex, or Cursor, then **Sign in with account** or **Use API key**. Each Add creates a derived instance (`extends` + unique id). The same type can be added repeatedly with different accounts or keys.
 
-Builtin `claude` / `codex` keep using `~/.claude` / `~/.codex`.
+OAuth instances use an isolated home under `$VINCU_HOME/provider-accounts/<id>/` (`CLAUDE_CONFIG_DIR`, `CODEX_HOME`, or `CURSOR_CONFIG_DIR`) and set `VINCU_PROVIDER_ACCOUNT=1`. API-key instances store the key in provider `env` (no isolated home).
 
-Requires a host that advertises `server_info.features.providerAccounts`.
+Before sign-in (OAuth) or before a key is set (API-key), the row has no enable toggle. After credentials are ready, Vincu enables the instance and shows the toggle. OAuth rows show email when known and a ⋯ menu: **Reconnect**, **Log out**, **Remove**. Codex device auth still copies the one-time code and opens the login page — paste with Cmd/Ctrl+V (not from a terminal). Cursor uses `agent login` / `agent logout` / `agent status`.
 
-You can create multiple entries that extend the same built-in provider. Each gets its own entry in the provider list with independent credentials, models, and environment.
+Requires a host that advertises `server_info.features.providerAccounts` (one create RPC for both auth modes).
+
+You can also create multiple entries by hand that extend the same built-in provider. Each gets its own entry in the provider list with independent credentials, models, and environment.
 
 Example: two different Anthropic API-key accounts as separate profiles:
 
@@ -721,31 +723,31 @@ When an `additionalModels` entry has the same `id` as a discovered model, it upd
 
 Every entry under `agents.providers` accepts these fields:
 
-| Field              | Type                      | Required          | Description                                                        |
-| ------------------ | ------------------------- | ----------------- | ------------------------------------------------------------------ |
-| `extends`          | `string`                  | Yes (custom only) | Built-in provider ID to inherit from, or `"acp"`                   |
-| `label`            | `string`                  | Yes (custom only) | Display name in the UI                                             |
-| `description`      | `string`                  | No                | Short description shown in the UI                                  |
-| `command`          | `string[]`                | Yes (ACP only)    | Command to spawn the agent process                                 |
-| `env`              | `Record<string, string>`  | No                | Environment variables to set for the agent process                 |
-| `params`           | `Record<string, unknown>` | No                | Provider-specific options such as `supportsMcpServers: false`      |
-| `models`           | `ProviderProfileModel[]`  | No                | Static model list (overrides runtime discovery)                    |
-| `additionalModels` | `ProviderProfileModel[]`  | No                | Static model additions (merged with runtime discovery or `models`) |
-| `disallowedTools`  | `string[]`                | No                | Tool names to disable for this provider (e.g. `["WebSearch"]`)     |
-| `enabled`          | `boolean`                 | No                | Set to `false` to hide the provider (default: `true`)              |
-| `order`            | `number`                  | No                | Sort order in the provider list                                    |
+| Field              | Type                      | Required          | Description                                                                                                                   |
+| ------------------ | ------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `extends`          | `string`                  | Yes (custom only) | Built-in provider ID to inherit from, or `"acp"`                                                                              |
+| `label`            | `string`                  | Yes (custom only) | Display name in the UI                                                                                                        |
+| `description`      | `string`                  | No                | Short description shown in the UI                                                                                             |
+| `command`          | `string[]`                | Yes (ACP only)    | Command to spawn the agent process                                                                                            |
+| `env`              | `Record<string, string>`  | No                | Environment variables to set for the agent process                                                                            |
+| `params`           | `Record<string, unknown>` | No                | Provider-specific options such as `supportsMcpServers: false`                                                                 |
+| `models`           | `ProviderProfileModel[]`  | No                | Static model list (overrides runtime discovery)                                                                               |
+| `additionalModels` | `ProviderProfileModel[]`  | No                | Static model additions (merged with runtime discovery or `models`)                                                            |
+| `disallowedTools`  | `string[]`                | No                | Tool names to disable for this provider (e.g. `["WebSearch"]`)                                                                |
+| `enabled`          | `boolean`                 | No                | Set to `false` to hide the provider (default: `true`)                                                                         |
+| `order`            | `number`                  | No                | Sort order in Settings and the create-agent picker; first entry is the default provider when the user has no saved preference |
 
 ### Model definition
 
 Each entry in the `models` array:
 
-| Field             | Type               | Required | Description                           |
-| ----------------- | ------------------ | -------- | ------------------------------------- |
-| `id`              | `string`           | Yes      | Model identifier sent to the provider |
-| `label`           | `string`           | Yes      | Display name in the UI                |
-| `description`     | `string`           | No       | Short description                     |
-| `isDefault`       | `boolean`          | No       | Mark as the default model selection   |
-| `thinkingOptions` | `ThinkingOption[]` | No       | Available thinking/reasoning levels   |
+| Field             | Type               | Required | Description                                                                                                 |
+| ----------------- | ------------------ | -------- | ----------------------------------------------------------------------------------------------------------- |
+| `id`              | `string`           | Yes      | Model identifier sent to the provider                                                                       |
+| `label`           | `string`           | Yes      | Display name in the UI                                                                                      |
+| `description`     | `string`           | No       | Short description                                                                                           |
+| `isDefault`       | `boolean`          | No       | Default for create-agent when there is no saved preference; set in this config or the provider detail sheet |
+| `thinkingOptions` | `ThinkingOption[]` | No       | Available thinking/reasoning levels                                                                         |
 
 ### Thinking option
 

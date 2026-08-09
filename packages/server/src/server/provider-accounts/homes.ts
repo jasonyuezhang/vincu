@@ -24,10 +24,25 @@ export function buildProviderAccountEnv(
   };
   if (base === "claude") {
     env.CLAUDE_CONFIG_DIR = homePath;
-  } else {
+  } else if (base === "codex") {
     env.CODEX_HOME = homePath;
+  } else {
+    env.CURSOR_CONFIG_DIR = homePath;
   }
   return env;
+}
+
+function accountHomeFromOverride(
+  override: ProviderOverride,
+  base: ProviderAccountBase,
+): string | undefined {
+  if (base === "claude") {
+    return override.env?.CLAUDE_CONFIG_DIR;
+  }
+  if (base === "codex") {
+    return override.env?.CODEX_HOME;
+  }
+  return override.env?.CURSOR_CONFIG_DIR;
 }
 
 export function isProviderAccountOverride(
@@ -41,8 +56,7 @@ export function isProviderAccountOverride(
     return true;
   }
   const accountsRoot = providerAccountsRoot(vincuHome);
-  const home =
-    override.extends === "claude" ? override.env?.CLAUDE_CONFIG_DIR : override.env?.CODEX_HOME;
+  const home = accountHomeFromOverride(override, override.extends);
   return typeof home === "string" && home.startsWith(`${accountsRoot}${path.sep}`);
 }
 
@@ -51,7 +65,7 @@ export function resolveProviderAccountHome(
   base: ProviderAccountBase,
   options?: { vincuHome?: string; providerId?: string },
 ): string | null {
-  const home = base === "claude" ? override.env?.CLAUDE_CONFIG_DIR : override.env?.CODEX_HOME;
+  const home = accountHomeFromOverride(override, base);
   if (typeof home === "string" && home.length > 0) {
     return home;
   }
@@ -78,7 +92,7 @@ export function slugifyProviderAccountLabel(label: string): string {
 }
 
 export function allocateProviderAccountId(options: {
-  base: ProviderAccountBase;
+  base: string;
   label: string;
   existingIds: ReadonlySet<string>;
 }): string {

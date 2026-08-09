@@ -1,10 +1,19 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactElement,
+  type Ref,
+} from "react";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import {
   Alert,
   Pressable,
   Text,
+  TextInput,
   View,
   type GestureResponderEvent,
   type PressableStateCallbackType,
@@ -43,19 +52,25 @@ import { openExternalUrl } from "@/utils/open-external-url";
 import { useToast } from "@/contexts/toast-context";
 import { filterSelectableModels } from "@/provider-selection/model-catalog";
 import {
+  ADDABLE_BUILTIN_PROVIDERS,
+  isProviderAccountBase,
   isProviderAccountId,
   nextDefaultProviderAccountLabel,
   providerAccountCompanyName,
   resolveProviderAccountBase,
   type ProviderAccountBase,
 } from "@/provider-accounts/is-provider-account";
+import { AdaptiveRenameModal } from "@/components/rename-modal";
+import { DraggableList, type DraggableRenderItemInfo } from "@/components/draggable-list";
+import type { DraggableListDragHandleProps } from "@/components/draggable-list.types";
 import {
-  ChevronRight,
   Copy,
   ExternalLink,
+  GripVertical,
   LogIn,
   LogOut,
   MoreVertical,
+  Pencil,
   RefreshCw,
   Trash2,
 } from "lucide-react-native";
@@ -68,10 +83,16 @@ const destructiveColorMapping = (theme: Theme) => ({ color: theme.colors.destruc
 const ThemedKebab = withUnistyles(MoreVertical);
 const ThemedRefreshCw = withUnistyles(RefreshCw);
 const ThemedLogOut = withUnistyles(LogOut);
+const ThemedPencil = withUnistyles(Pencil);
 const ThemedTrash2 = withUnistyles(Trash2);
+const ThemedGripVertical = withUnistyles(GripVertical);
+const ThemedApiKeyInput = withUnistyles(TextInput, (theme: Theme) => ({
+  placeholderTextColor: theme.colors.foregroundMuted,
+}));
 
 const reconnectLeading = <ThemedRefreshCw size={MENU_ICON_SIZE} uniProps={mutedColorMapping} />;
 const logoutLeading = <ThemedLogOut size={MENU_ICON_SIZE} uniProps={mutedColorMapping} />;
+const renameLeading = <ThemedPencil size={MENU_ICON_SIZE} uniProps={mutedColorMapping} />;
 const removeMenuLeading = <ThemedTrash2 size={MENU_ICON_SIZE} uniProps={destructiveColorMapping} />;
 
 interface PendingAccountLogin {
@@ -129,12 +150,17 @@ interface ProviderRowProps {
   canRemove: boolean;
   showLogin: boolean;
   showAccountMenu: boolean;
+  showRename: boolean;
   pendingLogin: PendingAccountLogin | null;
   accountBase: ProviderAccountBase | null;
   isFirst: boolean;
+  isActive: boolean;
+  drag: () => void;
+  dragHandleProps?: DraggableListDragHandleProps;
   onPress: (providerId: string) => void;
   onToggleEnabled: (providerId: string, enabled: boolean) => void;
   onLogin: (providerId: string) => void;
+  onRename: (providerId: string) => void;
   onLogout: (providerId: string, providerLabel: string) => void;
   onCopyLoginCode: (providerId: string) => void;
   onOpenLoginPage: (providerId: string) => void;
@@ -189,26 +215,104 @@ function resolveAccountSubtitleStyle(input: {
   return settingsStyles.rowHint;
 }
 
+function UnsignedAccountActionsMenu({
+  providerId,
+  title,
+  isRemoving,
+  isLoggingIn,
+  showRename,
+  canRemove,
+  onRename,
+  onRemove,
+  removeLabel,
+}: {
+  providerId: string;
+  title: string;
+  isRemoving: boolean;
+  isLoggingIn: boolean;
+  showRename: boolean;
+  canRemove: boolean;
+  onRename: (providerId: string) => void;
+  onRemove: (providerId: string, providerLabel: string) => void;
+  removeLabel: string;
+}) {
+  const { t } = useTranslation();
+  const menuBusy = isLoggingIn || isRemoving;
+  const handleRename = useCallback(() => {
+    onRename(providerId);
+  }, [onRename, providerId]);
+  const handleRemove = useCallback(() => {
+    onRemove(providerId, removeLabel);
+  }, [onRemove, providerId, removeLabel]);
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        hitSlop={8}
+        style={accountKebabTriggerStyle}
+        onPressIn={stopPressInPropagation}
+        accessibilityRole={isNative ? "button" : undefined}
+        accessibilityLabel={t("settings.providers.accounts.actionsMenu", { name: title })}
+        testID={`provider-account-menu-${providerId}`}
+      >
+        {renderAccountKebabIcon}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" width={220}>
+        {showRename ? (
+          <DropdownMenuItem
+            leading={renameLeading}
+            disabled={menuBusy}
+            onSelect={handleRename}
+            testID={`provider-rename-${providerId}`}
+          >
+            {t("settings.providers.actions.rename")}
+          </DropdownMenuItem>
+        ) : null}
+        {showRename && canRemove ? <DropdownMenuSeparator /> : null}
+        {canRemove ? (
+          <DropdownMenuItem
+            leading={removeMenuLeading}
+            destructive
+            disabled={menuBusy}
+            status={isRemoving ? "pending" : "idle"}
+            pendingLabel={t("settings.providers.actions.removing")}
+            onSelect={handleRemove}
+            testID={`provider-remove-${providerId}`}
+          >
+            {t("settings.providers.actions.remove")}
+          </DropdownMenuItem>
+        ) : null}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 function UnsignedAccountActions({
   providerId,
+  title,
   isRemoving,
   isLoggingIn,
   showLogin,
+  showRename,
   pendingLogin,
   canRemove,
   onLogin,
+  onRename,
   onCopyLoginCode,
   onOpenLoginPage,
   onRemove,
   removeLabel,
 }: {
   providerId: string;
+  title: string;
   isRemoving: boolean;
   isLoggingIn: boolean;
   showLogin: boolean;
+  showRename: boolean;
   pendingLogin: PendingAccountLogin | null;
   canRemove: boolean;
   onLogin: (providerId: string) => void;
+  onRename: (providerId: string) => void;
   onCopyLoginCode: (providerId: string) => void;
   onOpenLoginPage: (providerId: string) => void;
   onRemove: (providerId: string, providerLabel: string) => void;
@@ -217,6 +321,7 @@ function UnsignedAccountActions({
   const { t } = useTranslation();
   const { theme } = useUnistyles();
   const pendingLoginCode = pendingLogin?.loginCode ?? null;
+  const showActionsMenu = showRename || canRemove;
   const loginIcon = useMemo(
     () => <LogIn size={theme.iconSize.sm} color={theme.colors.foreground} />,
     [theme.colors.foreground, theme.iconSize.sm],
@@ -229,10 +334,6 @@ function UnsignedAccountActions({
     () => <ExternalLink size={theme.iconSize.sm} color={theme.colors.foreground} />,
     [theme.colors.foreground, theme.iconSize.sm],
   );
-  const removeIcon = useMemo(
-    () => <Trash2 size={theme.iconSize.sm} color={theme.colors.foreground} />,
-    [theme.colors.foreground, theme.iconSize.sm],
-  );
   const handleLogin = useCallback(() => {
     onLogin(providerId);
   }, [onLogin, providerId]);
@@ -242,9 +343,6 @@ function UnsignedAccountActions({
   const handleOpenLoginPage = useCallback(() => {
     onOpenLoginPage(providerId);
   }, [onOpenLoginPage, providerId]);
-  const handleRemove = useCallback(() => {
-    onRemove(providerId, removeLabel);
-  }, [onRemove, providerId, removeLabel]);
 
   return (
     <>
@@ -290,21 +388,18 @@ function UnsignedAccountActions({
             : t("settings.providers.actions.login")}
         </Button>
       ) : null}
-      {canRemove ? (
-        <Button
-          variant="outline"
-          size="sm"
-          leftIcon={removeIcon}
-          onPressIn={stopPressInPropagation}
-          onPress={handleRemove}
-          disabled={isRemoving || isLoggingIn}
-          loading={isRemoving}
-          testID={`provider-remove-${providerId}`}
-        >
-          {isRemoving
-            ? t("settings.providers.actions.removing")
-            : t("settings.providers.actions.remove")}
-        </Button>
+      {showActionsMenu ? (
+        <UnsignedAccountActionsMenu
+          providerId={providerId}
+          title={title}
+          isRemoving={isRemoving}
+          isLoggingIn={isLoggingIn}
+          showRename={showRename}
+          canRemove={canRemove}
+          onRename={onRename}
+          onRemove={onRemove}
+          removeLabel={removeLabel}
+        />
       ) : null}
     </>
   );
@@ -317,6 +412,7 @@ function SignedInAccountMenu({
   isLoggingIn,
   isLoggingOut,
   onLogin,
+  onRename,
   onLogout,
   onRemove,
   removeLabel,
@@ -327,6 +423,7 @@ function SignedInAccountMenu({
   isLoggingIn: boolean;
   isLoggingOut: boolean;
   onLogin: (providerId: string) => void;
+  onRename: (providerId: string) => void;
   onLogout: (providerId: string, providerLabel: string) => void;
   onRemove: (providerId: string, providerLabel: string) => void;
   removeLabel: string;
@@ -336,6 +433,9 @@ function SignedInAccountMenu({
   const handleReconnect = useCallback(() => {
     onLogin(providerId);
   }, [onLogin, providerId]);
+  const handleRename = useCallback(() => {
+    onRename(providerId);
+  }, [onRename, providerId]);
   const handleLogout = useCallback(() => {
     onLogout(providerId, removeLabel);
   }, [onLogout, providerId, removeLabel]);
@@ -356,6 +456,14 @@ function SignedInAccountMenu({
         {renderAccountKebabIcon}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" width={220}>
+        <DropdownMenuItem
+          leading={renameLeading}
+          disabled={menuBusy}
+          onSelect={handleRename}
+          testID={`provider-rename-${providerId}`}
+        >
+          {t("settings.providers.actions.rename")}
+        </DropdownMenuItem>
         <DropdownMenuItem
           leading={reconnectLeading}
           disabled={menuBusy}
@@ -393,6 +501,43 @@ function SignedInAccountMenu({
   );
 }
 
+function ProviderDragHandle({
+  providerId,
+  drag,
+  dragHandleProps,
+}: {
+  providerId: string;
+  drag: () => void;
+  dragHandleProps?: DraggableListDragHandleProps;
+}) {
+  const { t } = useTranslation();
+  const { theme } = useUnistyles();
+  const {
+    role: _dragRole,
+    tabIndex: _dragTabIndex,
+    "aria-roledescription": _dragRoleDescription,
+    ...dragAttributes
+  } = dragHandleProps?.attributes ?? {};
+
+  return (
+    <Pressable
+      {...dragAttributes}
+      {...(dragHandleProps?.listeners ?? {})}
+      ref={dragHandleProps?.setActivatorNodeRef as unknown as Ref<View>}
+      onLongPress={drag}
+      delayLongPress={200}
+      onPressIn={stopPressInPropagation}
+      accessibilityRole="button"
+      accessibilityLabel={t("settings.providers.actions.dragToReorder")}
+      testID={`provider-drag-handle-${providerId}`}
+      style={styles.dragHandle}
+      hitSlop={8}
+    >
+      <ThemedGripVertical size={theme.iconSize.sm} uniProps={mutedColorMapping} />
+    </Pressable>
+  );
+}
+
 function ProviderRowActions({
   providerId,
   title,
@@ -404,10 +549,12 @@ function ProviderRowActions({
   isLoggingOut,
   showLogin,
   showAccountMenu,
+  showRename,
   pendingLogin,
   canRemove,
   onToggleEnabled,
   onLogin,
+  onRename,
   onLogout,
   onCopyLoginCode,
   onOpenLoginPage,
@@ -424,10 +571,12 @@ function ProviderRowActions({
   isLoggingOut: boolean;
   showLogin: boolean;
   showAccountMenu: boolean;
+  showRename: boolean;
   pendingLogin: PendingAccountLogin | null;
   canRemove: boolean;
   onToggleEnabled: (providerId: string, enabled: boolean) => void;
   onLogin: (providerId: string) => void;
+  onRename: (providerId: string) => void;
   onLogout: (providerId: string, providerLabel: string) => void;
   onCopyLoginCode: (providerId: string) => void;
   onOpenLoginPage: (providerId: string) => void;
@@ -460,6 +609,7 @@ function ProviderRowActions({
           isLoggingIn={isLoggingIn}
           isLoggingOut={isLoggingOut}
           onLogin={onLogin}
+          onRename={onRename}
           onLogout={onLogout}
           onRemove={onRemove}
           removeLabel={removeLabel}
@@ -467,12 +617,15 @@ function ProviderRowActions({
       ) : (
         <UnsignedAccountActions
           providerId={providerId}
+          title={title}
           isRemoving={isRemoving}
           isLoggingIn={isLoggingIn}
           showLogin={showLogin}
+          showRename={showRename}
           pendingLogin={pendingLogin}
           canRemove={canRemove}
           onLogin={onLogin}
+          onRename={onRename}
           onCopyLoginCode={onCopyLoginCode}
           onOpenLoginPage={onOpenLoginPage}
           onRemove={onRemove}
@@ -481,6 +634,69 @@ function ProviderRowActions({
       )}
     </View>
   );
+}
+
+function resolveProviderRowModel(input: {
+  def: ProviderDefinition;
+  entry: ProviderEntry;
+  enabled: boolean;
+  accountBase: ProviderAccountBase | null;
+  pendingLogin: PendingAccountLogin | null;
+  t: TFunction;
+}) {
+  const resolvedAccountBase =
+    input.accountBase ??
+    (input.entry.accountBase && isProviderAccountBase(input.entry.accountBase)
+      ? input.entry.accountBase
+      : null);
+  const isAccount = resolvedAccountBase !== null;
+  const isAccountSignedIn = Boolean(input.entry.accountEmail);
+  const showEnableToggle = !isAccount || isAccountSignedIn;
+  const effectiveEnabled = showEnableToggle ? input.enabled : false;
+  const title = input.def.label;
+  const companyName = isAccount ? providerAccountCompanyName(resolvedAccountBase) : null;
+  const pendingLoginCode = input.pendingLogin?.loginCode ?? null;
+  const subtitle = resolveAccountSubtitle({
+    isAccount,
+    pendingLoginCode,
+    accountEmail: input.entry.accountEmail,
+    t: input.t,
+  });
+  const subtitleStyle = resolveAccountSubtitleStyle({
+    pendingLoginCode,
+    isAccount,
+    hasAccountEmail: Boolean(input.entry.accountEmail),
+  });
+  const removeLabel = input.entry.accountEmail ? `${title} (${input.entry.accountEmail})` : title;
+  const providerError =
+    effectiveEnabled &&
+    input.entry.status === "error" &&
+    typeof input.entry.error === "string" &&
+    input.entry.error.trim().length > 0
+      ? input.entry.error.trim()
+      : null;
+  const modelCount = filterSelectableModels(input.entry.models ?? null)?.length ?? 0;
+  const providerStatus = getProviderStatus(
+    input.entry.status,
+    effectiveEnabled,
+    modelCount,
+    input.t,
+  );
+  const accessibilityName = [title, companyName, subtitle].filter(Boolean).join(", ");
+  return {
+    resolvedAccountBase,
+    showEnableToggle,
+    effectiveEnabled,
+    title,
+    companyName,
+    pendingLoginCode,
+    subtitle,
+    subtitleStyle,
+    removeLabel,
+    providerError,
+    providerStatus,
+    accessibilityName,
+  };
 }
 
 function ProviderRow({
@@ -494,12 +710,17 @@ function ProviderRow({
   canRemove,
   showLogin,
   showAccountMenu,
+  showRename,
   pendingLogin,
   accountBase,
   isFirst,
+  isActive,
+  drag,
+  dragHandleProps,
   onPress,
   onToggleEnabled,
   onLogin,
+  onRename,
   onLogout,
   onCopyLoginCode,
   onOpenLoginPage,
@@ -508,116 +729,106 @@ function ProviderRow({
   const { t } = useTranslation();
   const { theme } = useUnistyles();
   const isCompact = useIsCompactFormFactor();
-  const resolvedAccountBase =
-    accountBase ??
-    (entry.accountBase === "claude" || entry.accountBase === "codex" ? entry.accountBase : null);
-  const isAccount = resolvedAccountBase !== null;
-  const isAccountSignedIn = Boolean(entry.accountEmail);
-  const showEnableToggle = !isAccount || isAccountSignedIn;
-  const effectiveEnabled = showEnableToggle ? enabled : false;
-  const title = isAccount ? providerAccountCompanyName(resolvedAccountBase) : def.label;
-  const pendingLoginCode = pendingLogin?.loginCode ?? null;
-  const subtitle = resolveAccountSubtitle({
-    isAccount,
-    pendingLoginCode,
-    accountEmail: entry.accountEmail,
+  const model = resolveProviderRowModel({
+    def,
+    entry,
+    enabled,
+    accountBase,
+    pendingLogin,
     t,
   });
-  const subtitleStyle = resolveAccountSubtitleStyle({
-    pendingLoginCode,
-    isAccount,
-    hasAccountEmail: Boolean(entry.accountEmail),
-  });
-  const removeLabel = entry.accountEmail ? `${title} (${entry.accountEmail})` : title;
-  const ProviderIcon = getProviderIcon(resolvedAccountBase ?? def.id);
-  const providerError =
-    effectiveEnabled &&
-    entry.status === "error" &&
-    typeof entry.error === "string" &&
-    entry.error.trim().length > 0
-      ? entry.error.trim()
-      : null;
-  const modelCount = filterSelectableModels(entry.models ?? null)?.length ?? 0;
-  const providerStatus = getProviderStatus(entry.status, effectiveEnabled, modelCount, t);
-  const accessibilityName = subtitle ? `${title}, ${subtitle}` : title;
+  const ProviderIcon = getProviderIcon(model.resolvedAccountBase ?? def.id);
 
   const handlePress = useCallback(() => {
     onPress(def.id);
   }, [def.id, onPress]);
-  const rowStyle = useCallback(
+  const rowPressableStyle = useCallback(
     ({ pressed, hovered }: PressableStateCallbackType & { hovered?: boolean }) => [
-      settingsStyles.row,
-      !isFirst && settingsStyles.rowBorder,
-      styles.row,
+      styles.rowPressable,
       hovered && styles.rowHovered,
       pressed && styles.rowPressed,
     ],
-    [isFirst],
+    [],
   );
 
   return (
-    <Pressable
-      style={rowStyle}
-      onPress={handlePress}
-      accessibilityRole="button"
-      accessibilityLabel={t("settings.providers.providerDetails", { name: accessibilityName })}
+    <View
+      testID={`provider-row-${def.id}`}
+      style={[
+        settingsStyles.row,
+        !isFirst && settingsStyles.rowBorder,
+        styles.row,
+        isActive && styles.rowDragging,
+      ]}
     >
-      {({ hovered }: PressableStateCallbackType & { hovered?: boolean }) => (
-        <>
-          <View style={styles.rowContent}>
-            <ChevronRight
-              size={theme.iconSize.sm}
-              color={hovered ? theme.colors.foreground : theme.colors.foregroundMuted}
-            />
-            <ProviderIcon size={theme.iconSize.md} color={theme.colors.foreground} />
-            <View style={styles.textColumn}>
-              <View style={styles.titleRow}>
-                <Text style={settingsStyles.rowTitle} numberOfLines={1}>
-                  {title}
-                </Text>
-                {!isCompact ? <Text style={styles.separator}>·</Text> : null}
-                <StatusIndicator status={providerStatus} compact={isCompact} />
-              </View>
-              {subtitle ? (
-                <Text
-                  style={subtitleStyle}
-                  numberOfLines={1}
-                  testID={pendingLoginCode ? `provider-login-code-${def.id}` : undefined}
-                >
-                  {subtitle}
-                </Text>
+      <ProviderDragHandle providerId={def.id} drag={drag} dragHandleProps={dragHandleProps} />
+      <Pressable
+        style={rowPressableStyle}
+        onPress={handlePress}
+        accessibilityRole="button"
+        accessibilityLabel={t("settings.providers.providerDetails", {
+          name: model.accessibilityName,
+        })}
+      >
+        <View style={styles.rowContent}>
+          <ProviderIcon size={theme.iconSize.md} color={theme.colors.foreground} />
+          <View style={styles.textColumn}>
+            <View style={styles.titleRow}>
+              <Text style={settingsStyles.rowTitle} numberOfLines={1}>
+                {model.title}
+              </Text>
+              {model.companyName ? (
+                <>
+                  <Text style={styles.separator}>·</Text>
+                  <Text style={styles.companyLabel} numberOfLines={1}>
+                    {model.companyName}
+                  </Text>
+                </>
               ) : null}
-              {providerError && !isCompact ? (
-                <Text style={styles.errorText} numberOfLines={3}>
-                  {providerError}
-                </Text>
-              ) : null}
+              {!isCompact ? <Text style={styles.separator}>·</Text> : null}
+              <StatusIndicator status={model.providerStatus} compact={isCompact} />
             </View>
+            {model.subtitle ? (
+              <Text
+                style={model.subtitleStyle}
+                numberOfLines={1}
+                testID={model.pendingLoginCode ? `provider-login-code-${def.id}` : undefined}
+              >
+                {model.subtitle}
+              </Text>
+            ) : null}
+            {model.providerError && !isCompact ? (
+              <Text style={styles.errorText} numberOfLines={3}>
+                {model.providerError}
+              </Text>
+            ) : null}
           </View>
-          <ProviderRowActions
-            providerId={def.id}
-            title={title}
-            showEnableToggle={showEnableToggle}
-            effectiveEnabled={effectiveEnabled}
-            isToggling={isToggling}
-            isRemoving={isRemoving}
-            isLoggingIn={isLoggingIn}
-            isLoggingOut={isLoggingOut}
-            showLogin={showLogin}
-            showAccountMenu={showAccountMenu}
-            pendingLogin={pendingLogin}
-            canRemove={canRemove}
-            onToggleEnabled={onToggleEnabled}
-            onLogin={onLogin}
-            onLogout={onLogout}
-            onCopyLoginCode={onCopyLoginCode}
-            onOpenLoginPage={onOpenLoginPage}
-            onRemove={onRemove}
-            removeLabel={removeLabel}
-          />
-        </>
-      )}
-    </Pressable>
+        </View>
+      </Pressable>
+      <ProviderRowActions
+        providerId={def.id}
+        title={model.title}
+        showEnableToggle={model.showEnableToggle}
+        effectiveEnabled={model.effectiveEnabled}
+        isToggling={isToggling}
+        isRemoving={isRemoving}
+        isLoggingIn={isLoggingIn}
+        isLoggingOut={isLoggingOut}
+        showLogin={showLogin}
+        showAccountMenu={showAccountMenu}
+        showRename={showRename && !showAccountMenu}
+        pendingLogin={pendingLogin}
+        canRemove={canRemove}
+        onToggleEnabled={onToggleEnabled}
+        onLogin={onLogin}
+        onRename={onRename}
+        onLogout={onLogout}
+        onCopyLoginCode={onCopyLoginCode}
+        onOpenLoginPage={onOpenLoginPage}
+        onRemove={onRemove}
+        removeLabel={model.removeLabel}
+      />
+    </View>
   );
 }
 
@@ -668,6 +879,190 @@ function StatusIndicator({ status, compact }: { status: ProviderStatus; compact:
   );
 }
 
+function BuiltinProviderAddButton({
+  entry,
+  creatingAccountBase,
+  onSelect,
+}: {
+  entry: (typeof ADDABLE_BUILTIN_PROVIDERS)[number];
+  creatingAccountBase: string | null;
+  onSelect: (entry: (typeof ADDABLE_BUILTIN_PROVIDERS)[number]) => void;
+}) {
+  const { t } = useTranslation();
+  const handlePress = useCallback(() => {
+    onSelect(entry);
+  }, [entry, onSelect]);
+  return (
+    <Button
+      size="sm"
+      variant="secondary"
+      disabled={creatingAccountBase !== null}
+      onPress={handlePress}
+      testID={`provider-add-builtin-${entry.id}`}
+    >
+      {creatingAccountBase === entry.id ? t("settings.providers.addingInstance") : entry.label}
+    </Button>
+  );
+}
+
+function AddProviderCard({
+  serverId,
+  supportsProviderAccounts,
+  creatingAccountBase,
+  authChooserBase,
+  apiKeyBase,
+  apiKeyDraft,
+  installingProviderId,
+  onSelectBuiltin,
+  onAuthSignIn,
+  onAuthApiKey,
+  onResetAddFlow,
+  onApiKeyDraftChange,
+  onSubmitApiKey,
+  onInstall,
+}: {
+  serverId: string;
+  supportsProviderAccounts: boolean;
+  creatingAccountBase: string | null;
+  authChooserBase: string | null;
+  apiKeyBase: string | null;
+  apiKeyDraft: string;
+  installingProviderId: string | null;
+  onSelectBuiltin: (entry: (typeof ADDABLE_BUILTIN_PROVIDERS)[number]) => void;
+  onAuthSignIn: () => void;
+  onAuthApiKey: () => void;
+  onResetAddFlow: () => void;
+  onApiKeyDraftChange: (value: string) => void;
+  onSubmitApiKey: () => void;
+  onInstall: (entry: AcpProviderCatalogItem) => Promise<void> | void;
+}) {
+  const { t } = useTranslation();
+  const authChooserLabel =
+    ADDABLE_BUILTIN_PROVIDERS.find((entry) => entry.id === authChooserBase)?.label ??
+    authChooserBase;
+  const apiKeyLabel =
+    ADDABLE_BUILTIN_PROVIDERS.find((entry) => entry.id === apiKeyBase)?.label ?? apiKeyBase;
+
+  return (
+    <SettingsSection
+      title={t("settings.providers.addProvider")}
+      testID="host-page-add-provider-card"
+      style={styles.addProviderSection}
+    >
+      <View style={styles.addProviderStack}>
+        <Text style={styles.addProviderHeading}>{t("settings.providers.builtinProviders")}</Text>
+        {supportsProviderAccounts ? (
+          <>
+            <View style={styles.accountActions}>
+              {ADDABLE_BUILTIN_PROVIDERS.map((entry) => (
+                <BuiltinProviderAddButton
+                  key={entry.id}
+                  entry={entry}
+                  creatingAccountBase={creatingAccountBase}
+                  onSelect={onSelectBuiltin}
+                />
+              ))}
+            </View>
+            {authChooserBase ? (
+              <View style={[settingsStyles.card, styles.authChooserCard]}>
+                <Text style={styles.authChooserTitle}>
+                  {t("settings.providers.choosingAuth", { name: authChooserLabel })}
+                </Text>
+                <View style={styles.accountActions}>
+                  <Button
+                    size="sm"
+                    variant="default"
+                    disabled={creatingAccountBase !== null}
+                    onPress={onAuthSignIn}
+                    testID="provider-add-auth-sign-in"
+                  >
+                    {creatingAccountBase === authChooserBase
+                      ? t("settings.providers.addingInstance")
+                      : t("settings.providers.signInWithAccount")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={creatingAccountBase !== null}
+                    onPress={onAuthApiKey}
+                    testID="provider-add-auth-api-key"
+                  >
+                    {t("settings.providers.useApiKey")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={creatingAccountBase !== null}
+                    onPress={onResetAddFlow}
+                    testID="provider-add-auth-cancel"
+                  >
+                    {t("settings.providers.apiKeyCancel")}
+                  </Button>
+                </View>
+              </View>
+            ) : null}
+            {apiKeyBase ? (
+              <View style={[settingsStyles.card, styles.authChooserCard]}>
+                <Text style={styles.authChooserTitle}>
+                  {t("settings.providers.apiKeyLabel")}
+                  {" · "}
+                  {apiKeyLabel}
+                </Text>
+                <ThemedApiKeyInput
+                  value={apiKeyDraft}
+                  onChangeText={onApiKeyDraftChange}
+                  placeholder={t("settings.providers.apiKeyPlaceholder")}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  style={styles.apiKeyInput}
+                  testID="provider-add-api-key-input"
+                />
+                <View style={styles.accountActions}>
+                  <Button
+                    size="sm"
+                    variant="default"
+                    disabled={creatingAccountBase !== null}
+                    onPress={onSubmitApiKey}
+                    testID="provider-add-api-key-submit"
+                  >
+                    {creatingAccountBase === apiKeyBase
+                      ? t("settings.providers.addingInstance")
+                      : t("settings.providers.apiKeySave")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={creatingAccountBase !== null}
+                    onPress={onResetAddFlow}
+                    testID="provider-add-api-key-cancel"
+                  >
+                    {t("settings.providers.apiKeyCancel")}
+                  </Button>
+                </View>
+              </View>
+            ) : null}
+          </>
+        ) : (
+          <View style={[settingsStyles.card, styles.emptyCard]}>
+            <Text style={styles.emptyText}>
+              {t("settings.providers.accounts.hostUpdateRequired")}
+            </Text>
+          </View>
+        )}
+        <Text style={[styles.addProviderHeading, styles.catalogHeading]}>
+          {t("settings.providers.catalogProviders")}
+        </Text>
+        <ProviderCatalogList
+          serverId={serverId}
+          installingProviderId={installingProviderId}
+          onInstall={onInstall}
+        />
+      </View>
+    </SettingsSection>
+  );
+}
+
 export interface ProvidersSectionProps {
   serverId: string;
 }
@@ -686,10 +1081,14 @@ export function ProvidersSection({ serverId }: ProvidersSectionProps) {
   const [removingProviderId, setRemovingProviderId] = useState<string | null>(null);
   const removingProviderIdRef = useRef<string | null>(null);
   const [installingProviderId, setInstallingProviderId] = useState<string | null>(null);
-  const [creatingAccountBase, setCreatingAccountBase] = useState<"claude" | "codex" | null>(null);
+  const [creatingAccountBase, setCreatingAccountBase] = useState<string | null>(null);
+  const [authChooserBase, setAuthChooserBase] = useState<string | null>(null);
+  const [apiKeyBase, setApiKeyBase] = useState<string | null>(null);
+  const [apiKeyDraft, setApiKeyDraft] = useState("");
   const [loggingInProviderId, setLoggingInProviderId] = useState<string | null>(null);
   const [loggingOutProviderId, setLoggingOutProviderId] = useState<string | null>(null);
   const [pendingLogins, setPendingLogins] = useState<Record<string, PendingAccountLogin>>({});
+  const [renamingProviderId, setRenamingProviderId] = useState<string | null>(null);
 
   const providerDefinitions = useMemo(() => buildProviderDefinitions(entries), [entries]);
   const hasServer = serverId.length > 0;
@@ -716,6 +1115,29 @@ export function ProvidersSection({ serverId }: ProvidersSectionProps) {
       }
     },
     [patchConfig, t],
+  );
+
+  const handleProviderDragEnd = useCallback(
+    (orderedDefinitions: ProviderDefinition[]) => {
+      const currentIds = providerDefinitions.map((definition) => definition.id);
+      const orderedIds = orderedDefinitions.map((definition) => definition.id);
+      if (
+        currentIds.length === orderedIds.length &&
+        currentIds.every((providerId, index) => providerId === orderedIds[index])
+      ) {
+        return;
+      }
+      const providers = Object.fromEntries(
+        orderedIds.map((providerId, order) => [providerId, { order }]),
+      );
+      void patchConfig({ providers }).catch((error: unknown) => {
+        Alert.alert(
+          t("settings.providers.updateErrorTitle"),
+          error instanceof Error ? error.message : String(error),
+        );
+      });
+    },
+    [patchConfig, providerDefinitions, t],
   );
 
   const handleRemoveProvider = useCallback(
@@ -907,6 +1329,42 @@ export function ProvidersSection({ serverId }: ProvidersSectionProps) {
     [copyAccountLoginCode, pendingLogins, t, toast],
   );
 
+  const handleOpenRenameProvider = useCallback((providerId: string) => {
+    setRenamingProviderId(providerId);
+  }, []);
+
+  const handleCloseRenameProvider = useCallback(() => {
+    setRenamingProviderId(null);
+  }, []);
+
+  const renamingProviderLabel = useMemo(() => {
+    if (!renamingProviderId) return "";
+    return (
+      providerDefinitions.find((definition) => definition.id === renamingProviderId)?.label ??
+      renamingProviderId
+    );
+  }, [providerDefinitions, renamingProviderId]);
+
+  const handleRenameProvider = useCallback(
+    async (nextLabel: string) => {
+      if (!renamingProviderId) return;
+      const label = nextLabel.trim();
+      if (label.length === 0) return;
+      try {
+        await patchConfig({ providers: { [renamingProviderId]: { label } } });
+        await refresh([renamingProviderId]);
+        setRenamingProviderId(null);
+      } catch (error) {
+        Alert.alert(
+          t("settings.providers.rename.errorTitle"),
+          error instanceof Error ? error.message : String(error),
+        );
+        throw error;
+      }
+    },
+    [patchConfig, refresh, renamingProviderId, t],
+  );
+
   const handleOpenLoginPage = useCallback(
     (providerId: string) => {
       const pending = pendingLogins[providerId];
@@ -918,16 +1376,27 @@ export function ProvidersSection({ serverId }: ProvidersSectionProps) {
     [openAccountLoginPage, pendingLogins, toast],
   );
 
-  const handleCreateProviderAccount = useCallback(
-    async (base: "claude" | "codex") => {
+  const resetAddFlow = useCallback(() => {
+    setAuthChooserBase(null);
+    setApiKeyBase(null);
+    setApiKeyDraft("");
+  }, []);
+
+  const handleCreateOauthAccount = useCallback(
+    async (base: ProviderAccountBase) => {
       if (!client || creatingAccountBase) return;
       setCreatingAccountBase(base);
       try {
         const label = nextDefaultProviderAccountLabel(base, config);
-        const created = await client.createProviderAccount({ base, label });
+        const created = await client.createProviderAccount({
+          base,
+          label,
+          authMode: "oauth",
+        });
         if (created.error || !created.providerId) {
           throw new Error(created.error?.message ?? "Failed to create account");
         }
+        resetAddFlow();
         await refresh([created.providerId]);
         const login = await client.loginProviderAccount({ providerId: created.providerId });
         if (login.error) {
@@ -940,16 +1409,84 @@ export function ProvidersSection({ serverId }: ProvidersSectionProps) {
         setCreatingAccountBase(null);
       }
     },
-    [client, config, creatingAccountBase, presentProviderAccountLogin, refresh, toast],
+    [
+      client,
+      config,
+      creatingAccountBase,
+      presentProviderAccountLogin,
+      refresh,
+      resetAddFlow,
+      toast,
+    ],
   );
 
-  const handleCreateClaudeAccount = useCallback(() => {
-    void handleCreateProviderAccount("claude");
-  }, [handleCreateProviderAccount]);
+  const handleCreateApiKeyInstance = useCallback(
+    async (base: string, apiKey?: string) => {
+      if (!client || creatingAccountBase) return;
+      setCreatingAccountBase(base);
+      try {
+        const label = nextDefaultProviderAccountLabel(base, config);
+        const created = await client.createProviderAccount({
+          base,
+          label,
+          authMode: "api_key",
+          apiKey,
+        });
+        if (created.error || !created.providerId) {
+          throw new Error(created.error?.message ?? "Failed to create provider");
+        }
+        resetAddFlow();
+        await refresh([created.providerId]);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : String(error));
+      } finally {
+        setCreatingAccountBase(null);
+      }
+    },
+    [client, config, creatingAccountBase, refresh, resetAddFlow, toast],
+  );
 
-  const handleCreateCodexAccount = useCallback(() => {
-    void handleCreateProviderAccount("codex");
-  }, [handleCreateProviderAccount]);
+  const handleSelectBuiltinProvider = useCallback(
+    (entry: (typeof ADDABLE_BUILTIN_PROVIDERS)[number]) => {
+      if (creatingAccountBase) return;
+      if (entry.supportsOauth && entry.supportsApiKey) {
+        setApiKeyBase(null);
+        setApiKeyDraft("");
+        setAuthChooserBase(entry.id);
+        return;
+      }
+      if (entry.supportsApiKey) {
+        setAuthChooserBase(null);
+        setApiKeyBase(entry.id);
+        setApiKeyDraft("");
+        return;
+      }
+      void handleCreateApiKeyInstance(entry.id);
+    },
+    [creatingAccountBase, handleCreateApiKeyInstance],
+  );
+
+  const handleAuthChooserSignIn = useCallback(() => {
+    if (!authChooserBase || !isProviderAccountBase(authChooserBase)) return;
+    void handleCreateOauthAccount(authChooserBase);
+  }, [authChooserBase, handleCreateOauthAccount]);
+
+  const handleAuthChooserApiKey = useCallback(() => {
+    if (!authChooserBase) return;
+    setApiKeyBase(authChooserBase);
+    setApiKeyDraft("");
+    setAuthChooserBase(null);
+  }, [authChooserBase]);
+
+  const handleSubmitApiKey = useCallback(() => {
+    if (!apiKeyBase) return;
+    const trimmed = apiKeyDraft.trim();
+    if (trimmed.length === 0) {
+      toast.error(t("settings.providers.apiKeyPlaceholder"));
+      return;
+    }
+    void handleCreateApiKeyInstance(apiKeyBase, trimmed);
+  }, [apiKeyBase, apiKeyDraft, handleCreateApiKeyInstance, t, toast]);
 
   useEffect(() => {
     if (!client || !supportsProviderAccounts || !config) {
@@ -1018,6 +1555,81 @@ export function ProvidersSection({ serverId }: ProvidersSectionProps) {
     [installingProviderId, patchConfig, refresh, t],
   );
 
+  const renderProviderRow = useCallback(
+    ({
+      item: def,
+      index,
+      drag,
+      isActive,
+      dragHandleProps,
+    }: DraggableRenderItemInfo<ProviderDefinition>) => {
+      const entry = entries?.find((candidate) => candidate.provider === def.id);
+      if (!entry) {
+        return <View />;
+      }
+      const accountBase =
+        entry.accountBase && isProviderAccountBase(entry.accountBase)
+          ? entry.accountBase
+          : resolveProviderAccountBase(config, def.id);
+      const isAccount = accountBase !== null;
+      const showRename = isAccount || (supportsProviderRemoval && entry.source === "custom");
+      return (
+        <ProviderRow
+          def={def}
+          entry={entry}
+          enabled={entry.enabled ?? true}
+          isToggling={pendingProviderId === def.id}
+          isRemoving={removingProviderId === def.id}
+          isLoggingIn={loggingInProviderId === def.id}
+          isLoggingOut={loggingOutProviderId === def.id}
+          canRemove={
+            isAccount
+              ? supportsProviderAccounts
+              : supportsProviderRemoval && entry.source === "custom"
+          }
+          showLogin={supportsProviderAccounts && isAccount}
+          showAccountMenu={supportsProviderAccounts && isAccount && Boolean(entry.accountEmail)}
+          showRename={showRename}
+          pendingLogin={pendingLogins[def.id] ?? null}
+          accountBase={accountBase}
+          isFirst={index === 0}
+          isActive={isActive}
+          drag={drag}
+          dragHandleProps={dragHandleProps}
+          onPress={handleOpenProviderSettings}
+          onToggleEnabled={handleToggleEnabled}
+          onLogin={handleLoginProviderAccount}
+          onRename={handleOpenRenameProvider}
+          onLogout={handleLogoutProviderAccount}
+          onCopyLoginCode={handleCopyLoginCode}
+          onOpenLoginPage={handleOpenLoginPage}
+          onRemove={handleRemoveProvider}
+        />
+      );
+    },
+    [
+      config,
+      entries,
+      handleCopyLoginCode,
+      handleLoginProviderAccount,
+      handleLogoutProviderAccount,
+      handleOpenLoginPage,
+      handleOpenProviderSettings,
+      handleOpenRenameProvider,
+      handleRemoveProvider,
+      handleToggleEnabled,
+      loggingInProviderId,
+      loggingOutProviderId,
+      pendingLogins,
+      pendingProviderId,
+      removingProviderId,
+      supportsProviderAccounts,
+      supportsProviderRemoval,
+    ],
+  );
+
+  const providerKeyExtractor = useCallback((definition: ProviderDefinition) => definition.id, []);
+
   return (
     <>
       <SettingsSection
@@ -1035,106 +1647,55 @@ export function ProvidersSection({ serverId }: ProvidersSectionProps) {
             <Text style={styles.emptyText}>{t("settings.providers.loading")}</Text>
           </View>
         ) : null}
+        {hasServer && isConnected && !isLoading && providerDefinitions.length === 0 ? (
+          <View style={[settingsStyles.card, styles.emptyCard]}>
+            <Text style={styles.emptyText}>{t("settings.providers.emptyList")}</Text>
+          </View>
+        ) : null}
         {hasServer && isConnected && !isLoading && providerDefinitions.length > 0 ? (
           <View style={settingsStyles.card}>
-            {providerDefinitions.map((def, index) => {
-              const entry = entries?.find((candidate) => candidate.provider === def.id);
-              if (!entry) return null;
-              const accountBase =
-                entry.accountBase === "claude" || entry.accountBase === "codex"
-                  ? entry.accountBase
-                  : resolveProviderAccountBase(config, def.id);
-              const isAccount = accountBase !== null;
-              return (
-                <ProviderRow
-                  key={def.id}
-                  def={def}
-                  entry={entry}
-                  enabled={entry.enabled ?? true}
-                  isToggling={pendingProviderId === def.id}
-                  isRemoving={removingProviderId === def.id}
-                  isLoggingIn={loggingInProviderId === def.id}
-                  isLoggingOut={loggingOutProviderId === def.id}
-                  canRemove={
-                    isAccount
-                      ? supportsProviderAccounts
-                      : supportsProviderRemoval && entry.source === "custom"
-                  }
-                  showLogin={supportsProviderAccounts && isAccount}
-                  showAccountMenu={
-                    supportsProviderAccounts && isAccount && Boolean(entry.accountEmail)
-                  }
-                  pendingLogin={pendingLogins[def.id] ?? null}
-                  accountBase={accountBase}
-                  isFirst={index === 0}
-                  onPress={handleOpenProviderSettings}
-                  onToggleEnabled={handleToggleEnabled}
-                  onLogin={handleLoginProviderAccount}
-                  onLogout={handleLogoutProviderAccount}
-                  onCopyLoginCode={handleCopyLoginCode}
-                  onOpenLoginPage={handleOpenLoginPage}
-                  onRemove={handleRemoveProvider}
-                />
-              );
-            })}
+            <DraggableList
+              data={providerDefinitions}
+              keyExtractor={providerKeyExtractor}
+              renderItem={renderProviderRow}
+              onDragEnd={handleProviderDragEnd}
+              scrollEnabled={false}
+              useDragHandle
+              testID="provider-list"
+              containerStyle={styles.providerList}
+            />
           </View>
         ) : null}
       </SettingsSection>
 
       {hasServer && isConnected ? (
-        <SettingsSection
-          title={t("settings.providers.accounts.title")}
-          testID="host-page-provider-accounts-card"
-          style={styles.addProviderSection}
-        >
-          {supportsProviderAccounts ? (
-            <View style={styles.accountActions}>
-              <Button
-                size="sm"
-                variant="secondary"
-                disabled={creatingAccountBase !== null}
-                onPress={handleCreateClaudeAccount}
-                testID="provider-account-add-claude"
-              >
-                {creatingAccountBase === "claude"
-                  ? t("settings.providers.accounts.adding")
-                  : t("settings.providers.accounts.addClaude")}
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                disabled={creatingAccountBase !== null}
-                onPress={handleCreateCodexAccount}
-                testID="provider-account-add-codex"
-              >
-                {creatingAccountBase === "codex"
-                  ? t("settings.providers.accounts.adding")
-                  : t("settings.providers.accounts.addCodex")}
-              </Button>
-            </View>
-          ) : (
-            <View style={[settingsStyles.card, styles.emptyCard]}>
-              <Text style={styles.emptyText}>
-                {t("settings.providers.accounts.hostUpdateRequired")}
-              </Text>
-            </View>
-          )}
-        </SettingsSection>
+        <AddProviderCard
+          serverId={serverId}
+          supportsProviderAccounts={supportsProviderAccounts}
+          creatingAccountBase={creatingAccountBase}
+          authChooserBase={authChooserBase}
+          apiKeyBase={apiKeyBase}
+          apiKeyDraft={apiKeyDraft}
+          installingProviderId={installingProviderId}
+          onSelectBuiltin={handleSelectBuiltinProvider}
+          onAuthSignIn={handleAuthChooserSignIn}
+          onAuthApiKey={handleAuthChooserApiKey}
+          onResetAddFlow={resetAddFlow}
+          onApiKeyDraftChange={setApiKeyDraft}
+          onSubmitApiKey={handleSubmitApiKey}
+          onInstall={handleInstall}
+        />
       ) : null}
 
-      {hasServer && isConnected ? (
-        <SettingsSection
-          title={t("settings.providers.addProvider")}
-          testID="host-page-add-provider-card"
-          style={styles.addProviderSection}
-        >
-          <ProviderCatalogList
-            serverId={serverId}
-            installingProviderId={installingProviderId}
-            onInstall={handleInstall}
-          />
-        </SettingsSection>
-      ) : null}
+      <AdaptiveRenameModal
+        visible={renamingProviderId !== null}
+        title={t("settings.providers.rename.title")}
+        initialValue={renamingProviderLabel}
+        submitLabel={t("settings.providers.rename.submit")}
+        onClose={handleCloseRenameProvider}
+        onSubmit={handleRenameProvider}
+        testID="provider-rename-modal"
+      />
     </>
   );
 }
@@ -1146,8 +1707,38 @@ const styles = StyleSheet.create((theme) => ({
   addProviderSection: {
     marginTop: theme.spacing[4],
   },
+  addProviderStack: {
+    gap: theme.spacing[3],
+  },
+  addProviderHeading: {
+    color: theme.colors.foregroundMuted,
+    fontSize: theme.fontSize.sm,
+    fontWeight: theme.fontWeight.medium,
+  },
+  catalogHeading: {
+    marginTop: theme.spacing[2],
+  },
   accountActions: {
     gap: theme.spacing[2],
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  authChooserCard: {
+    padding: theme.spacing[3],
+    gap: theme.spacing[3],
+  },
+  authChooserTitle: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+  },
+  apiKeyInput: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.lg,
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    paddingHorizontal: theme.spacing[3],
+    paddingVertical: theme.spacing[2],
   },
   accountEmailMuted: {
     color: theme.colors.foregroundMuted,
@@ -1169,15 +1760,34 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.foregroundMuted,
     fontSize: theme.fontSize.sm,
   },
+  providerList: {
+    flexGrow: 0,
+  },
   row: {
     gap: theme.spacing[3],
     minHeight: 56,
+    alignItems: "center",
+  },
+  rowDragging: {
+    backgroundColor: theme.colors.surface2,
+  },
+  rowPressable: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 56,
+    justifyContent: "center",
   },
   rowHovered: {
     backgroundColor: theme.colors.surface2,
   },
   rowPressed: {
     backgroundColor: theme.colors.surface3,
+  },
+  dragHandle: {
+    paddingVertical: theme.spacing[2],
+    paddingHorizontal: theme.spacing[1],
+    justifyContent: "center",
+    alignItems: "center",
   },
   rowContent: {
     flex: 1,
@@ -1193,6 +1803,11 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: "row",
     alignItems: "center",
     gap: theme.spacing[2],
+  },
+  companyLabel: {
+    color: theme.colors.foregroundMuted,
+    fontSize: theme.fontSize.sm,
+    flexShrink: 1,
   },
   statusRow: {
     flexDirection: "row",
