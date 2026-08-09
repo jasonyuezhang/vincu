@@ -106,6 +106,7 @@ See [docs/development.md](docs/development.md) for full setup, build sync requir
 - **NEVER assume a timeout means the service needs restarting** — timeouts can be transient.
 - **NEVER add auth checks to tests** — agent providers handle their own auth.
 - **Before changing app routes, startup routing, remembered workspace restore, or active workspace selection, read [docs/expo-router.md](docs/expo-router.md).**
+- **Every round of development ends with all tests passing.** Run the test files you touched locally, push, and confirm CI is green before calling the work done. If your change breaks a suite you didn't touch, fixing it is part of the same round — never leave known-failing tests on the branch or on `main`.
 - **NEVER run the full test suite locally.** The test suites are heavy and will freeze the machine, especially if multiple agents run them in parallel. Rules:
   - Run only the specific test file you changed: `npx vitest run <file> --bail=1`
   - Never run `npm run test` for an entire workspace unless explicitly asked.

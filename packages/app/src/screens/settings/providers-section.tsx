@@ -19,6 +19,7 @@ import {
   type PressableStateCallbackType,
 } from "react-native";
 import { StyleSheet, useUnistyles, withUnistyles } from "react-native-unistyles";
+import { BUILTIN_PROVIDER_IDS } from "@getvincu/protocol/provider-manifest";
 import { useIsCompactFormFactor } from "@/constants/layout";
 import { isNative } from "@/constants/platform";
 import { settingsStyles } from "@/styles/settings";
@@ -27,7 +28,7 @@ import { useHostRuntimeClient, useHostRuntimeIsConnected } from "@/runtime/host-
 import { useHostFeature } from "@/runtime/host-features";
 import { useProvidersSnapshot } from "@/hooks/use-providers-snapshot";
 import { useDaemonConfig } from "@/hooks/use-daemon-config";
-import { buildProviderDefinitions } from "@/utils/provider-definitions";
+import { buildProviderDefinitions, orderProviderDefinitions } from "@/utils/provider-definitions";
 import {
   buildAcpProviderConfigPatch,
   type AcpProviderCatalogItem,
@@ -1089,8 +1090,33 @@ export function ProvidersSection({ serverId }: ProvidersSectionProps) {
   const [loggingOutProviderId, setLoggingOutProviderId] = useState<string | null>(null);
   const [pendingLogins, setPendingLogins] = useState<Record<string, PendingAccountLogin>>({});
   const [renamingProviderId, setRenamingProviderId] = useState<string | null>(null);
+  const [optimisticOrderIds, setOptimisticOrderIds] = useState<string[] | null>(null);
 
-  const providerDefinitions = useMemo(() => buildProviderDefinitions(entries), [entries]);
+  const providerDefinitions = useMemo(
+    () =>
+      orderProviderDefinitions(
+        buildProviderDefinitions(entries),
+        config?.providers,
+        optimisticOrderIds,
+      ),
+    [config?.providers, entries, optimisticOrderIds],
+  );
+
+  useEffect(() => {
+    if (!optimisticOrderIds) return;
+    const orderedFromConfig = orderProviderDefinitions(
+      buildProviderDefinitions(entries),
+      config?.providers,
+      null,
+    ).map((definition) => definition.id);
+    if (
+      orderedFromConfig.length === optimisticOrderIds.length &&
+      orderedFromConfig.every((providerId, index) => providerId === optimisticOrderIds[index])
+    ) {
+      setOptimisticOrderIds(null);
+    }
+  }, [config?.providers, entries, optimisticOrderIds]);
+
   const hasServer = serverId.length > 0;
 
   const handleOpenProviderSettings = useCallback(
@@ -1127,17 +1153,35 @@ export function ProvidersSection({ serverId }: ProvidersSectionProps) {
       ) {
         return;
       }
+      // Only patch providers the daemon can persist: builtins and ids that already
+      // have a config entry. Runtime-only providers (dev mock providers) have no
+      // config entry, and creating one with just `order` fails persisted-config
+      // validation ("custom provider must declare extends/label"), which would
+      // reject the whole patch.
+      const persistableIds = new Set<string>([
+        ...BUILTIN_PROVIDER_IDS,
+        ...Object.keys(config?.providers ?? {}),
+      ]);
       const providers = Object.fromEntries(
-        orderedIds.map((providerId, order) => [providerId, { order }]),
+        orderedIds
+          .filter((providerId) => persistableIds.has(providerId))
+          .map((providerId, order) => [providerId, { order }]),
       );
+      if (Object.keys(providers).length === 0) {
+        return;
+      }
+      // Keep the list in the dropped order while patchConfig + snapshot catch up.
+      // Drag state clears before those updates, so without this the row snaps back.
+      setOptimisticOrderIds(orderedIds);
       void patchConfig({ providers }).catch((error: unknown) => {
+        setOptimisticOrderIds(null);
         Alert.alert(
           t("settings.providers.updateErrorTitle"),
           error instanceof Error ? error.message : String(error),
         );
       });
     },
-    [patchConfig, providerDefinitions, t],
+    [config?.providers, patchConfig, providerDefinitions, t],
   );
 
   const handleRemoveProvider = useCallback(

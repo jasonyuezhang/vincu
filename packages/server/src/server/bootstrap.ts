@@ -518,6 +518,9 @@ function createInitialMutableDaemonConfig(config: VincuDaemonConfig): MutableDae
       if (override.additionalModels) {
         providerConfig.additionalModels = override.additionalModels;
       }
+      if (typeof override.order === "number") {
+        providerConfig.order = override.order;
+      }
       // Keep account markers + home paths after restart. Arbitrary env secrets in
       // custom-provider overrides stay daemon-only (not copied into mutable config).
       if (override.extends) {

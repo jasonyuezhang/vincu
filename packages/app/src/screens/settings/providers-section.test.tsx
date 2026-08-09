@@ -659,6 +659,47 @@ describe("ProvidersSection", () => {
         claude: { order: 1 },
       },
     });
+
+    // Optimistic order keeps the dropped sequence even while the snapshot is stale.
+    const rowOrder = Array.from(
+      container?.querySelectorAll<HTMLElement>('[data-testid^="provider-row-"]') ?? [],
+    ).map((row) => row.getAttribute("data-testid"));
+    expect(rowOrder).toEqual(["provider-row-codex", "provider-row-claude"]);
+  });
+
+  it("skips runtime-only providers without a config entry when persisting order", async () => {
+    const mockEntry: ProviderSnapshotEntry = {
+      provider: "mock",
+      status: "ready",
+      enabled: true,
+      label: "Mock Load Test",
+      description: "Dev mock provider",
+      defaultModeId: null,
+      modes: [],
+    };
+    // "mock" is registered at runtime in dev daemons but has no config entry;
+    // patching `{ order }` for it would fail persisted-config validation.
+    snapshotState.entries = [mockEntry, claudeEntry, disabledCodexEntry];
+    configState.config = makeConfig({ codex: { enabled: false } });
+
+    render();
+
+    const simulateReorder = container?.querySelector<HTMLButtonElement>(
+      '[data-testid="provider-list-simulate-reorder"]',
+    );
+    expect(simulateReorder).not.toBeNull();
+
+    // Simulated reorder moves the first row (mock) to the end.
+    await act(async () => {
+      simulateReorder?.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(patchConfigMock).toHaveBeenCalledWith({
+      providers: {
+        claude: { order: 0 },
+        codex: { order: 1 },
+      },
+    });
   });
 
   it("shows account instance label with company as same-line subtitle", () => {

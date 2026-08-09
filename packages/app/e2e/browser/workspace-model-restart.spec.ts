@@ -15,6 +15,7 @@ import {
   type NodeWebSocketFactory,
 } from "../support/helpers/node-ws-factory";
 import { withDisabledE2ESpeechEnv } from "../support/helpers/speech-env";
+import { ensureE2EBuiltinProviderStubs } from "../support/helpers/isolated-host-daemon";
 import {
   expectNewWorkspaceProjectSelected,
   openGlobalNewWorkspaceComposer,
@@ -130,6 +131,9 @@ async function seedRestartHome(): Promise<SeededRestartHome> {
     path.join(projectsDir, "workspaces.json"),
     JSON.stringify([workspaceA, workspaceB]),
   );
+  // Builtins are instance-only; without an enabled override the daemon never
+  // registers codex and the seeded legacy agent cannot restore.
+  await ensureE2EBuiltinProviderStubs(vincuHome);
   writeFileSync(
     path.join(agentDir, `${LEGACY_AGENT_ID}.json`),
     JSON.stringify({

@@ -33,6 +33,47 @@ export function buildProviderDefinitions(
   }));
 }
 
+/** Sort Settings / picker lists by persisted `order`, with optional optimistic ids. */
+export function orderProviderDefinitions<T extends { id: string }>(
+  definitions: T[],
+  providerConfig: Record<string, { order?: number } | undefined> | null | undefined,
+  optimisticOrderIds?: string[] | null,
+): T[] {
+  if (definitions.length <= 1) {
+    return definitions;
+  }
+
+  const byId = new Map(definitions.map((definition) => [definition.id, definition]));
+  if (optimisticOrderIds && optimisticOrderIds.length > 0) {
+    const ordered: T[] = [];
+    for (const id of optimisticOrderIds) {
+      const definition = byId.get(id);
+      if (definition) {
+        ordered.push(definition);
+        byId.delete(id);
+      }
+    }
+    for (const definition of definitions) {
+      if (byId.has(definition.id)) {
+        ordered.push(definition);
+      }
+    }
+    return ordered;
+  }
+
+  const snapshotIndex = new Map(definitions.map((definition, index) => [definition.id, index]));
+  return [...definitions].sort((left, right) => {
+    const leftOrder = providerConfig?.[left.id]?.order;
+    const rightOrder = providerConfig?.[right.id]?.order;
+    const leftRank = typeof leftOrder === "number" ? leftOrder : Number.POSITIVE_INFINITY;
+    const rightRank = typeof rightOrder === "number" ? rightOrder : Number.POSITIVE_INFINITY;
+    if (leftRank !== rightRank) {
+      return leftRank - rightRank;
+    }
+    return (snapshotIndex.get(left.id) ?? 0) - (snapshotIndex.get(right.id) ?? 0);
+  });
+}
+
 export function resolveProviderLabel(
   provider: string,
   snapshotEntries: ProviderSnapshotEntry[] | undefined,
