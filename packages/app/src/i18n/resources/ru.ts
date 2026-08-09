@@ -1786,6 +1786,14 @@ export const ru: TranslationResources = {
           external: "Внешний браузер",
         },
       },
+      openLinks: {
+        label: "Открывать ссылки",
+        description: "Где открываются ссылки из чатов, файлов и терминалов",
+        options: {
+          inApp: "В Vincu",
+          external: "Внешний браузер",
+        },
+      },
       terminalScrollback: {
         label: "Terminal прокрутка назад",
         description: "Строки, хранящиеся во встроенном буфере терминала.",

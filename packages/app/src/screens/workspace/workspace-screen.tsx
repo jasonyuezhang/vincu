@@ -110,6 +110,7 @@ import { useWorkspace } from "@/stores/session-store-hooks";
 import { useWorkspaceTerminalSessionRetention } from "@/terminal/hooks/use-workspace-terminal-session-retention";
 import type { CheckoutStatusPayload } from "@/git/use-status-query";
 import { confirmDialog } from "@/utils/confirm-dialog";
+import { registerInAppLinkOpener } from "@/utils/open-link-url";
 import { useArchiveAgent } from "@/hooks/use-archive-agent";
 import { useStableEvent } from "@/hooks/use-stable-event";
 import { removeResidentBrowserWebview } from "@/desktop/browser/resident-webviews";
@@ -2663,6 +2664,15 @@ function WorkspaceScreenContent({
     workspaceLayout,
     openUrl: handleOpenUrlInBrowserTab,
   });
+
+  // Let content links (chat/markdown/file links) reach the internal browser
+  // pane when the "Open links" setting is "in-app".
+  useEffect(() => {
+    if (!persistenceKey || !getIsElectron()) {
+      return;
+    }
+    return registerInAppLinkOpener(handleOpenUrlInBrowserTab);
+  }, [persistenceKey, handleOpenUrlInBrowserTab]);
 
   const handleSelectSwitcherTab = useCallback(
     (key: string) => {

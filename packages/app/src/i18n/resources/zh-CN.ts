@@ -1731,6 +1731,14 @@ export const zhCN: TranslationResources = {
           external: "外部浏览器",
         },
       },
+      openLinks: {
+        label: "打开链接",
+        description: "聊天、文件和终端中的链接打开位置",
+        options: {
+          inApp: "在 Vincu 中",
+          external: "外部浏览器",
+        },
+      },
       terminalScrollback: {
         label: "终端回滚",
         description: "内置终端缓冲区保留的行数",

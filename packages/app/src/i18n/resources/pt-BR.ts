@@ -1782,6 +1782,14 @@ export const ptBR: TranslationResources = {
           external: "Navegador externo",
         },
       },
+      openLinks: {
+        label: "Abrir links",
+        description: "Onde abrir links de chats, arquivos e terminais",
+        options: {
+          inApp: "No Vincu",
+          external: "Navegador externo",
+        },
+      },
       terminalScrollback: {
         label: "Scrollback do terminal",
         description: "Linhas mantidas no buffer do terminal integrado",

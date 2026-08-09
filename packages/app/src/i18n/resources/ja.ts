@@ -1767,6 +1767,14 @@ export const ja: TranslationResources = {
           external: "外部ブラウザ",
         },
       },
+      openLinks: {
+        label: "リンクの開き方",
+        description: "チャット、ファイル、ターミナルのリンクを開く場所",
+        options: {
+          inApp: "Vincuで",
+          external: "外部ブラウザ",
+        },
+      },
       terminalScrollback: {
         label: "ターミナルスクロールバック",
         description: "組み込みターミナルバッファに保持する行数",

@@ -52,6 +52,7 @@ import {
   parseTerminalScrollbackLines,
   type AppSettings,
   type SendBehavior,
+  type LinkOpenBehavior,
   type ServiceUrlBehavior,
   type Settings as EffectiveSettings,
 } from "@/hooks/use-settings";
@@ -244,12 +245,21 @@ function getServiceUrlBehaviorLabel(t: TFunction, value: ServiceUrlBehavior): st
   return labels[value];
 }
 
+function getLinkOpenBehaviorLabel(t: TFunction, value: LinkOpenBehavior): string {
+  const labels: Record<LinkOpenBehavior, string> = {
+    "in-app": t("settings.general.openLinks.options.inApp"),
+    external: t("settings.general.openLinks.options.external"),
+  };
+  return labels[value];
+}
+
 function getActiveLocale(language: string | undefined): SupportedLocale {
   const parsed = parseAppLanguage(language);
   return parsed && parsed !== "system" ? parsed : "en";
 }
 
 const SERVICE_URL_BEHAVIOR_VALUES: ServiceUrlBehavior[] = ["ask", "in-app", "external"];
+const LINK_OPEN_BEHAVIOR_VALUES: LinkOpenBehavior[] = ["external", "in-app"];
 
 // ---------------------------------------------------------------------------
 // Section components
@@ -260,6 +270,7 @@ interface GeneralSectionProps {
   isDesktopApp: boolean;
   handleSendBehaviorChange: (behavior: SendBehavior) => void;
   handleServiceUrlBehaviorChange: (behavior: ServiceUrlBehavior) => void;
+  handleLinkOpenBehaviorChange: (behavior: LinkOpenBehavior) => void;
   handleLanguageChange: (language: AppLanguage) => void;
   handleTerminalScrollbackLinesChange: (lines: number) => void;
 }
@@ -277,6 +288,29 @@ function ServiceUrlBehaviorMenuItem({
   selected,
   onChange,
 }: ServiceUrlBehaviorMenuItemProps) {
+  const handleSelect = useCallback(() => {
+    onChange(value);
+  }, [onChange, value]);
+  return (
+    <DropdownMenuItem selected={selected} onSelect={handleSelect}>
+      {label}
+    </DropdownMenuItem>
+  );
+}
+
+interface LinkOpenBehaviorMenuItemProps {
+  value: LinkOpenBehavior;
+  label: string;
+  selected: boolean;
+  onChange: (value: LinkOpenBehavior) => void;
+}
+
+function LinkOpenBehaviorMenuItem({
+  value,
+  label,
+  selected,
+  onChange,
+}: LinkOpenBehaviorMenuItemProps) {
   const handleSelect = useCallback(() => {
     onChange(value);
   }, [onChange, value]);
@@ -316,6 +350,7 @@ function GeneralSection({
   isDesktopApp,
   handleSendBehaviorChange,
   handleServiceUrlBehaviorChange,
+  handleLinkOpenBehaviorChange,
   handleLanguageChange,
   handleTerminalScrollbackLinesChange,
 }: GeneralSectionProps) {
@@ -424,6 +459,34 @@ function GeneralSection({
                     label={getServiceUrlBehaviorLabel(t, value)}
                     selected={settings.serviceUrlBehavior === value}
                     onChange={handleServiceUrlBehaviorChange}
+                  />
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </View>
+        ) : null}
+        {isDesktopApp ? (
+          <View style={[settingsStyles.row, settingsStyles.rowBorder]}>
+            <View style={settingsStyles.rowContent}>
+              <Text style={settingsStyles.rowTitle}>{t("settings.general.openLinks.label")}</Text>
+              <Text style={settingsStyles.rowHint}>
+                {t("settings.general.openLinks.description")}
+              </Text>
+            </View>
+            <DropdownMenu>
+              <DropdownTrigger style={themeTriggerStyle}>
+                <Text style={styles.themeTriggerText}>
+                  {getLinkOpenBehaviorLabel(t, settings.linkOpenBehavior)}
+                </Text>
+              </DropdownTrigger>
+              <DropdownMenuContent side="bottom" align="end" width={200}>
+                {LINK_OPEN_BEHAVIOR_VALUES.map((value) => (
+                  <LinkOpenBehaviorMenuItem
+                    key={value}
+                    value={value}
+                    label={getLinkOpenBehaviorLabel(t, value)}
+                    selected={settings.linkOpenBehavior === value}
+                    onChange={handleLinkOpenBehaviorChange}
                   />
                 ))}
               </DropdownMenuContent>
@@ -1183,6 +1246,13 @@ export default function SettingsScreen({ view, openAddHostIntent = null }: Setti
     [updateSettings],
   );
 
+  const handleLinkOpenBehaviorChange = useCallback(
+    (behavior: LinkOpenBehavior) => {
+      void updateSettings({ linkOpenBehavior: behavior });
+    },
+    [updateSettings],
+  );
+
   const handleLanguageChange = useCallback(
     (language: AppLanguage) => {
       void updateSettings({ language });
@@ -1413,6 +1483,7 @@ export default function SettingsScreen({ view, openAddHostIntent = null }: Setti
                 isDesktopApp={isDesktopApp}
                 handleSendBehaviorChange={handleSendBehaviorChange}
                 handleServiceUrlBehaviorChange={handleServiceUrlBehaviorChange}
+                handleLinkOpenBehaviorChange={handleLinkOpenBehaviorChange}
                 handleLanguageChange={handleLanguageChange}
                 handleTerminalScrollbackLinesChange={handleTerminalScrollbackLinesChange}
               />

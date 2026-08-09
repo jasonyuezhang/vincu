@@ -1763,6 +1763,14 @@ export const ko: TranslationResources = {
           external: "외부 브라우저",
         },
       },
+      openLinks: {
+        label: "링크 열기",
+        description: "채팅, 파일, 터미널의 링크를 열 위치",
+        options: {
+          inApp: "Vincu에서",
+          external: "외부 브라우저",
+        },
+      },
       terminalScrollback: {
         label: "터미널 스크롤백",
         description: "내장 터미널 버퍼에 보관되는 줄 수",
