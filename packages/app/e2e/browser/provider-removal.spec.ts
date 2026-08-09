@@ -49,6 +49,7 @@ async function clickRemoveProviderAndAcceptWarning(page: Page): Promise<Dialog> 
     expect(dialog.message()).toContain("This deletes the provider entry from config.json.");
     void dialog.accept();
   });
+  await page.getByTestId(`provider-account-menu-${CUSTOM_PROVIDER.id}`).click();
   await page.getByTestId(`provider-remove-${CUSTOM_PROVIDER.id}`).click();
   if (!warning) {
     throw new Error("Expected a provider removal confirmation dialog, but none was shown.");
@@ -77,7 +78,7 @@ test.describe("provider removal", () => {
       await expectProviderInstalledInSettings(page, CUSTOM_PROVIDER.name);
       await expectProviderSource(client, "custom");
 
-      await expect(page.getByTestId(`provider-remove-${CUSTOM_PROVIDER.id}`)).toBeVisible();
+      await expect(page.getByTestId(`provider-account-menu-${CUSTOM_PROVIDER.id}`)).toBeVisible();
       await clickRemoveProviderAndAcceptWarning(page);
 
       await expect(
