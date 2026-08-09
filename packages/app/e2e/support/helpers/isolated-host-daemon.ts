@@ -6,11 +6,41 @@ import {
   type ChildProcess,
   type SpawnOptions,
 } from "node:child_process";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import net from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { withDisabledE2ESpeechEnv } from "./speech-env";
+
+/** Builtins e2e still creates by id after instance-only listing. */
+const E2E_BUILTIN_PROVIDER_STUBS = ["opencode", "codex", "claude"] as const;
+
+async function ensureE2EBuiltinProviderStubs(vincuHome: string): Promise<void> {
+  const configPath = path.join(vincuHome, "config.json");
+  let config: {
+    version?: number;
+    agents?: { providers?: Record<string, unknown> };
+    [key: string]: unknown;
+  } = { version: 1 };
+  try {
+    config = JSON.parse(await readFile(configPath, "utf8")) as typeof config;
+  } catch {
+    // Fresh home — write stubs below.
+  }
+  const existingProviders = config.agents?.providers;
+  const providers: Record<string, unknown> = existingProviders ? { ...existingProviders } : {};
+  let changed = false;
+  for (const providerId of E2E_BUILTIN_PROVIDER_STUBS) {
+    if (providers[providerId] === undefined) {
+      providers[providerId] = { enabled: true };
+      changed = true;
+    }
+  }
+  if (!changed) return;
+  config.version ??= 1;
+  config.agents = { ...config.agents, providers };
+  await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`);
+}
 
 export interface IsolatedHostDaemon {
   serverId: string;
@@ -154,6 +184,8 @@ export async function startIsolatedHostDaemon(
       })}\n`,
     );
   }
+  // Instance-only builtins need an override before createAgent(opencode/codex/…).
+  await ensureE2EBuiltinProviderStubs(vincuHome);
   const serverDir = publishedPackageRoot
     ? // Historical published versions are still scoped @getpaseo.
       path.join(publishedPackageRoot, "node_modules", "@getpaseo", "server")

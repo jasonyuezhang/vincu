@@ -1,9 +1,49 @@
 import { describe, expect, it } from "vitest";
 import type { AgentModelDefinition } from "@getvincu/protocol/agent-types";
+import type { ProviderProfileModel } from "@getvincu/protocol/provider-config";
 import {
+  buildAdditionalModelsWithDefault,
   resolveProviderDiscoveredModels,
   type ProviderDiscoveredModelsCache,
 } from "./provider-diagnostic-models";
+
+describe("buildAdditionalModelsWithDefault", () => {
+  it("adds a discovered model override marked as the sole default", () => {
+    const existing: ProviderProfileModel[] = [
+      { id: "custom-a", label: "Custom A", isDefault: true },
+    ];
+
+    expect(
+      buildAdditionalModelsWithDefault(existing, {
+        id: "gpt-5.4",
+        label: "GPT-5.4",
+        description: "Solid coding model.",
+      }),
+    ).toEqual([
+      { id: "custom-a", label: "Custom A", isDefault: false },
+      {
+        id: "gpt-5.4",
+        label: "GPT-5.4",
+        description: "Solid coding model.",
+        isDefault: true,
+      },
+    ]);
+  });
+
+  it("flips isDefault onto an existing additional model and clears siblings", () => {
+    const existing: ProviderProfileModel[] = [
+      { id: "custom-a", label: "Custom A", isDefault: true },
+      { id: "custom-b", label: "Custom B" },
+    ];
+
+    expect(
+      buildAdditionalModelsWithDefault(existing, { id: "custom-b", label: "Custom B" }),
+    ).toEqual([
+      { id: "custom-a", label: "Custom A", isDefault: false },
+      { id: "custom-b", label: "Custom B", isDefault: true },
+    ]);
+  });
+});
 
 const piModel: AgentModelDefinition = {
   provider: "pi",

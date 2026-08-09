@@ -574,7 +574,7 @@ export class ProviderSnapshotManager {
   }
 
   private resolveAccountIdentity(provider: AgentProvider): {
-    accountBase?: "claude" | "codex";
+    accountBase?: "claude" | "codex" | "cursor";
     accountEmail?: string;
   } {
     const override = this.providerOverrides?.[provider];

@@ -53,11 +53,16 @@ export interface SheetHeaderBack {
 export interface SheetHeader {
   title: string;
   subtitle?: ReactNode;
+  /** Double-click / double-tap on the title. Used for inline rename. */
+  onTitleDoubleClick?: () => void;
+  titleAccessibilityHint?: string;
   back?: SheetHeaderBack;
   leading?: ReactNode;
   actions?: ReactNode;
   search?: SheetHeaderSearch;
 }
+
+const TITLE_DOUBLE_CLICK_MS = 350;
 
 const ABSOLUTE_FILL_STYLE = { ...StyleSheet.absoluteFillObject };
 
@@ -338,6 +343,7 @@ export function SheetHeaderView({
 }) {
   const { theme } = useUnistyles();
   const { t } = useTranslation();
+  const lastTitlePressAtRef = useRef(0);
   const titleStyle = useMemo(
     () => [styles.title, { color: theme.colors.foreground }],
     [theme.colors.foreground],
@@ -351,6 +357,17 @@ export function SheetHeaderView({
     },
     [search],
   );
+  const handleTitlePress = useCallback(() => {
+    const onTitleDoubleClick = header.onTitleDoubleClick;
+    if (!onTitleDoubleClick) return;
+    const now = Date.now();
+    if (now - lastTitlePressAtRef.current <= TITLE_DOUBLE_CLICK_MS) {
+      lastTitlePressAtRef.current = 0;
+      onTitleDoubleClick();
+      return;
+    }
+    lastTitlePressAtRef.current = now;
+  }, [header.onTitleDoubleClick]);
 
   return (
     <View style={styles.headerContainer} testID={testID}>
@@ -374,9 +391,23 @@ export function SheetHeaderView({
         ) : null}
         {header.leading ? <View style={styles.headerLeadingSlot}>{header.leading}</View> : null}
         <View style={styles.headerTitleGroup}>
-          <Text style={titleStyle} numberOfLines={1}>
-            {header.title}
-          </Text>
+          {header.onTitleDoubleClick ? (
+            <Pressable
+              onPress={handleTitlePress}
+              accessibilityRole="button"
+              accessibilityLabel={header.title}
+              accessibilityHint={header.titleAccessibilityHint}
+              testID="sheet-header-title"
+            >
+              <Text style={titleStyle} numberOfLines={1}>
+                {header.title}
+              </Text>
+            </Pressable>
+          ) : (
+            <Text style={titleStyle} numberOfLines={1} testID="sheet-header-title">
+              {header.title}
+            </Text>
+          )}
           {header.subtitle}
         </View>
         {header.actions ? <View style={styles.headerActions}>{header.actions}</View> : null}

@@ -1207,6 +1207,10 @@ export class HubRelationshipHarness {
       mcpEnabled: this.mcpEnabled,
       staticDir,
       mcpDebug: false,
+      // Instance-only builtins need an enabled override before injected agentClients bind.
+      providerOverrides: {
+        codex: { enabled: true },
+      },
       agentClients: {
         ...createTestAgentClients(),
         codex: this.codex,

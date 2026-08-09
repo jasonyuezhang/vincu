@@ -199,6 +199,8 @@ export const AGENT_PROVIDER_DEFINITIONS: AgentProviderDefinition[] = [
     id: "claude",
     label: "Claude",
     description: "Anthropic's multi-tool assistant with MCP support, streaming, and deep reasoning",
+    // Instance-only: surface via Add (account or API key), not as a default row.
+    enabledByDefault: false,
     defaultModeId: "auto",
     modes: CLAUDE_MODES,
     voice: {
@@ -211,6 +213,7 @@ export const AGENT_PROVIDER_DEFINITIONS: AgentProviderDefinition[] = [
     id: "codex",
     label: "Codex",
     description: "OpenAI's Codex workspace agent with sandbox controls and optional network access",
+    enabledByDefault: false,
     defaultModeId: "auto-review",
     modes: CODEX_MODES,
     voice: {
@@ -223,6 +226,7 @@ export const AGENT_PROVIDER_DEFINITIONS: AgentProviderDefinition[] = [
     id: "copilot",
     label: "Copilot",
     description: "GitHub Copilot via Agent Client Protocol with dynamic modes and session support",
+    enabledByDefault: false,
     defaultModeId: "https://agentclientprotocol.com/protocol/session-modes#agent",
     modes: COPILOT_MODES,
   },
@@ -230,6 +234,7 @@ export const AGENT_PROVIDER_DEFINITIONS: AgentProviderDefinition[] = [
     id: "cursor",
     label: "Cursor",
     description: "Cursor's coding agent via Agent Client Protocol",
+    enabledByDefault: false,
     // Modes and models come from cursor-agent at runtime.
     defaultModeId: null,
     modes: [],
@@ -238,6 +243,7 @@ export const AGENT_PROVIDER_DEFINITIONS: AgentProviderDefinition[] = [
     id: "opencode",
     label: "OpenCode",
     description: "Open-source coding assistant with multi-provider model support",
+    enabledByDefault: false,
     // No static default: OpenCode users can rename or delete any agent,
     // including "build". Leaving this unset means the daemon and OpenCode
     // itself decide (see normalizeOpenCodeModeId in opencode-agent.ts).
@@ -252,6 +258,7 @@ export const AGENT_PROVIDER_DEFINITIONS: AgentProviderDefinition[] = [
     id: "pi",
     label: "Pi",
     description: "Minimal terminal-based coding agent with multi-provider LLM support",
+    enabledByDefault: false,
     defaultModeId: null,
     modes: [],
   },

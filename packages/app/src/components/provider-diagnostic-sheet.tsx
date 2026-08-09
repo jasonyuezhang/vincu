@@ -3,23 +3,31 @@ import { AlertTriangle, Copy, FileText, Plus, RotateCw, Trash2 } from "lucide-re
 import type { TFunction } from "i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, type PressableStateCallbackType, Text, View } from "react-native";
+import { Alert, Pressable, type PressableStateCallbackType, Text, View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import {
   AdaptiveModalSheet,
   AdaptiveTextInput,
   type SheetHeader,
 } from "@/components/adaptive-modal-sheet";
+import { AdaptiveRenameModal } from "@/components/rename-modal";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ScrollableCodeSurface, SurfaceCard } from "@/components/ui/scrollable-code-surface";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { useIsCompactFormFactor } from "@/constants/layout";
 import { isWeb } from "@/constants/platform";
 import { useToast } from "@/contexts/toast-context";
 import { CODE_SURFACE_DATASET } from "@/styles/code-surface";
 import { useDaemonConfig } from "@/hooks/use-daemon-config";
 import { useProvidersSnapshot } from "@/hooks/use-providers-snapshot";
+import { useHostFeature } from "@/runtime/host-features";
 import { useHostRuntimeClient } from "@/runtime/host-runtime";
+import {
+  isProviderAccountBase,
+  isProviderAccountId,
+  resolveProviderAccountBase,
+} from "@/provider-accounts/is-provider-account";
 import { settingsStyles } from "@/styles/settings";
 import { resolveProviderLabel } from "@/utils/provider-definitions";
 import { formatTimeAgo } from "@/utils/time";
@@ -27,6 +35,7 @@ import { compareMatchScores, scoreTextFields } from "@/utils/score-match";
 import type { AgentModelDefinition, AgentProvider } from "@getvincu/protocol/agent-types";
 import type { ProviderProfileModel } from "@getvincu/protocol/provider-config";
 import {
+  buildAdditionalModelsWithDefault,
   resolveProviderDiscoveredModels,
   type ProviderDiscoveredModelsCache,
 } from "./provider-diagnostic-models";
@@ -49,9 +58,77 @@ function rankModels<T>(items: T[], query: string, fields: (item: T) => string[])
   return scored.map((entry) => entry.item);
 }
 
-function DiscoveredModelRow({ model }: { model: AgentModelDefinition }) {
+function ModelRowActions({
+  modelId,
+  isDefault,
+  settingDefault,
+  onSetDefault,
+  deleting,
+  onDelete,
+}: {
+  modelId: string;
+  isDefault: boolean;
+  settingDefault: boolean;
+  onSetDefault: (modelId: string) => void;
+  deleting?: boolean;
+  onDelete?: (modelId: string) => void;
+}) {
+  const { t } = useTranslation();
+  const { theme } = useUnistyles();
+  const handleSetDefault = useCallback(() => onSetDefault(modelId), [modelId, onSetDefault]);
+  const handleDelete = useCallback(() => onDelete?.(modelId), [modelId, onDelete]);
+  const deleteButtonStyle = useCallback(
+    ({ hovered, pressed }: PressableStateCallbackType & { hovered?: boolean }) => [
+      sheetStyles.iconButton,
+      (Boolean(hovered) || pressed) && sheetStyles.iconButtonHovered,
+      deleting ? sheetStyles.disabled : null,
+    ],
+    [deleting],
+  );
+
   return (
-    <View style={sheetStyles.modelRow}>
+    <View style={sheetStyles.modelRowActions}>
+      {isDefault ? (
+        <StatusBadge label={t("settings.providers.models.defaultBadge")} />
+      ) : (
+        <Button
+          variant="outline"
+          size="xs"
+          onPress={handleSetDefault}
+          disabled={settingDefault}
+          accessibilityLabel={t("settings.providers.models.setDefault", { id: modelId })}
+          testID={`provider-model-set-default-${modelId}`}
+        >
+          {t("settings.providers.models.setDefaultAction")}
+        </Button>
+      )}
+      {onDelete ? (
+        <Pressable
+          onPress={handleDelete}
+          disabled={deleting || settingDefault}
+          hitSlop={8}
+          style={deleteButtonStyle}
+          accessibilityRole="button"
+          accessibilityLabel={t("settings.providers.models.removeModel", { id: modelId })}
+        >
+          <Trash2 size={theme.iconSize.sm} color={theme.colors.destructive} />
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
+function DiscoveredModelRow({
+  model,
+  settingDefault,
+  onSetDefault,
+}: {
+  model: AgentModelDefinition;
+  settingDefault: boolean;
+  onSetDefault: (modelId: string) => void;
+}) {
+  return (
+    <View style={sheetStyles.modelRow} testID={`provider-model-row-${model.id}`}>
       <Text style={sheetStyles.modelTitle} numberOfLines={1}>
         {model.label}
       </Text>
@@ -67,7 +144,15 @@ function DiscoveredModelRow({ model }: { model: AgentModelDefinition }) {
         <Text style={sheetStyles.descriptionInline} numberOfLines={1}>
           {model.description}
         </Text>
-      ) : null}
+      ) : (
+        <View style={sheetStyles.modelRowFiller} />
+      )}
+      <ModelRowActions
+        modelId={model.id}
+        isDefault={model.isDefault === true}
+        settingDefault={settingDefault}
+        onSetDefault={onSetDefault}
+      />
     </View>
   );
 }
@@ -75,26 +160,18 @@ function DiscoveredModelRow({ model }: { model: AgentModelDefinition }) {
 function CustomModelRow({
   model,
   deleting,
+  settingDefault,
   onDelete,
+  onSetDefault,
 }: {
   model: ProviderProfileModel;
   deleting: boolean;
+  settingDefault: boolean;
   onDelete: (modelId: string) => void;
+  onSetDefault: (modelId: string) => void;
 }) {
-  const { t } = useTranslation();
-  const { theme } = useUnistyles();
-  const handleDelete = useCallback(() => onDelete(model.id), [model.id, onDelete]);
-  const deleteButtonStyle = useCallback(
-    ({ hovered, pressed }: PressableStateCallbackType & { hovered?: boolean }) => [
-      sheetStyles.iconButton,
-      (Boolean(hovered) || pressed) && sheetStyles.iconButtonHovered,
-      deleting ? sheetStyles.disabled : null,
-    ],
-    [deleting],
-  );
-
   return (
-    <View style={sheetStyles.modelRow}>
+    <View style={sheetStyles.modelRow} testID={`provider-model-row-${model.id}`}>
       <Text style={sheetStyles.modelTitle} numberOfLines={1}>
         {model.label}
       </Text>
@@ -107,16 +184,14 @@ function CustomModelRow({
         {model.id}
       </Text>
       <View style={sheetStyles.modelRowFiller} />
-      <Pressable
-        onPress={handleDelete}
-        disabled={deleting}
-        hitSlop={8}
-        style={deleteButtonStyle}
-        accessibilityRole="button"
-        accessibilityLabel={t("settings.providers.models.removeModel", { id: model.id })}
-      >
-        <Trash2 size={theme.iconSize.sm} color={theme.colors.destructive} />
-      </Pressable>
+      <ModelRowActions
+        modelId={model.id}
+        isDefault={model.isDefault === true}
+        settingDefault={settingDefault}
+        onSetDefault={onSetDefault}
+        deleting={deleting}
+        onDelete={onDelete}
+      />
     </View>
   );
 }
@@ -404,8 +479,10 @@ interface ProviderModalBodyProps {
   filteredDiscovered: AgentModelDefinition[];
   filteredCustom: ProviderProfileModel[];
   deletingModelId: string | null;
+  settingDefaultModelId: string | null;
   onRefresh: () => void;
   onDeleteCustom: (modelId: string) => void;
+  onSetDefaultModel: (modelId: string) => void;
   theme: { iconSize: { md: number }; colors: { foregroundMuted: string } };
 }
 
@@ -490,8 +567,10 @@ function ProviderModalBody(props: ProviderModalBodyProps) {
     filteredDiscovered,
     filteredCustom,
     deletingModelId,
+    settingDefaultModelId,
     onRefresh,
     onDeleteCustom,
+    onSetDefaultModel,
     theme,
   } = props;
 
@@ -540,7 +619,12 @@ function ProviderModalBody(props: ProviderModalBodyProps) {
           />
           <View style={settingsStyles.card}>
             {filteredDiscovered.map((model) => (
-              <DiscoveredModelRow key={model.id} model={model} />
+              <DiscoveredModelRow
+                key={model.id}
+                model={model}
+                settingDefault={settingDefaultModelId === model.id}
+                onSetDefault={onSetDefaultModel}
+              />
             ))}
           </View>
         </View>
@@ -557,7 +641,9 @@ function ProviderModalBody(props: ProviderModalBodyProps) {
                 key={model.id}
                 model={model}
                 deleting={deletingModelId === model.id}
+                settingDefault={settingDefaultModelId === model.id}
                 onDelete={onDeleteCustom}
+                onSetDefault={onSetDefaultModel}
               />
             ))}
           </View>
@@ -575,19 +661,34 @@ export function ProviderDiagnosticSheet({
 }: ProviderDiagnosticSheetProps) {
   const { t } = useTranslation();
   const { theme } = useUnistyles();
+  const toast = useToast();
   const isCompact = useIsCompactFormFactor();
+  const supportsProviderRemoval = useHostFeature(serverId, "providerRemoval");
   const { entries: snapshotEntries, refresh, isRefreshing } = useProvidersSnapshot(serverId);
   const { config, patchConfig } = useDaemonConfig(serverId);
   const [query, setQuery] = useState("");
   const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [diagSheetOpen, setDiagSheetOpen] = useState(false);
   const [deletingModelId, setDeletingModelId] = useState<string | null>(null);
+  const [settingDefaultModelId, setSettingDefaultModelId] = useState<string | null>(null);
+  const [renameOpen, setRenameOpen] = useState(false);
 
   const providerLabel = resolveProviderLabel(provider, snapshotEntries);
   const providerEntry = useMemo(
     () => snapshotEntries?.find((entry) => entry.provider === provider),
     [snapshotEntries, provider],
   );
+  const canRenameProvider = useMemo(() => {
+    const accountBase =
+      providerEntry?.accountBase && isProviderAccountBase(providerEntry.accountBase)
+        ? providerEntry.accountBase
+        : resolveProviderAccountBase(config, provider);
+    return (
+      accountBase !== null ||
+      isProviderAccountId(config, provider) ||
+      (supportsProviderRemoval && providerEntry?.source === "custom")
+    );
+  }, [config, provider, providerEntry, supportsProviderRemoval]);
   const additionalModels = useMemo(
     () => config?.providers?.[provider]?.additionalModels ?? [],
     [config?.providers, provider],
@@ -627,6 +728,7 @@ export function ProviderDiagnosticSheet({
       setQuery("");
       setAddSheetOpen(false);
       setDiagSheetOpen(false);
+      setRenameOpen(false);
     }
   }, [visible]);
 
@@ -648,6 +750,29 @@ export function ProviderDiagnosticSheet({
   const handleCloseAddSheet = useCallback(() => setAddSheetOpen(false), []);
   const handleOpenDiagSheet = useCallback(() => setDiagSheetOpen(true), []);
   const handleCloseDiagSheet = useCallback(() => setDiagSheetOpen(false), []);
+  const handleOpenRename = useCallback(() => {
+    if (!canRenameProvider) return;
+    setRenameOpen(true);
+  }, [canRenameProvider]);
+  const handleCloseRename = useCallback(() => setRenameOpen(false), []);
+  const handleRenameProvider = useCallback(
+    async (nextLabel: string) => {
+      const label = nextLabel.trim();
+      if (label.length === 0) return;
+      try {
+        await patchConfig({ providers: { [provider]: { label } } });
+        await refresh([provider]);
+        setRenameOpen(false);
+      } catch (error) {
+        Alert.alert(
+          t("settings.providers.rename.errorTitle"),
+          error instanceof Error ? error.message : String(error),
+        );
+        throw error;
+      }
+    },
+    [patchConfig, provider, refresh, t],
+  );
 
   const handleDeleteCustom = useCallback(
     (modelId: string) => {
@@ -667,16 +792,74 @@ export function ProviderDiagnosticSheet({
     [additionalModels, patchConfig, provider, refresh],
   );
 
+  const handleSetDefaultModel = useCallback(
+    (modelId: string) => {
+      if (settingDefaultModelId) return;
+      const discovered = discoveredModels.find((model) => model.id === modelId);
+      const custom = additionalModels.find((model) => model.id === modelId);
+      if (discovered?.isDefault === true || custom?.isDefault === true) return;
+      let selected: Pick<ProviderProfileModel, "id" | "label" | "description"> | null = null;
+      if (discovered) {
+        selected = {
+          id: discovered.id,
+          label: discovered.label,
+          description: discovered.description,
+        };
+      } else if (custom) {
+        selected = {
+          id: custom.id,
+          label: custom.label,
+          description: custom.description,
+        };
+      }
+      if (!selected) return;
+
+      setSettingDefaultModelId(modelId);
+      void patchConfig({
+        providers: {
+          [provider]: {
+            additionalModels: buildAdditionalModelsWithDefault(additionalModels, selected),
+          },
+        },
+      })
+        .then(() => refresh([provider]))
+        .catch((error: unknown) => {
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : t("settings.providers.models.setDefaultFailed"),
+          );
+        })
+        .finally(() => {
+          setSettingDefaultModelId((current) => (current === modelId ? null : current));
+        });
+    },
+    [
+      additionalModels,
+      discoveredModels,
+      patchConfig,
+      provider,
+      refresh,
+      settingDefaultModelId,
+      t,
+      toast,
+    ],
+  );
+
   const sheetHeader = useMemo<SheetHeader>(
     () => ({
       title: providerLabel,
+      onTitleDoubleClick: canRenameProvider ? handleOpenRename : undefined,
+      titleAccessibilityHint: canRenameProvider
+        ? t("settings.providers.rename.doubleClickHint")
+        : undefined,
       search: {
         onChange: setQuery,
         placeholder: t("settings.providers.models.searchPlaceholder"),
         testID: "provider-settings-search",
       },
     }),
-    [providerLabel, t],
+    [canRenameProvider, handleOpenRename, providerLabel, t],
   );
 
   return (
@@ -707,8 +890,10 @@ export function ProviderDiagnosticSheet({
           filteredDiscovered={filteredDiscovered}
           filteredCustom={filteredCustom}
           deletingModelId={deletingModelId}
+          settingDefaultModelId={settingDefaultModelId}
           onRefresh={handleRefreshModels}
           onDeleteCustom={handleDeleteCustom}
+          onSetDefaultModel={handleSetDefaultModel}
           theme={theme}
         />
       </AdaptiveModalSheet>
@@ -724,6 +909,15 @@ export function ProviderDiagnosticSheet({
         serverId={serverId}
         visible={diagSheetOpen}
         onClose={handleCloseDiagSheet}
+      />
+      <AdaptiveRenameModal
+        visible={renameOpen}
+        title={t("settings.providers.rename.title")}
+        initialValue={providerLabel}
+        submitLabel={t("settings.providers.rename.submit")}
+        onClose={handleCloseRename}
+        onSubmit={handleRenameProvider}
+        testID="provider-settings-rename-modal"
       />
     </>
   );
@@ -809,6 +1003,12 @@ const sheetStyles = StyleSheet.create((theme) => ({
   },
   modelRowFiller: {
     flex: 1,
+  },
+  modelRowActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexShrink: 0,
+    gap: theme.spacing[2],
   },
   emptyState: {
     paddingVertical: theme.spacing[8],

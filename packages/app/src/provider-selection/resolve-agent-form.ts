@@ -273,6 +273,12 @@ export function buildProviderDefinitionMapForStatuses(args: {
   );
 }
 
+function firstAllowedProvider(
+  allowedProviderMap: Map<AgentProvider, AgentProviderDefinition>,
+): AgentProvider | null {
+  return allowedProviderMap.keys().next().value ?? null;
+}
+
 function resolveProvider(input: {
   currentProvider: AgentProvider | null;
   userModified: boolean;
@@ -300,7 +306,11 @@ function resolveProvider(input: {
   if (currentProvider && allowedProviderMap.size > 0 && !allowedProviderMap.has(currentProvider)) {
     return null;
   }
-  return currentProvider;
+  if (currentProvider) {
+    return currentProvider;
+  }
+  // Snapshot / registry order: first allowed provider is the Settings default.
+  return firstAllowedProvider(allowedProviderMap);
 }
 
 function resolveModeId(input: {
@@ -347,7 +357,7 @@ function resolveModelField(input: {
       ? preferredModel
       : resolveCanonicalModelId(availableModels, preferredModel) || defaultModelId;
   }
-  return "";
+  return defaultModelId;
 }
 
 function resolveThinkingOption(input: {

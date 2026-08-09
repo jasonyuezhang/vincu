@@ -11,7 +11,7 @@ import {
 } from "./homes.js";
 
 describe("provider account homes", () => {
-  test("builds isolated env for claude and codex", () => {
+  test("builds isolated env for claude, codex, and cursor", () => {
     expect(buildProviderAccountEnv("claude", "/tmp/home/claude-personal")).toEqual({
       VINCU_PROVIDER_ACCOUNT: "1",
       CLAUDE_CONFIG_DIR: "/tmp/home/claude-personal",
@@ -19,6 +19,10 @@ describe("provider account homes", () => {
     expect(buildProviderAccountEnv("codex", "/tmp/home/codex-work")).toEqual({
       VINCU_PROVIDER_ACCOUNT: "1",
       CODEX_HOME: "/tmp/home/codex-work",
+    });
+    expect(buildProviderAccountEnv("cursor", "/tmp/home/cursor-work")).toEqual({
+      VINCU_PROVIDER_ACCOUNT: "1",
+      CURSOR_CONFIG_DIR: "/tmp/home/cursor-work",
     });
   });
 

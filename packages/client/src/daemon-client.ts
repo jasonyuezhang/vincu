@@ -4668,8 +4668,10 @@ export class DaemonClient {
   }
 
   async createProviderAccount(input: {
-    base: "claude" | "codex";
+    base: string;
     label: string;
+    authMode?: "oauth" | "api_key";
+    apiKey?: string;
     requestId?: string;
   }): Promise<
     Extract<SessionOutboundMessage, { type: "providers.accounts.create.response" }>["payload"]
@@ -4680,6 +4682,8 @@ export class DaemonClient {
         type: "providers.accounts.create.request",
         base: input.base,
         label: input.label,
+        authMode: input.authMode,
+        apiKey: input.apiKey,
       },
     });
   }

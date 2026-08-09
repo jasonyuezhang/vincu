@@ -141,13 +141,13 @@ const PROVIDER_CLIENT_FACTORIES: Record<string, ProviderClientFactory> = {
       logger,
       runtimeSettings,
     }),
-  cursor: (logger, runtimeSettings) =>
+  cursor: (logger, runtimeSettings, options) =>
     new CursorACPAgentClient({
       logger,
       command: getCursorACPCommand(runtimeSettings),
       env: runtimeSettings?.env,
-      providerId: "cursor",
-      label: "Cursor",
+      providerId: options?.customProvider?.id ?? "cursor",
+      label: options?.customProvider?.label ?? "Cursor",
     }),
   opencode: (logger, runtimeSettings, options) =>
     new OpenCodeAgentClient(logger, runtimeSettings, {
@@ -630,6 +630,14 @@ function buildResolvedBuiltinProviders(
 
   for (const definition of definitions) {
     const override = providerOverrides[definition.id];
+    const isDevProvider = DEV_AGENT_PROVIDER_DEFINITIONS.some(
+      (entry) => entry.id === definition.id,
+    );
+    // Instance-only: production builtins appear only after Add writes an override.
+    // Dev mock providers stay registered so e2e/load tests keep working.
+    if (!override && !isDevProvider) {
+      continue;
+    }
     const factory = getProviderClientFactory(definition.id);
     const mergedRuntimeSettings = mergeRuntimeSettings(
       runtimeSettings?.[definition.id],
@@ -725,19 +733,33 @@ function addDerivedProviders(
 
     const baseProviderId = override.extends;
     const baseProvider = resolvedProviders.get(baseProviderId);
-    if (!baseProvider) {
+    let baseDefinition: AgentProviderDefinition;
+    let baseRuntimeSettings: ProviderRuntimeSettings | undefined;
+    let baseProviderParams: unknown;
+    try {
+      if (baseProvider) {
+        baseDefinition = baseProvider.definition;
+        baseRuntimeSettings = baseProvider.runtimeSettings;
+        baseProviderParams = baseProvider.providerParams;
+      } else {
+        // Base builtin may be absent under instance-only listing; still resolve
+        // factories/manifest for derived account and API-key profiles.
+        baseDefinition = getAgentProviderDefinition(baseProviderId);
+        baseRuntimeSettings = undefined;
+        baseProviderParams = undefined;
+      }
+    } catch {
       throw new Error(
         `Custom provider '${providerId}' extends unknown provider '${baseProviderId}'`,
       );
     }
 
+    const baseFactory = getProviderClientFactory(baseProviderId);
     const mergedRuntimeSettings = mergeRuntimeSettings(
-      baseProvider.runtimeSettings,
+      baseRuntimeSettings,
       toRuntimeSettings(override),
     );
-    const baseDefinition = baseProvider.definition;
-    const baseFactory = getProviderClientFactory(baseProviderId);
-    const providerParams = override.params ?? baseProvider.providerParams;
+    const providerParams = override.params ?? baseProviderParams;
 
     resolvedProviders.set(providerId, {
       definition: createDerivedDefinition(providerId, baseDefinition, override),
@@ -762,6 +784,28 @@ function addDerivedProviders(
   }
 }
 
+function sortResolvedProviderEntries(
+  resolvedProviders: Map<string, ResolvedProvider>,
+  providerOverrides: Record<string, ProviderOverride>,
+): Array<[string, ResolvedProvider]> {
+  return [...resolvedProviders.entries()]
+    .map(([provider, resolved], index) => ({
+      provider,
+      resolved,
+      order: providerOverrides[provider]?.order,
+      index,
+    }))
+    .sort((a, b) => {
+      const aOrder = typeof a.order === "number" ? a.order : Number.POSITIVE_INFINITY;
+      const bOrder = typeof b.order === "number" ? b.order : Number.POSITIVE_INFINITY;
+      if (aOrder !== bOrder) {
+        return aOrder - bOrder;
+      }
+      return a.index - b.index;
+    })
+    .map(({ provider, resolved }) => [provider, resolved]);
+}
+
 export function buildProviderRegistry(
   logger: Logger,
   options?: BuildProviderRegistryOptions,
@@ -783,10 +827,9 @@ export function buildProviderRegistry(
   });
 
   return Object.fromEntries(
-    [...resolvedProviders.entries()].map(([provider, resolved]) => [
-      provider,
-      createRegistryEntry(logger, provider, resolved),
-    ]),
+    sortResolvedProviderEntries(resolvedProviders, providerOverrides).map(
+      ([provider, resolved]) => [provider, createRegistryEntry(logger, provider, resolved)],
+    ),
   ) as Record<AgentProvider, ProviderDefinition>;
 }
 

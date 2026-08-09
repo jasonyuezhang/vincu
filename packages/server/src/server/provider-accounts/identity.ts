@@ -121,6 +121,56 @@ export function parseClaudeAuthStatusOutput(output: string): {
   }
 }
 
+export function readCursorAccountEmail(homePath: string): string | null {
+  const configPath = path.join(homePath, "cli-config.json");
+  if (!existsSync(configPath)) {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(readFileSync(configPath, "utf8")) as {
+      authInfo?: { email?: unknown; userEmail?: unknown };
+      email?: unknown;
+    };
+    const candidates = [parsed.email, parsed.authInfo?.email, parsed.authInfo?.userEmail];
+    for (const value of candidates) {
+      if (typeof value === "string" && value.trim().length > 0) {
+        return value.trim();
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function parseCursorStatusOutput(output: string): {
+  authenticated: boolean | null;
+  email: string | null;
+} {
+  const trimmed = output.trim();
+  if (!trimmed) {
+    return { authenticated: null, email: null };
+  }
+  const lower = trimmed.toLowerCase();
+  const emailMatch = trimmed.match(/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/);
+  const email = emailMatch?.[0] ?? null;
+  if (
+    lower.includes("logged in") ||
+    lower.includes("authenticated") ||
+    (email && !lower.includes("not logged") && !lower.includes("unauthenticated"))
+  ) {
+    return { authenticated: true, email };
+  }
+  if (
+    lower.includes("not logged") ||
+    lower.includes("unauthenticated") ||
+    lower.includes("log in")
+  ) {
+    return { authenticated: false, email };
+  }
+  return { authenticated: null, email };
+}
+
 export function readProviderAccountEmail(options: {
   base: ProviderAccountBase;
   homePath: string;
@@ -131,6 +181,9 @@ export function readProviderAccountEmail(options: {
   }
   if (options.base === "codex") {
     return readCodexAccountEmail(options.homePath);
+  }
+  if (options.base === "cursor") {
+    return readCursorAccountEmail(options.homePath);
   }
   return null;
 }

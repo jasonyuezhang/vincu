@@ -29,6 +29,18 @@ const TEST_CAPABILITIES = {
 } as const;
 const TEST_REFRESH_TIMEOUT_MS = 120_000;
 
+// Stub overrides so tests can opt into the old "all builtins registered" behavior.
+const ALL_BUILTINS = {
+  claude: {},
+  codex: {},
+  cursor: {},
+  copilot: {},
+  opencode: {},
+  pi: {},
+  omp: {},
+  deepseek: {},
+} as const;
+
 // Builds an AgentClient that can be injected via the public extraClients option.
 // extraClients is the only injection surface the manager exposes for tests.
 function createExtraClient(
@@ -69,8 +81,20 @@ async function withEnv(key: string, value: string, run: () => Promise<void>): Pr
 }
 
 describe("ProviderSnapshotManager public surface", () => {
-  test("listRegisteredProviderIds includes the built-in providers", () => {
+  test("listRegisteredProviderIds is empty without provider overrides", () => {
     const manager = new ProviderSnapshotManager({ logger: createTestLogger() });
+    try {
+      expect(manager.listRegisteredProviderIds()).toEqual([]);
+    } finally {
+      manager.destroy();
+    }
+  });
+
+  test("listRegisteredProviderIds includes builtins when overrides exist", () => {
+    const manager = new ProviderSnapshotManager({
+      logger: createTestLogger(),
+      providerOverrides: { ...ALL_BUILTINS },
+    });
     try {
       const ids = manager.listRegisteredProviderIds();
       expect(ids).toEqual(
@@ -81,7 +105,7 @@ describe("ProviderSnapshotManager public surface", () => {
     }
   });
 
-  test("hasProvider reflects the built-in set and providerOverrides additions", () => {
+  test("hasProvider reflects providerOverrides, not bare builtins", () => {
     const manager = new ProviderSnapshotManager({
       logger: createTestLogger(),
       providerOverrides: {
@@ -89,7 +113,7 @@ describe("ProviderSnapshotManager public surface", () => {
       },
     });
     try {
-      expect(manager.hasProvider("claude")).toBe(true);
+      expect(manager.hasProvider("claude")).toBe(false);
       expect(manager.hasProvider("zai-claude")).toBe(true);
       expect(manager.hasProvider("not-a-provider" as AgentProvider)).toBe(false);
     } finally {
@@ -106,14 +130,17 @@ describe("ProviderSnapshotManager public surface", () => {
     });
     try {
       expect(manager.getProviderLabel("qwen-codex")).toBe("Qwen Code");
-      expect(manager.getProviderLabel("claude")).toBe("Claude");
+      expect(manager.getProviderLabel("claude")).toBe("claude");
     } finally {
       manager.destroy();
     }
   });
 
   test("getSnapshot returns loading entries for built-in providers before warmup", () => {
-    const manager = new ProviderSnapshotManager({ logger: createTestLogger() });
+    const manager = new ProviderSnapshotManager({
+      logger: createTestLogger(),
+      providerOverrides: { ...ALL_BUILTINS },
+    });
     try {
       const snapshot = manager.getSnapshot("/tmp/project");
       const claude = snapshot.find((entry) => entry.provider === "claude");
@@ -162,6 +189,7 @@ describe("ProviderSnapshotManager public surface", () => {
     const manager = new ProviderSnapshotManager({
       logger: createTestLogger(),
       providerOverrides: {
+        codex: { enabled: true },
         claude: { enabled: false },
         copilot: { enabled: false },
         opencode: { enabled: false },
@@ -198,6 +226,7 @@ describe("ProviderSnapshotManager public surface", () => {
     }));
     const manager = new ProviderSnapshotManager({
       logger: createTestLogger(),
+      providerOverrides: { codex: { enabled: true } },
       extraClients: {
         codex: createExtraClient("codex", { isAvailable, fetchCatalog }),
       },
@@ -225,6 +254,7 @@ describe("ProviderSnapshotManager public surface", () => {
   test("ready snapshots publish the catalog's capability-aware default mode", async () => {
     const manager = new ProviderSnapshotManager({
       logger: createTestLogger(),
+      providerOverrides: { codex: { enabled: true } },
       extraClients: {
         codex: createExtraClient("codex", {
           isAvailable: async () => true,
@@ -276,6 +306,7 @@ describe("ProviderSnapshotManager public surface", () => {
     }));
     const manager = new ProviderSnapshotManager({
       logger: createTestLogger(),
+      providerOverrides: { codex: { enabled: true }, claude: { enabled: true } },
       extraClients: {
         codex: createExtraClient("codex", {
           isAvailable: isAvailableCodex,
@@ -307,6 +338,7 @@ describe("ProviderSnapshotManager public surface", () => {
       logger: createTestLogger(),
       refreshTimeoutMs: 1,
       providerOverrides: {
+        codex: { enabled: true },
         claude: { enabled: false },
         copilot: { enabled: false },
         opencode: { enabled: false },
@@ -334,6 +366,7 @@ describe("ProviderSnapshotManager public surface", () => {
     const manager = new ProviderSnapshotManager({
       logger: createTestLogger(),
       providerOverrides: {
+        codex: { enabled: true },
         claude: { enabled: false },
         copilot: { enabled: false },
         opencode: { enabled: false },
@@ -362,6 +395,7 @@ describe("ProviderSnapshotManager public surface", () => {
       logger: createTestLogger(),
       refreshTimeoutMs: 5,
       providerOverrides: {
+        codex: { enabled: true },
         claude: { enabled: false },
         copilot: { enabled: false },
         opencode: { enabled: false },
@@ -395,6 +429,7 @@ describe("ProviderSnapshotManager public surface", () => {
         deepseek: { enabled: false },
         opencode: { enabled: false },
         pi: { enabled: false },
+        omp: { enabled: false },
       },
     });
     try {
@@ -469,6 +504,7 @@ describe("ProviderSnapshotManager public surface", () => {
     });
     const manager = new ProviderSnapshotManager({
       logger: createTestLogger(),
+      providerOverrides: { codex: { enabled: true } },
       extraClients: { codex: client },
     });
     try {
@@ -532,6 +568,7 @@ describe("ProviderSnapshotManager public surface", () => {
     const client = createExtraClient("codex", { getDiagnostic });
     const manager = new ProviderSnapshotManager({
       logger: createTestLogger(),
+      providerOverrides: { codex: { enabled: true } },
       extraClients: { codex: client },
     });
     try {
@@ -561,6 +598,7 @@ describe("ProviderSnapshotManager public surface", () => {
     });
     const manager = new ProviderSnapshotManager({
       logger: createTestLogger(),
+      providerOverrides: { codex: { enabled: true } },
       extraClients: { codex: client },
     });
     try {
@@ -577,6 +615,7 @@ describe("ProviderSnapshotManager public surface", () => {
   test("getProviderDiagnostic falls back to a default message when the client has no getDiagnostic and appends snapshot models/status", async () => {
     const manager = new ProviderSnapshotManager({
       logger: createTestLogger(),
+      providerOverrides: { codex: { enabled: true } },
       extraClients: { codex: createExtraClient("codex") },
     });
     try {
@@ -609,6 +648,7 @@ describe("ProviderSnapshotManager public surface", () => {
   test("getProviderDiagnostic turns provider diagnostic failures into diagnostic text", async () => {
     const manager = new ProviderSnapshotManager({
       logger: createTestLogger(),
+      providerOverrides: { codex: { enabled: true } },
       extraClients: {
         codex: createExtraClient("codex", {
           isAvailable: async () => true,
@@ -638,6 +678,7 @@ describe("ProviderSnapshotManager public surface", () => {
     const manager = new ProviderSnapshotManager({
       logger: createTestLogger(),
       refreshTimeoutMs: TEST_REFRESH_TIMEOUT_MS,
+      providerOverrides: { codex: { enabled: true } },
       extraClients: {
         codex: createExtraClient("codex", {
           isAvailable: async () => true,
@@ -681,6 +722,7 @@ describe("ProviderSnapshotManager public surface", () => {
     const manager = new ProviderSnapshotManager({
       logger: createTestLogger(),
       refreshTimeoutMs: TEST_REFRESH_TIMEOUT_MS,
+      providerOverrides: { codex: { enabled: true } },
       extraClients: {
         codex: createExtraClient("codex", {
           isAvailable: async () => true,
@@ -721,6 +763,7 @@ describe("ProviderSnapshotManager public surface", () => {
     const manager = new ProviderSnapshotManager({
       logger: createTestLogger(),
       refreshTimeoutMs: TEST_REFRESH_TIMEOUT_MS,
+      providerOverrides: { codex: { enabled: true } },
       extraClients: {
         codex: createExtraClient("codex", {
           isAvailable: async () => true,
@@ -795,7 +838,12 @@ describe("ProviderSnapshotManager public surface", () => {
     const claudeClient = createExtraClient("claude");
     const manager = new ProviderSnapshotManager({
       logger: createTestLogger(),
-      providerOverrides: { opencode: { enabled: false }, copilot: { enabled: false } },
+      providerOverrides: {
+        codex: { enabled: true },
+        claude: { enabled: true },
+        opencode: { enabled: false },
+        copilot: { enabled: false },
+      },
       extraClients: { codex: codexClient, claude: claudeClient },
     });
     try {
@@ -820,6 +868,8 @@ describe("ProviderSnapshotManager public surface", () => {
     const manager = new ProviderSnapshotManager({
       logger: createTestLogger(),
       providerOverrides: {
+        codex: { enabled: true },
+        claude: { enabled: true },
         copilot: { enabled: false },
         opencode: { enabled: false },
         pi: { enabled: false },
@@ -897,6 +947,7 @@ describe("ProviderSnapshotManager public surface", () => {
     const manager = new ProviderSnapshotManager({
       logger: createTestLogger(),
       providerOverrides: {
+        codex: { enabled: true },
         claude: { enabled: false },
         copilot: { enabled: false },
         opencode: { enabled: false },
@@ -956,6 +1007,7 @@ describe("ProviderSnapshotManager public surface", () => {
     const manager = new ProviderSnapshotManager({
       logger: createTestLogger(),
       providerOverrides: {
+        opencode: { enabled: true },
         claude: { enabled: false },
         codex: { enabled: false },
         copilot: { enabled: false },
@@ -1175,6 +1227,7 @@ describe("ProviderSnapshotManager cwd routing", () => {
     }));
     const manager = new ProviderSnapshotManager({
       logger: createTestLogger(),
+      providerOverrides: { codex: { enabled: true } },
       extraClients: {
         codex: createExtraClient("codex", {
           isAvailable: vi.fn(async () => true),
@@ -1198,6 +1251,7 @@ describe("ProviderSnapshotManager cwd routing", () => {
     }));
     const manager = new ProviderSnapshotManager({
       logger: createTestLogger(),
+      providerOverrides: { codex: { enabled: true } },
       extraClients: {
         codex: createExtraClient("codex", {
           isAvailable: vi.fn(async () => true),

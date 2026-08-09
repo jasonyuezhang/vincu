@@ -76,6 +76,10 @@ describe("bootstrap provider availability", () => {
       mcpEnabled: false,
       staticDir,
       mcpDebug: false,
+      // Instance-only: persist an enabled stub so bootstrap can load Codex availability.
+      providerOverrides: {
+        codex: { enabled: true },
+      },
       agentClients: {},
       agentStoragePath,
       relayEnabled: false,

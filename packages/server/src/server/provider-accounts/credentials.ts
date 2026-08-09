@@ -1,16 +1,49 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import type { ProviderOverride } from "../agent/provider-launch-config.js";
-import { isProviderAccountBase, VINCU_PROVIDER_ACCOUNT_ENV } from "./constants.js";
+import {
+  apiKeyEnvForProviderBase,
+  isProviderAccountBase,
+  VINCU_PROVIDER_ACCOUNT_ENV,
+  type ProviderAccountBase,
+} from "./constants.js";
 
-export function providerAccountCredentialPath(base: "claude" | "codex", homePath: string): string {
-  return base === "codex"
-    ? path.join(homePath, "auth.json")
-    : path.join(homePath, ".credentials.json");
+export function providerAccountCredentialPath(base: ProviderAccountBase, homePath: string): string {
+  if (base === "codex") {
+    return path.join(homePath, "auth.json");
+  }
+  if (base === "cursor") {
+    return path.join(homePath, "cli-config.json");
+  }
+  return path.join(homePath, ".credentials.json");
+}
+
+function cursorCliConfigHasAuth(homePath: string): boolean {
+  const configPath = path.join(homePath, "cli-config.json");
+  if (!existsSync(configPath)) {
+    // Legacy layouts used by older cursor-agent builds.
+    return (
+      existsSync(path.join(homePath, "auth.json")) || existsSync(path.join(homePath, "credentials"))
+    );
+  }
+  try {
+    const parsed = JSON.parse(readFileSync(configPath, "utf8")) as {
+      authInfo?: unknown;
+    };
+    return parsed.authInfo != null && typeof parsed.authInfo === "object";
+  } catch {
+    return false;
+  }
 }
 
 /** True when an OAuth account home has local credentials on disk. */
-export function hasProviderAccountCredentials(base: "claude" | "codex", homePath: string): boolean {
+export function hasProviderAccountCredentials(
+  base: ProviderAccountBase,
+  homePath: string,
+): boolean {
+  if (base === "cursor") {
+    return cursorCliConfigHasAuth(homePath);
+  }
   return existsSync(providerAccountCredentialPath(base, homePath));
 }
 
@@ -26,9 +59,30 @@ export function isProviderAccountReadyForEnable(override: ProviderOverride): boo
   if (!base || !isProviderAccountBase(base)) {
     return true;
   }
-  const homePath = base === "claude" ? override.env.CLAUDE_CONFIG_DIR : override.env.CODEX_HOME;
+  let homePath: unknown;
+  if (base === "claude") {
+    homePath = override.env.CLAUDE_CONFIG_DIR;
+  } else if (base === "codex") {
+    homePath = override.env.CODEX_HOME;
+  } else {
+    homePath = override.env.CURSOR_CONFIG_DIR;
+  }
   if (typeof homePath !== "string" || homePath.length === 0) {
     return false;
   }
   return hasProviderAccountCredentials(base, homePath);
+}
+
+/** True when an API-key profile has a non-empty key in env. */
+export function hasProviderApiKey(override: ProviderOverride): boolean {
+  const base = override.extends;
+  if (!base) {
+    return false;
+  }
+  const keyEnv = apiKeyEnvForProviderBase(base);
+  if (!keyEnv) {
+    return false;
+  }
+  const value = override.env?.[keyEnv];
+  return typeof value === "string" && value.trim().length > 0;
 }

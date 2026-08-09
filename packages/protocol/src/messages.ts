@@ -285,7 +285,7 @@ export const ProviderSnapshotEntrySchema = z.object({
   // COMPAT(providerAccountEmail): added in v0.3.0, remove optional once floor includes it.
   accountEmail: z.string().optional(),
   // COMPAT(providerAccountBase): added in v0.3.0, remove optional once floor includes it.
-  accountBase: z.enum(["claude", "codex"]).optional(),
+  accountBase: z.enum(["claude", "codex", "cursor"]).optional(),
 });
 
 export const CompactProviderSnapshotModelSchema = AgentModelDefinitionSchema.omit({
@@ -1378,12 +1378,16 @@ export const ProviderUsageListRequestMessageSchema = z.object({
   requestId: z.string(),
 });
 
-export const ProviderAccountBaseSchema = z.enum(["claude", "codex"]);
+export const ProviderAccountBaseSchema = z.enum(["claude", "codex", "cursor"]);
+export const ProviderInstanceAuthModeSchema = z.enum(["oauth", "api_key"]);
 
 export const ProvidersAccountsCreateRequestSchema = z.object({
   type: z.literal("providers.accounts.create.request"),
-  base: ProviderAccountBaseSchema,
+  // oauth: claude|codex|cursor. api_key: any builtin id that accepts env keys.
+  base: z.string().min(1),
   label: z.string().min(1),
+  authMode: ProviderInstanceAuthModeSchema.optional(),
+  apiKey: z.string().optional(),
   requestId: z.string(),
 });
 
@@ -5207,7 +5211,8 @@ export const ProvidersAccountsCreateResponseSchema = z.object({
     requestId: z.string(),
     providerId: z.string().nullable(),
     label: z.string().nullable(),
-    base: ProviderAccountBaseSchema.nullable(),
+    // oauth account base or api_key profile extends id
+    base: z.string().nullable(),
     homePath: z.string().nullable(),
     error: ProviderAccountErrorSchema,
   }),
