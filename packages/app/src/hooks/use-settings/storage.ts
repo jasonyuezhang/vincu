@@ -39,7 +39,7 @@ const VALID_TOOL_CALL_DETAIL_LEVELS = new Set<ToolCallDetailLevel>(["overview", 
 export const DEFAULT_TERMINAL_SCROLLBACK_LINES = 10_000;
 export const MIN_TERMINAL_SCROLLBACK_LINES = 0;
 export const MAX_TERMINAL_SCROLLBACK_LINES = 1_000_000;
-export const DEFAULT_UI_FONT_SIZE = 14;
+export const DEFAULT_UI_FONT_SIZE = 13;
 export const MIN_UI_FONT_SIZE = 11;
 export const MAX_UI_FONT_SIZE = 24;
 export const DEFAULT_CODE_FONT_SIZE = 12; // == FONT_SIZE.code
@@ -56,7 +56,7 @@ export interface AppSettings {
   useLegacyTerminalRenderer: boolean;
   uiFontFamily: string; // "" = platform default UI stack
   monoFontFamily: string; // "" = platform default mono stack
-  uiFontSize: number; // clamped px, default 14
+  uiFontSize: number; // clamped px, default 13
   codeFontSize: number; // clamped px, default 12
   syntaxTheme: SyntaxThemeId; // default "one"
   workspaceTitleSource: WorkspaceTitleSource;
