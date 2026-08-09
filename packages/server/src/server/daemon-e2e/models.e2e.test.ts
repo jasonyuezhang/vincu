@@ -1,6 +1,9 @@
 import { describe, test, expect } from "vitest";
 import { execFileSync } from "node:child_process";
-import { createDaemonTestContext } from "../test-utils/index.js";
+import {
+  createDaemonTestContext,
+  ENABLED_BUILTIN_PROVIDER_OVERRIDES,
+} from "../test-utils/index.js";
 
 function isBinaryInstalled(binary: string): boolean {
   try {
@@ -19,7 +22,9 @@ describe("daemon E2E", () => {
     test.runIf(hasCodex)(
       "returns model list for Codex provider",
       async () => {
-        const ctx = await createDaemonTestContext();
+        const ctx = await createDaemonTestContext({
+          providerOverrides: ENABLED_BUILTIN_PROVIDER_OVERRIDES,
+        });
         try {
           // List models for Codex provider - no agent needed
           const result = await ctx.client.listProviderModels("codex");
@@ -46,7 +51,9 @@ describe("daemon E2E", () => {
     );
 
     test("returns model list for Claude provider", async () => {
-      const ctx = await createDaemonTestContext();
+      const ctx = await createDaemonTestContext({
+        providerOverrides: ENABLED_BUILTIN_PROVIDER_OVERRIDES,
+      });
       try {
         // List models for Claude provider - no agent needed
         const result = await ctx.client.listProviderModels("claude");
@@ -73,7 +80,9 @@ describe("daemon E2E", () => {
     test.runIf(hasOpenCode)(
       "returns model list for OpenCode provider",
       async () => {
-        const ctx = await createDaemonTestContext();
+        const ctx = await createDaemonTestContext({
+          providerOverrides: ENABLED_BUILTIN_PROVIDER_OVERRIDES,
+        });
         try {
           const result = await ctx.client.listProviderModels("opencode");
 

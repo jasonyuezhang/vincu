@@ -2,7 +2,10 @@ import { describe, expect, test } from "vitest";
 import { execFileSync } from "node:child_process";
 
 import type { AgentModelDefinition } from "./agent-sdk-types.js";
-import { createDaemonTestContext } from "../test-utils/index.js";
+import {
+  createDaemonTestContext,
+  ENABLED_BUILTIN_PROVIDER_OVERRIDES,
+} from "../test-utils/index.js";
 
 function isBinaryInstalled(binary: string): boolean {
   try {
@@ -25,7 +28,9 @@ function modelMatchesFamily(model: AgentModelDefinition, family: "sonnet" | "hai
 
 describe("provider model catalogs (e2e)", () => {
   test("Claude catalog exposes Sonnet and Haiku variants", async () => {
-    const ctx = await createDaemonTestContext();
+    const ctx = await createDaemonTestContext({
+      providerOverrides: ENABLED_BUILTIN_PROVIDER_OVERRIDES,
+    });
     try {
       const result = await ctx.client.listProviderModels("claude");
 
@@ -42,7 +47,9 @@ describe("provider model catalogs (e2e)", () => {
   test.runIf(hasCodex)(
     "Codex catalog exposes normalized models",
     async () => {
-      const ctx = await createDaemonTestContext();
+      const ctx = await createDaemonTestContext({
+        providerOverrides: ENABLED_BUILTIN_PROVIDER_OVERRIDES,
+      });
       try {
         const result = await ctx.client.listProviderModels("codex");
 
@@ -67,7 +74,9 @@ describe("provider model catalogs (e2e)", () => {
   test.runIf(hasOpenCode)(
     "OpenCode catalog returns models from multiple providers",
     async () => {
-      const ctx = await createDaemonTestContext();
+      const ctx = await createDaemonTestContext({
+        providerOverrides: ENABLED_BUILTIN_PROVIDER_OVERRIDES,
+      });
       try {
         const result = await ctx.client.listProviderModels("opencode");
 

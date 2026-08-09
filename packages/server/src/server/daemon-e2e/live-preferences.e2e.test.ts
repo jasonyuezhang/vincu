@@ -3,7 +3,11 @@ import { mkdtempSync, rmSync } from "fs";
 import { tmpdir } from "os";
 import path from "path";
 import { execFileSync } from "node:child_process";
-import { createDaemonTestContext, type DaemonTestContext } from "../test-utils/index.js";
+import {
+  createDaemonTestContext,
+  type DaemonTestContext,
+  ENABLED_BUILTIN_PROVIDER_OVERRIDES,
+} from "../test-utils/index.js";
 import type { AgentSnapshotPayload, SessionOutboundMessage } from "../messages.js";
 
 function tmpCwd(): string {
@@ -91,7 +95,7 @@ let messages: SessionOutboundMessage[] = [];
 let unsubscribe: (() => void) | null = null;
 
 beforeEach(async () => {
-  ctx = await createDaemonTestContext();
+  ctx = await createDaemonTestContext({ providerOverrides: ENABLED_BUILTIN_PROVIDER_OVERRIDES });
   messages = [];
   unsubscribe = ctx.client.subscribeRawMessages((message) => {
     messages.push(message);
