@@ -1056,6 +1056,36 @@ describe("ProviderSnapshotManager public surface", () => {
 });
 
 describe("ProviderSnapshotManager applyMutableProviderConfig", () => {
+  test("reorders registered providers when mutable order changes", () => {
+    const manager = new ProviderSnapshotManager({
+      logger: createTestLogger(),
+      providerOverrides: {
+        claude: { enabled: true, order: 0 },
+        codex: { enabled: true, order: 1 },
+        copilot: { enabled: false },
+        opencode: { enabled: false },
+        pi: { enabled: false },
+      },
+    });
+    try {
+      const trackedIds = (ids: string[]) => ids.filter((id) => id === "claude" || id === "codex");
+      expect(trackedIds(manager.listRegisteredProviderIds())).toEqual(["claude", "codex"]);
+
+      manager.applyMutableProviderConfig({
+        claude: { order: 1 },
+        codex: { order: 0 },
+      });
+
+      expect(trackedIds(manager.listRegisteredProviderIds())).toEqual(["codex", "claude"]);
+      expect(trackedIds(manager.getSnapshot().map((entry) => entry.provider))).toEqual([
+        "codex",
+        "claude",
+      ]);
+    } finally {
+      manager.destroy();
+    }
+  });
+
   test("adds a derived provider and includes it in subsequent reads", async () => {
     const manager = new ProviderSnapshotManager({
       logger: createTestLogger(),

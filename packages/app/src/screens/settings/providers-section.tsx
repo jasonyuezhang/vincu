@@ -27,7 +27,7 @@ import { useHostRuntimeClient, useHostRuntimeIsConnected } from "@/runtime/host-
 import { useHostFeature } from "@/runtime/host-features";
 import { useProvidersSnapshot } from "@/hooks/use-providers-snapshot";
 import { useDaemonConfig } from "@/hooks/use-daemon-config";
-import { buildProviderDefinitions } from "@/utils/provider-definitions";
+import { buildProviderDefinitions, orderProviderDefinitions } from "@/utils/provider-definitions";
 import {
   buildAcpProviderConfigPatch,
   type AcpProviderCatalogItem,
@@ -1089,8 +1089,33 @@ export function ProvidersSection({ serverId }: ProvidersSectionProps) {
   const [loggingOutProviderId, setLoggingOutProviderId] = useState<string | null>(null);
   const [pendingLogins, setPendingLogins] = useState<Record<string, PendingAccountLogin>>({});
   const [renamingProviderId, setRenamingProviderId] = useState<string | null>(null);
+  const [optimisticOrderIds, setOptimisticOrderIds] = useState<string[] | null>(null);
 
-  const providerDefinitions = useMemo(() => buildProviderDefinitions(entries), [entries]);
+  const providerDefinitions = useMemo(
+    () =>
+      orderProviderDefinitions(
+        buildProviderDefinitions(entries),
+        config?.providers,
+        optimisticOrderIds,
+      ),
+    [config?.providers, entries, optimisticOrderIds],
+  );
+
+  useEffect(() => {
+    if (!optimisticOrderIds) return;
+    const orderedFromConfig = orderProviderDefinitions(
+      buildProviderDefinitions(entries),
+      config?.providers,
+      null,
+    ).map((definition) => definition.id);
+    if (
+      orderedFromConfig.length === optimisticOrderIds.length &&
+      orderedFromConfig.every((providerId, index) => providerId === optimisticOrderIds[index])
+    ) {
+      setOptimisticOrderIds(null);
+    }
+  }, [config?.providers, entries, optimisticOrderIds]);
+
   const hasServer = serverId.length > 0;
 
   const handleOpenProviderSettings = useCallback(
@@ -1127,10 +1152,14 @@ export function ProvidersSection({ serverId }: ProvidersSectionProps) {
       ) {
         return;
       }
+      // Keep the list in the dropped order while patchConfig + snapshot catch up.
+      // Drag state clears before those updates, so without this the row snaps back.
+      setOptimisticOrderIds(orderedIds);
       const providers = Object.fromEntries(
         orderedIds.map((providerId, order) => [providerId, { order }]),
       );
       void patchConfig({ providers }).catch((error: unknown) => {
+        setOptimisticOrderIds(null);
         Alert.alert(
           t("settings.providers.updateErrorTitle"),
           error instanceof Error ? error.message : String(error),

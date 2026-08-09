@@ -659,6 +659,12 @@ describe("ProvidersSection", () => {
         claude: { order: 1 },
       },
     });
+
+    // Optimistic order keeps the dropped sequence even while the snapshot is stale.
+    const rowOrder = Array.from(
+      container?.querySelectorAll<HTMLElement>('[data-testid^="provider-row-"]') ?? [],
+    ).map((row) => row.getAttribute("data-testid"));
+    expect(rowOrder).toEqual(["provider-row-codex", "provider-row-claude"]);
   });
 
   it("shows account instance label with company as same-line subtitle", () => {
