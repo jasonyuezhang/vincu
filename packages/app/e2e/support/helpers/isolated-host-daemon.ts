@@ -15,7 +15,7 @@ import { withDisabledE2ESpeechEnv } from "./speech-env";
 /** Builtins e2e still creates by id after instance-only listing. */
 const E2E_BUILTIN_PROVIDER_STUBS = ["opencode", "codex", "claude"] as const;
 
-async function ensureE2EBuiltinProviderStubs(vincuHome: string): Promise<void> {
+export async function ensureE2EBuiltinProviderStubs(vincuHome: string): Promise<void> {
   const configPath = path.join(vincuHome, "config.json");
   let config: {
     version?: number;

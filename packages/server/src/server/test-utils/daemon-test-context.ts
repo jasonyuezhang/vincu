@@ -2,6 +2,17 @@ import { createTestVincuDaemon, type TestVincuDaemon } from "./vincu-daemon.js";
 import { DaemonClient } from "./daemon-client.js";
 import { createTestAgentClients } from "./fake-agent-client.js";
 
+/**
+ * Builtin providers are instance-only (enabledByDefault: false), so a bare test
+ * daemon registers none of them. Tests that drive claude/codex/opencode by id
+ * must seed an enabled override or the daemon reports "Unknown provider".
+ */
+export const ENABLED_BUILTIN_PROVIDER_OVERRIDES = {
+  claude: { enabled: true },
+  codex: { enabled: true },
+  opencode: { enabled: true },
+} as const;
+
 export interface DaemonTestContext {
   daemon: TestVincuDaemon;
   client: DaemonClient;
